@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <title>ManeStreet - City Builder Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Particle Background -->
+    <div class="particles" id="particles"></div>
+
+    <div class="game-wrapper">
+        <div class="game-container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-left">
+                    <h1>🏛️ ManeStreet</h1>
+                    <div class="difficulty-badge" id="difficulty-badge"></div>
+                </div>
+                
+                <!-- Timer Display -->
+                <div class="timer-container" id="timer-container">
+                    <div class="timer-display">
+                        <span class="timer-icon">⏱️</span>
+                        <span class="timer-seconds" id="timer-seconds">30</span>
+                        <div class="timer-progress">
+                            <div class="timer-progress-fill" id="timer-progress"></div>
+                        </div>
+                    </div>
+                    <div class="timer-urgent-text" id="timer-urgent-text">HURRY!</div>
+                </div>
+                
+                <!-- Planning Efficiency Display -->
+                <div class="efficiency-display" id="efficiency-display">
+                    <span class="efficiency-icon">📊</span>
+                    <span class="efficiency-value" id="efficiency-value">0%</span>
+                </div>
+            </div>
+
+            <!-- City View -->
+            <div class="city-view" id="city-view">
+                <div class="sun"></div>
+                <div class="cloud cloud-1"></div>
+                <div class="cloud cloud-2"></div>
+                
+                <!-- Building Grid -->
+                <div class="grid-container">
+                    <div class="city-grid" id="city-grid">
+                        <!-- Grid cells will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="stats-panel">
+                <div class="stat" data-tooltip="How happy are your citizens?">
+                    <span class="stat-icon">😊</span>
+                    <div class="stat-content">
+                        <span class="stat-label">Happiness</span>
+                        <div class="stat-value" id="happiness">75</div>
+                    </div>
+                </div>
+                <div class="stat" data-tooltip="Money available for city projects">
+                    <span class="stat-icon">💰</span>
+                    <div class="stat-content">
+                        <span class="stat-label">Funds</span>
+                        <div class="stat-value" id="cityFunds">60</div>
+                    </div>
+                </div>
+                <div class="stat" data-tooltip="Support from businesses and organizations">
+                    <span class="stat-icon">🏦</span>
+                    <div class="stat-content">
+                        <span class="stat-label">Interest</span>
+                        <div class="stat-value" id="specialInterest">50</div>
+                    </div>
+                </div>
+                <div class="stat" data-tooltip="Total decisions made">
+                    <span class="stat-icon">🎯</span>
+                    <div class="stat-content">
+                        <span class="stat-label">Decisions</span>
+                        <div class="stat-value" id="decisionsMade">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Content Overlay -->
+            <div class="game-content-overlay" id="game-content-overlay">
+                <div class="quiz-header">
+                    <h3 id="quiz-title">Decision Time</h3>
+                    <button class="quiz-toggle" id="quiz-toggle" onclick="toggleQuiz()">
+                        <span class="toggle-icon">👁️</span>
+                        <span class="toggle-text">Hide</span>
+                    </button>
+                </div>
+                <div class="game-content" id="game-content">
+                    <!-- Content will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Floating Unhide Button (shown when quiz is hidden) -->
+            <button class="unhide-button" id="unhide-button" onclick="toggleQuiz()" style="display: none;">
+                <span class="unhide-icon">👁️‍🗨️</span>
+                <span class="unhide-text">Show Decisions</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Building Palette Sidebar -->
+    <div class="building-palette" id="building-palette">
+        <div class="palette-header">
+            <h3>🏗️ Building Palette</h3>
+            <p class="palette-subtitle">Drag buildings to place them</p>
+        </div>
+        <div class="palette-buildings" id="palette-buildings">
+            <!-- Building cards will be generated here -->
+        </div>
+        
+        <!-- Undo Button -->
+        <div class="palette-footer">
+            <button class="undo-button" id="undo-button" onclick="undoLastPlacement()">
+                <span class="undo-icon">↶</span>
+                <span class="undo-text">Undo</span>
+                <span class="undo-count" id="undo-count">(3)</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Action Menu Modal -->
+    <div class="action-menu" id="action-menu" style="display: none;">
+        <div class="action-menu-content">
+            <h3 id="action-menu-title">Building Options</h3>
+            <p id="action-menu-info"></p>
+            <div class="action-buttons">
+                <button class="action-btn action-sell" onclick="sellBuilding()">
+                    <span class="action-icon">💰</span>
+                    Sell (50% refund)
+                </button>
+                <button class="action-btn action-cancel" onclick="closeActionMenu()">
+                    <span class="action-icon">❌</span>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placement Overlay -->
+    <div class="placement-overlay" id="placement-overlay">
+        <div class="placement-message" id="placement-message">
+            <span class="placement-icon" id="placement-icon">🏗️</span>
+            <h3>Place Your Building!</h3>
+            <p id="placement-text">Drag and drop to continue...</p>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorial-overlay" style="display: none;">
+        <div class="tutorial-highlight" id="tutorial-highlight"></div>
+        <div class="tutorial-card" id="tutorial-card">
+            <h3 id="tutorial-title">Tutorial</h3>
+            <p id="tutorial-text">Welcome to the tutorial!</p>
+            <div class="tutorial-buttons">
+                <button class="tutorial-btn tutorial-skip" onclick="skipTutorial()">Skip Tutorial</button>
+                <button class="tutorial-btn tutorial-next" onclick="nextTutorialStep()">Next →</button>
+            </div>
+            <div class="tutorial-progress" id="tutorial-progress">Step 1 of 5</div>
+        </div>
+    </div>
+
+    <!-- Tooltip Element -->
+    <div class="tooltip" id="tooltip"></div>
+
+    <!-- JavaScript -->
+    <script src="game.js"></script>
+</body>
+</html>
