@@ -131,15 +131,24 @@ const gameState = {
     timeBonus: 0,          // Total time bonus points accumulated
     timeBankSeconds: 0,    // Extra seconds to add to next timer
     currentDecisionTime: 0, // Time when decision was started
-    cityGrid: Array(60).fill(null), // Grid cells (responsive: 60/32/24)
+    cityGrid: Array(60).fill(null), // Grid cells (responsive: 60/32/24) - stores buildings AND features
+    gridFeatures: [],      // Track all placed grid features (river, mountains, etc.)
     buildingHistory: [],   // Track last 3 placements for undo
     undoCount: 3,          // Number of undos remaining
     planningEfficiency: 0, // City planning efficiency score (0-100)
     detectedZones: [],     // Array of detected zones
     achievements: [],      // Unlocked achievements
+    achievementTracking: { // Track progress toward story-based achievements
+        builtNearRiver: false,
+        rejectedFactory: false,
+        neverTimedOut: true,
+        usedNoUndos: true,
+        usedNoRelocations: true
+    },
     unlockedBuildings: [], // Buildings unlocked through story choices
     pendingBuildingPlacement: null, // Building that must be placed before continuing
     awaitingPlacement: false, // Is game waiting for mandatory placement?
+    placementConstraints: null, // { allowedCells: [array of cell indices] } - restricts where buildings can be placed
     difficulty: null,      // Selected difficulty mode
     maxRelocations: 3,     // Max relocations allowed
     relocationsUsed: 0,    // Number of relocations used
@@ -155,6 +164,101 @@ const buildingTypes = {
     'park': { width: 100, height: 80, windows: 0, color: '#2ecc71', icon: '🌳' },
     'office': { width: 90, height: 130, windows: 12, color: '#9b59b6', icon: '🏢' },
     'shop': { width: 70, height: 90, windows: 4, color: '#e74c3c', icon: '🏪' }
+};
+
+// ==================== GRID FEATURES SYSTEM ====================
+// Fixed environmental features that appear based on story choices
+const gridFeatures = {
+    river: {
+        id: 'river',
+        name: 'River',
+        icon: '🌊',
+        description: 'Natural water source',
+        buildable: false, // Can't build on river
+        color: '#3498db',
+        adjacencyEffects: {
+            factory: { bonus: { cityFunds: 5 }, message: '🏭 Factory has water access!' },
+            park: { bonus: { happiness: 3 }, message: '🌳 Riverside park is beautiful!' },
+            house: { bonus: { happiness: 2 }, message: '🏠 Waterfront property!' }
+        }
+    },
+    polluted_river: {
+        id: 'polluted_river',
+        name: 'Polluted River',
+        icon: '🌊',
+        description: 'Contaminated water',
+        buildable: false,
+        color: '#7f8c8d',
+        adjacencyEffects: {
+            house: { penalty: { happiness: -5 }, message: '🏠 Polluted water nearby!' },
+            park: { penalty: { happiness: -3 }, message: '🌳 Park affected by pollution!' }
+        }
+    },
+    mountain: {
+        id: 'mountain',
+        name: 'Mountain',
+        icon: '⛰️',
+        description: 'Scenic highlands',
+        buildable: false,
+        color: '#95a5a6',
+        adjacencyEffects: {
+            park: { bonus: { happiness: 4 }, message: '🌳 Mountain park is stunning!' },
+            house: { bonus: { happiness: 2 }, message: '🏠 Mountain view property!' }
+        }
+    },
+    highway: {
+        id: 'highway',
+        name: 'Highway',
+        icon: '🛣️',
+        description: 'Major road',
+        buildable: false,
+        color: '#34495e',
+        adjacencyEffects: {
+            shop: { bonus: { cityFunds: 4 }, message: '🏪 Highway access boosts business!' },
+            office: { bonus: { specialInterest: 3 }, message: '🏢 Easy commute for workers!' },
+            factory: { bonus: { cityFunds: 3 }, message: '🏭 Easy shipping access!' },
+            house: { penalty: { happiness: -4 }, message: '🏠 Highway noise disturbs residents!' }
+        }
+    },
+    protected_forest: {
+        id: 'protected_forest',
+        name: 'Protected Forest',
+        icon: '🌲',
+        description: 'Environmental preserve',
+        buildable: false,
+        color: '#27ae60',
+        adjacencyEffects: {
+            park: { bonus: { happiness: 5 }, message: '🌳 Park integrated with nature!' },
+            house: { bonus: { happiness: 3 }, message: '🏠 Living near nature!' },
+            factory: { penalty: { specialInterest: -8 }, message: '🏭 Environmental groups protest factory!' }
+        }
+    },
+    city_hall: {
+        id: 'city_hall',
+        name: 'City Hall',
+        icon: '🏛️',
+        description: 'Government center',
+        buildable: false,
+        color: '#3498db',
+        adjacencyEffects: {
+            office: { bonus: { specialInterest: 4 }, message: '🏢 Close to government!' },
+            park: { bonus: { happiness: 2 }, message: '🌳 Central park!' }
+        }
+    },
+    existing_neighborhood: {
+        id: 'existing_neighborhood',
+        name: 'Existing Homes',
+        icon: '🏘️',
+        description: 'Pre-existing neighborhood',
+        buildable: false,
+        color: '#e67e22',
+        isBuilding: true, // Acts like a building for adjacency
+        adjacencyEffects: {
+            shop: { bonus: { cityFunds: 3 }, message: '🏪 Shops serve existing residents!' },
+            park: { bonus: { happiness: 3 }, message: '🌳 Park for the neighborhood!' },
+            factory: { penalty: { happiness: -6 }, message: '🏭 Residents protest factory!' }
+        }
+    }
 };
 
 // Building Palette for drag-and-drop
@@ -194,6 +298,230 @@ const adjacencyRules = {
         message: "🏠 House near park increases quality of life"
     }
 };
+
+// ==================== GRID FEATURE PLACEMENT SYSTEM ====================
+
+// Place a feature on the grid (called by story choices)
+function placeGridFeature(featureId, cellIndices, silent = false) {
+    const feature = gridFeatures[featureId];
+    if (!feature) {
+        console.error(`Feature ${featureId} not found`);
+        return;
+    }
+
+    // Place feature on each specified cell
+    cellIndices.forEach(cellIndex => {
+        if (cellIndex >= 0 && cellIndex < gameState.cityGrid.length) {
+            gameState.cityGrid[cellIndex] = {
+                type: 'feature',
+                featureId: featureId,
+                icon: feature.icon,
+                name: feature.name,
+                buildable: feature.buildable,
+                isBuilding: feature.isBuilding || false
+            };
+
+            // Track in gridFeatures array
+            gameState.gridFeatures.push({
+                featureId: featureId,
+                cellIndex: cellIndex
+            });
+        }
+    });
+
+    console.log(`🗺️ Placed ${feature.name} on cells:`, cellIndices);
+
+    // Update grid display
+    renderCityGrid();
+
+    // Show notification (unless silent)
+    if (!silent) {
+        showToast(`🗺️ ${feature.name} added to city map`, 'info');
+    }
+}
+
+// Remove/replace a feature (e.g., river becomes polluted_river)
+function replaceGridFeature(oldFeatureId, newFeatureId) {
+    const affectedCells = [];
+
+    // Find all cells with the old feature
+    gameState.cityGrid.forEach((cell, index) => {
+        if (cell && cell.type === 'feature' && cell.featureId === oldFeatureId) {
+            affectedCells.push(index);
+        }
+    });
+
+    if (affectedCells.length === 0) {
+        console.log(`No cells found with feature ${oldFeatureId}`);
+        return;
+    }
+
+    // Remove old feature from tracking
+    gameState.gridFeatures = gameState.gridFeatures.filter(f => f.featureId !== oldFeatureId);
+
+    // Clear old feature from grid
+    affectedCells.forEach(index => {
+        gameState.cityGrid[index] = null;
+    });
+
+    // Place new feature
+    placeGridFeature(newFeatureId, affectedCells);
+
+    const newFeature = gridFeatures[newFeatureId];
+    console.log(`🔄 Replaced ${oldFeatureId} with ${newFeatureId}`);
+    showToast(`⚠️ ${newFeature.name} - environmental change!`, 'warning');
+}
+
+// Generate river pattern for different grid sizes
+function generateRiverPattern() {
+    const gridSize = getGridSize();
+    const pattern = [];
+
+    if (gridSize.total === 60) {
+        // Desktop: 10x6 - River flows vertically through middle-left (column 3)
+        for (let row = 0; row < gridSize.rows; row++) {
+            pattern.push(row * gridSize.cols + 3); // Column 3
+        }
+    } else if (gridSize.total === 32) {
+        // Tablet: 8x4 - River flows through column 2
+        for (let row = 0; row < gridSize.rows; row++) {
+            pattern.push(row * gridSize.cols + 2);
+        }
+    } else {
+        // Mobile: 6x4 - River flows through column 2
+        for (let row = 0; row < gridSize.rows; row++) {
+            pattern.push(row * gridSize.cols + 2);
+        }
+    }
+
+    return pattern;
+}
+
+// Generate mountain pattern
+function generateMountainPattern() {
+    const gridSize = getGridSize();
+    const pattern = [];
+
+    if (gridSize.total === 60) {
+        // Desktop: Mountains on right edge (column 9)
+        for (let row = 0; row < 4; row++) {
+            pattern.push(row * gridSize.cols + 9);
+        }
+    } else if (gridSize.total === 32) {
+        // Tablet: Mountains on right edge
+        for (let row = 0; row < 3; row++) {
+            pattern.push(row * gridSize.cols + 7);
+        }
+    } else {
+        // Mobile: Mountains on right edge
+        for (let row = 0; row < 2; row++) {
+            pattern.push(row * gridSize.cols + 5);
+        }
+    }
+
+    return pattern;
+}
+
+// Generate highway pattern
+function generateHighwayPattern() {
+    const gridSize = getGridSize();
+    const pattern = [];
+
+    if (gridSize.total === 60) {
+        // Desktop: Highway runs horizontally across top (row 0)
+        for (let col = 0; col < gridSize.cols; col++) {
+            pattern.push(col);
+        }
+    } else if (gridSize.total === 32) {
+        // Tablet: Highway across top
+        for (let col = 0; col < gridSize.cols; col++) {
+            pattern.push(col);
+        }
+    } else {
+        // Mobile: Highway across top
+        for (let col = 0; col < gridSize.cols; col++) {
+            pattern.push(col);
+        }
+    }
+
+    return pattern;
+}
+
+// Generate protected forest pattern
+function generateForestPattern() {
+    const gridSize = getGridSize();
+    const pattern = [];
+
+    if (gridSize.total === 60) {
+        // Desktop: Forest area in bottom-left corner (3x2 area)
+        pattern.push(40, 41, 50, 51, 42, 52); // 6 cells
+    } else if (gridSize.total === 32) {
+        // Tablet: Forest in bottom-left
+        pattern.push(24, 25, 26); // 3 cells
+    } else {
+        // Mobile: Forest in bottom-left
+        pattern.push(18, 19); // 2 cells
+    }
+
+    return pattern;
+}
+
+// Place city hall at start of game
+function placeInitialCityHall() {
+    const gridSize = getGridSize();
+    let centerCell;
+
+    if (gridSize.total === 60) {
+        centerCell = 25; // Center-ish of 10x6 grid
+    } else if (gridSize.total === 32) {
+        centerCell = 13; // Center of 8x4
+    } else {
+        centerCell = 9; // Center of 6x4
+    }
+
+    placeGridFeature('city_hall', [centerCell], true); // Silent placement
+}
+
+// Place existing neighborhood at start
+function placeInitialNeighborhood() {
+    const gridSize = getGridSize();
+    const pattern = [];
+
+    if (gridSize.total === 60) {
+        // Desktop: Small neighborhood near city hall (3 houses)
+        pattern.push(14, 15, 24);
+    } else if (gridSize.total === 32) {
+        // Tablet: 2 houses
+        pattern.push(12, 20);
+    } else {
+        // Mobile: 2 houses
+        pattern.push(8, 14);
+    }
+
+    placeGridFeature('existing_neighborhood', pattern, true); // Silent placement
+}
+
+// Get all cells adjacent to a specific feature type
+function getCellsAdjacentToFeature(featureId) {
+    const adjacentCells = new Set();
+
+    // Find all cells with this feature
+    gameState.cityGrid.forEach((cell, index) => {
+        if (cell && cell.type === 'feature' && cell.featureId === featureId) {
+            // Get all adjacent cells for this feature cell
+            const neighbors = getAdjacentCells(index);
+            neighbors.forEach(neighborIndex => {
+                // Only add if the cell is empty or buildable
+                const neighborCell = gameState.cityGrid[neighborIndex];
+                if (!neighborCell || neighborCell.buildable) {
+                    adjacentCells.add(neighborIndex);
+                }
+            });
+        }
+    });
+
+    return Array.from(adjacentCells);
+}
 
 function addBuilding(type) {
     gameState.buildings.push(type);
@@ -321,41 +649,95 @@ function renderCityGrid() {
         const cell = document.createElement('div');
         cell.className = 'grid-cell';
         cell.setAttribute('data-cell-index', i);
-        
-        // If cell is occupied, show building
+
+        // If cell is occupied (building or feature), render it
         if (gameState.cityGrid[i]) {
-            const building = gameState.cityGrid[i];
-            cell.classList.add('occupied');
-            
-            // Add newly-placed highlight (lasts 3 seconds)
-            if (building.placedAt && (now - building.placedAt) < 3000) {
-                cell.classList.add('newly-placed');
+            const cellData = gameState.cityGrid[i];
+
+            // Handle FEATURES (river, mountains, etc.)
+            if (cellData.type === 'feature') {
+                const feature = gridFeatures[cellData.featureId];
+                cell.classList.add('feature-cell');
+                cell.setAttribute('data-feature-id', cellData.featureId);
+
+                // Add feature-specific class for styling
+                if (cellData.featureId) {
+                    cell.classList.add(`feature-${cellData.featureId.replace('_', '-')}`);
+                }
+
+                const icon = document.createElement('span');
+                icon.className = 'grid-cell-icon feature-icon';
+                icon.textContent = cellData.icon;
+                cell.appendChild(icon);
+
+                // Add tooltip for features
+                cell.addEventListener('mouseenter', (e) => showFeatureTooltip(e, feature));
+                cell.addEventListener('mouseleave', hideBuildingTooltip);
+
+                // If feature is buildable, allow drops
+                if (cellData.buildable) {
+                    cell.addEventListener('dragover', handleGridDragOver);
+                    cell.addEventListener('dragleave', handleGridDragLeave);
+                    cell.addEventListener('drop', handleGridDrop);
+                }
+                // If feature acts like a building (existing_neighborhood), make it interactable
+                else if (cellData.isBuilding) {
+                    cell.classList.add('occupied');
+                    cell.addEventListener('click', (e) => {
+                        showToast('🏘️ This is an existing neighborhood from the previous mayor', 'info');
+                    });
+                }
             }
-            
-            const icon = document.createElement('span');
-            icon.className = 'grid-cell-icon';
-            icon.textContent = building.icon;
-            cell.appendChild(icon);
-            
-            // Add click handler for action menu
-            cell.addEventListener('click', (e) => openActionMenu(i));
-            
-            // Add hover tooltip
-            cell.addEventListener('mouseenter', (e) => showBuildingTooltip(e, building, i));
-            cell.addEventListener('mouseleave', hideBuildingTooltip);
-            
-            // Make occupied cells draggable for relocation
-            cell.setAttribute('draggable', 'true');
-            cell.addEventListener('dragstart', (e) => handleOccupiedDragStart(e, i));
-            cell.addEventListener('dragend', handleOccupiedDragEnd);
-            
+            // Handle BUILDINGS (house, shop, factory, etc.)
+            else {
+                const building = cellData;
+                cell.classList.add('occupied');
+
+                // Add newly-placed highlight (lasts 3 seconds)
+                if (building.placedAt && (now - building.placedAt) < 3000) {
+                    cell.classList.add('newly-placed');
+                }
+
+                const icon = document.createElement('span');
+                icon.className = 'grid-cell-icon';
+                icon.textContent = building.icon;
+                cell.appendChild(icon);
+
+                // Add click handler for action menu
+                cell.addEventListener('click', (e) => openActionMenu(i));
+
+                // Add hover tooltip
+                cell.addEventListener('mouseenter', (e) => showBuildingTooltip(e, building, i));
+                cell.addEventListener('mouseleave', hideBuildingTooltip);
+
+                // Make occupied cells draggable for relocation
+                cell.setAttribute('draggable', 'true');
+                cell.addEventListener('dragstart', (e) => handleOccupiedDragStart(e, i));
+                cell.addEventListener('dragend', handleOccupiedDragEnd);
+            }
+
         } else {
-            // Add drop event listeners only to empty cells
-            cell.addEventListener('dragover', handleGridDragOver);
-            cell.addEventListener('dragleave', handleGridDragLeave);
-            cell.addEventListener('drop', handleGridDrop);
+            // Check if cell is allowed based on placement constraints
+            if (gameState.placementConstraints) {
+                const isAllowed = gameState.placementConstraints.allowedCells.includes(i);
+                if (!isAllowed) {
+                    cell.classList.add('locked-cell');
+                    cell.setAttribute('title', 'This cell is locked for this placement');
+                } else {
+                    cell.classList.add('allowed-cell');
+                    // Add drop event listeners only to allowed cells
+                    cell.addEventListener('dragover', handleGridDragOver);
+                    cell.addEventListener('dragleave', handleGridDragLeave);
+                    cell.addEventListener('drop', handleGridDrop);
+                }
+            } else {
+                // No constraints - all empty cells are droppable
+                cell.addEventListener('dragover', handleGridDragOver);
+                cell.addEventListener('dragleave', handleGridDragLeave);
+                cell.addEventListener('drop', handleGridDrop);
+            }
         }
-        
+
         container.appendChild(cell);
     }
     
@@ -440,10 +822,11 @@ function handleTouchMove(e) {
         if (cell && !cell.classList.contains('occupied')) {
             const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
             const canAfford = gameState.cityFunds >= touchDragData.building.cost;
-            
-            if (canAfford) {
+            const isConstrained = gameState.placementConstraints && !gameState.placementConstraints.allowedCells.includes(cellIndex);
+
+            if (canAfford && !isConstrained) {
                 cell.classList.add('drag-over');
-                
+
                 // Show adjacency preview
                 const { beneficial, harmful } = getAdjacencyHighlights(cellIndex, touchDragData.building.id);
                 beneficial.forEach(idx => {
@@ -463,21 +846,35 @@ function handleTouchMove(e) {
 
 function handleTouchEnd(e) {
     if (!touchDragData) return;
-    
+
     const card = e.target.closest('.building-card');
     if (card) {
         card.classList.remove('dragging');
     }
-    
+
     if (touchDragData.isDragging) {
         const touch = e.changedTouches[0];
         const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
         const cell = elementUnderTouch?.closest('.grid-cell');
-        
+
         if (cell && !cell.classList.contains('occupied')) {
             const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
             const building = touchDragData.building;
-            
+
+            // Check placement constraints
+            if (gameState.placementConstraints) {
+                if (!gameState.placementConstraints.allowedCells.includes(cellIndex)) {
+                    showToast('❌ Cannot place here! Must be adjacent to the river.', 'error');
+                    triggerHaptic('error');
+                    // Clear touch data
+                    touchDragData = null;
+                    document.querySelectorAll('.grid-cell').forEach(c => {
+                        c.classList.remove('drag-over', 'invalid-drop', 'adjacent-good', 'adjacent-bad');
+                    });
+                    return;
+                }
+            }
+
             // Simulate drop
             if (gameState.cityFunds >= building.cost) {
                 // Successful placement
@@ -499,6 +896,11 @@ function handleTouchEnd(e) {
                 if (newZones.length > previousZoneCount) {
                     newZones.slice(previousZoneCount).forEach(zone => {
                         showToast(`${zone.icon} Zone Formed: ${zone.name}!`, 'success');
+
+                        // Play zone formed sound
+                        if (typeof audioManager !== 'undefined') {
+                            audioManager.playZoneFormed();
+                        }
                     });
                     applyZoneBonuses();
                     updateStats();
@@ -564,8 +966,9 @@ function handleGridDragOver(e) {
     // Check if this is a valid drop
     const isOccupied = gameState.cityGrid[cellIndex] !== null;
     const canAfford = currentDraggedBuilding ? gameState.cityFunds >= currentDraggedBuilding.cost : true;
-    
-    if (isOccupied || !canAfford) {
+    const isConstrained = gameState.placementConstraints && !gameState.placementConstraints.allowedCells.includes(cellIndex);
+
+    if (isOccupied || !canAfford || isConstrained) {
         cell.classList.add('invalid-drop');
         cell.classList.remove('drag-over');
     } else {
@@ -600,13 +1003,22 @@ function handleGridDragLeave(e) {
 
 function handleGridDrop(e) {
     e.preventDefault();
-    
+
     const cell = e.target.closest('.grid-cell');
     const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
-    
+
+    // Check placement constraints
+    if (gameState.placementConstraints) {
+        if (!gameState.placementConstraints.allowedCells.includes(cellIndex)) {
+            showToast('❌ Cannot place here! Must be adjacent to the river.', 'error');
+            triggerHaptic('error');
+            return;
+        }
+    }
+
     // Check if this is a move operation
     const isMoving = e.dataTransfer.getData('moveBuilding') === 'true';
-    
+
     if (isMoving) {
         // MOVE EXISTING BUILDING
         const sourceCellIndex = parseInt(e.dataTransfer.getData('sourceCellIndex'));
@@ -646,6 +1058,7 @@ function handleGridDrop(e) {
         
         // Increment relocation counter
         gameState.relocationsUsed++;
+        gameState.achievementTracking.usedNoRelocations = false; // Track for achievement
         
         // Place in new position
         gameState.cityGrid[cellIndex] = building;
@@ -721,6 +1134,11 @@ function handleGridDrop(e) {
         if (newZones.length > previousZoneCount) {
             newZones.slice(previousZoneCount).forEach(zone => {
                 showToast(`${zone.icon} Zone Formed: ${zone.name}!`, 'success');
+
+                // Play zone formed sound
+                if (typeof audioManager !== 'undefined') {
+                    audioManager.playZoneFormed();
+                }
             });
             applyZoneBonuses();
             updateStats();
@@ -834,19 +1252,46 @@ function getAdjacentCells(cellIndex) {
 function calculateAdjacency(cellIndex, buildingType) {
     const adjacentCells = getAdjacentCells(cellIndex);
     const rule = adjacencyRules[buildingType];
-    
-    if (!rule) return { bonuses: {}, penalties: {}, messages: [] };
-    
+
     let totalBonuses = {};
     let totalPenalties = {};
     let messages = [];
-    
+
     adjacentCells.forEach(adjIndex => {
         const neighbor = gameState.cityGrid[adjIndex];
         if (!neighbor) return;
-        
-        // Check if neighbor is in the 'near' list
-        if (rule.near && rule.near.includes(neighbor.type)) {
+
+        // HANDLE FEATURES (river, mountains, etc.)
+        if (neighbor.type === 'feature') {
+            const feature = gridFeatures[neighbor.featureId];
+            if (feature && feature.adjacencyEffects && feature.adjacencyEffects[buildingType]) {
+                const effect = feature.adjacencyEffects[buildingType];
+
+                // Apply bonus from feature
+                if (effect.bonus) {
+                    Object.keys(effect.bonus).forEach(key => {
+                        totalBonuses[key] = (totalBonuses[key] || 0) + effect.bonus[key];
+                    });
+                    messages.push(effect.message);
+                }
+
+                // Apply penalty from feature
+                if (effect.penalty) {
+                    Object.keys(effect.penalty).forEach(key => {
+                        totalPenalties[key] = (totalPenalties[key] || 0) + effect.penalty[key];
+                    });
+                    messages.push(effect.message);
+                }
+
+                // Track achievement: built near river
+                if (neighbor.featureId === 'river' && buildingType === 'factory') {
+                    gameState.achievementTracking.builtNearRiver = true;
+                    console.log('🏆 Achievement tracking: Built factory near river');
+                }
+            }
+        }
+        // HANDLE BUILDINGS (existing adjacency rules)
+        else if (rule && rule.near && rule.near.includes(neighbor.type)) {
             if (rule.bonus) {
                 // Apply bonus
                 Object.keys(rule.bonus).forEach(key => {
@@ -863,10 +1308,10 @@ function calculateAdjacency(cellIndex, buildingType) {
             }
         }
     });
-    
-    return { 
-        bonuses: totalBonuses, 
-        penalties: totalPenalties, 
+
+    return {
+        bonuses: totalBonuses,
+        penalties: totalPenalties,
         messages: [...new Set(messages)] // Remove duplicates
     };
 }
@@ -1125,13 +1570,28 @@ function reverseAdjacencyEffects(cellIndex, buildingType) {
 function showBuildingTooltip(e, building, cellIndex) {
     const tooltip = document.getElementById('tooltip');
     const timePlaced = Math.floor((Date.now() - building.placedAt) / 1000);
-    
+
     tooltip.innerHTML = `
         <strong>${building.icon} ${building.name}</strong><br>
         📊 ${building.effect}<br>
         💰 Cost: $${building.cost}M<br>
         ⏱️ Placed ${timePlaced}s ago<br>
         <em style="font-size:0.9em;opacity:0.8;">Click to manage</em>
+    `;
+    tooltip.style.opacity = '1';
+    tooltip.style.left = e.pageX + 15 + 'px';
+    tooltip.style.top = e.pageY + 15 + 'px';
+}
+
+// Show feature tooltip on hover
+function showFeatureTooltip(e, feature) {
+    const tooltip = document.getElementById('tooltip');
+
+    tooltip.innerHTML = `
+        <strong>${feature.icon} ${feature.name}</strong><br>
+        📖 ${feature.description}<br>
+        ${!feature.buildable ? '🚫 Cannot build here' : '✅ Can build here'}<br>
+        <em style="font-size:0.9em;opacity:0.8;">Environmental feature</em>
     `;
     tooltip.style.opacity = '1';
     tooltip.style.left = e.pageX + 15 + 'px';
@@ -1166,13 +1626,14 @@ function undoLastPlacement() {
     
     // Decrease undo count
     gameState.undoCount--;
-    
+    gameState.achievementTracking.usedNoUndos = false; // Track for achievement
+
     // Update display
     renderCityGrid();
     updateStats();
     updateUndoButton();
     updateEfficiencyDisplay();
-    
+
     showToast(`↶ Undid ${lastAction.building.name} placement`, 'info');
     console.log(`↶ Undo: Removed ${lastAction.building.name} from cell ${lastAction.cellIndex}`);
 }
@@ -1205,16 +1666,41 @@ function showUnlockNotification(building) {
 }
 
 // Show mandatory placement overlay
-function showMandatoryPlacementOverlay(building) {
+function showMandatoryPlacementOverlay(building, constraints = null) {
     const overlay = document.getElementById('placement-overlay');
     const icon = document.getElementById('placement-icon');
     const text = document.getElementById('placement-text');
-    
+
     icon.textContent = building.icon;
-    text.textContent = `Drag ${building.name} to the grid to continue!`;
-    
+
+    // Update text based on constraints
+    if (constraints && constraints.adjacentToFeature) {
+        const feature = gridFeatures[constraints.adjacentToFeature];
+        text.textContent = `Drag ${building.name} to a cell adjacent to the ${feature.icon} ${feature.name}!`;
+    } else {
+        text.textContent = `Drag ${building.name} to the grid to continue!`;
+    }
+
     overlay.classList.add('active');
-    
+
+    // Set placement constraints if provided
+    if (constraints) {
+        if (constraints.adjacentToFeature) {
+            // Get all cells adjacent to the specified feature
+            const allowedCells = getCellsAdjacentToFeature(constraints.adjacentToFeature);
+            gameState.placementConstraints = { allowedCells };
+            console.log(`🔒 Placement restricted to ${allowedCells.length} cells adjacent to ${constraints.adjacentToFeature}`);
+        } else if (constraints.allowedCells) {
+            gameState.placementConstraints = { allowedCells: constraints.allowedCells };
+            console.log(`🔒 Placement restricted to ${constraints.allowedCells.length} specific cells`);
+        }
+    } else {
+        gameState.placementConstraints = null;
+    }
+
+    // Re-render grid to show locked/allowed cells
+    renderCityGrid();
+
     console.log(`🏗️ Mandatory placement required: ${building.name}`);
 }
 
@@ -1227,19 +1713,23 @@ function hideMandatoryPlacementOverlay() {
 // Complete mandatory placement and continue to next scene
 function completeMandatoryPlacement() {
     if (!gameState.pendingBuildingPlacement) return;
-    
+
     const nextScene = gameState.pendingBuildingPlacement.nextScene;
-    
+
     // Clear placement state
     gameState.pendingBuildingPlacement = null;
     gameState.awaitingPlacement = false;
-    
+    gameState.placementConstraints = null; // Clear constraints
+
     // Hide overlay
     hideMandatoryPlacementOverlay();
-    
+
+    // Re-render grid to remove locked cells
+    renderCityGrid();
+
     // Continue to next scene
     renderScene(nextScene);
-    
+
     console.log(`✅ Mandatory placement complete, continuing to ${nextScene}`);
 }
 
@@ -1438,207 +1928,177 @@ function updateEfficiencyDisplay() {
     checkAchievements();
 }
 
-// Comprehensive Achievement Definitions
+// ==================== STORY-CONNECTED ACHIEVEMENTS ====================
+// Redesigned achievements that connect to narrative choices and strategic gameplay
 const achievementDefinitions = {
-    // Speed achievements
-    lightning_mayor: {
-        id: 'lightning_mayor',
-        name: 'Lightning Mayor',
-        description: 'All decisions under 30s',
-        icon: '⚡',
-        category: 'speed'
-    },
-    time_master: {
-        id: 'time_master',
-        name: 'Time Master',
-        description: 'Earned 150+ time bonus points',
-        icon: '⏱️',
-        category: 'speed'
-    },
-    rush_hour: {
-        id: 'rush_hour',
-        name: 'Rush Hour',
-        description: 'Completed game in under 8 minutes',
-        icon: '🏃',
-        category: 'speed'
-    },
-    
-    // Building achievements
-    architect: {
-        id: 'architect',
-        name: 'Architect',
-        description: 'Placed 15+ buildings',
-        icon: '🏗️',
-        category: 'building'
-    },
-    city_planner: {
-        id: 'city_planner',
-        name: 'City Planner',
-        description: 'Planning efficiency > 85',
-        icon: '📐',
-        category: 'building'
-    },
-    green_mayor: {
-        id: 'green_mayor',
-        name: 'Green Mayor',
-        description: '6+ parks placed',
-        icon: '🌳',
-        category: 'building'
-    },
-    industrial_tycoon: {
-        id: 'industrial_tycoon',
-        name: 'Industrial Tycoon',
-        description: '8+ factories',
+    // Story-based achievements
+    riverside_industrial: {
+        id: 'riverside_industrial',
+        name: 'Riverside Industrial',
+        description: 'Built factory adjacent to the river',
         icon: '🏭',
-        category: 'building'
+        category: 'story'
     },
-    urban_designer: {
-        id: 'urban_designer',
-        name: 'Urban Designer',
-        description: 'Perfect adjacency score',
-        icon: '✨',
-        category: 'building'
+    green_guardian: {
+        id: 'green_guardian',
+        name: 'Green Guardian',
+        description: 'Rejected factory and built 4+ parks',
+        icon: '🌳',
+        category: 'story'
     },
-    
-    // Balance achievements
+
+    // Stat achievements
     balanced_leader: {
         id: 'balanced_leader',
         name: 'Balanced Leader',
-        description: 'All stats within 10 points',
+        description: 'All stats within 15 points at game end',
         icon: '⚖️',
         category: 'balance'
     },
-    popular_mayor: {
-        id: 'popular_mayor',
-        name: 'Popular Mayor',
-        description: 'Happiness > 85',
+    peoples_champion: {
+        id: 'peoples_champion',
+        name: "People's Champion",
+        description: 'Happiness > 80 at game end',
         icon: '😊',
         category: 'balance'
     },
-    rich_city: {
-        id: 'rich_city',
-        name: 'Rich City',
-        description: 'City funds > 90',
+    economic_powerhouse: {
+        id: 'economic_powerhouse',
+        name: 'Economic Powerhouse',
+        description: 'City funds > 80 at game end',
         icon: '💰',
         category: 'balance'
     },
-    well_connected: {
-        id: 'well_connected',
-        name: 'Well-Connected',
-        description: 'Special interest > 80',
-        icon: '🏛️',
+    master_diplomat: {
+        id: 'master_diplomat',
+        name: 'Master Diplomat',
+        description: 'Special interest > 80 at game end',
+        icon: '🤝',
         category: 'balance'
     },
-    
-    // Perfect run
+
+    // Gameplay achievements
+    master_planner: {
+        id: 'master_planner',
+        name: 'Master Planner',
+        description: 'City planning efficiency > 85%',
+        icon: '📐',
+        category: 'planning'
+    },
+    swift_decisor: {
+        id: 'swift_decisor',
+        name: 'Swift Decisor',
+        description: 'Never let the timer expire',
+        icon: '⚡',
+        category: 'planning'
+    },
+    no_regrets: {
+        id: 'no_regrets',
+        name: 'No Regrets',
+        description: 'Complete without undo or relocation',
+        icon: '🎯',
+        category: 'planning'
+    },
+
+    // Ultimate achievement
     perfect_mayor: {
         id: 'perfect_mayor',
         name: 'Perfect Mayor',
-        description: 'All stats > 90, efficiency > 85, time bonus > 200',
+        description: 'All stats > 75, efficiency > 80, no timeouts',
         icon: '👑',
         category: 'perfect'
     }
 };
 
-// Check and award achievements
+// Check and award achievements (story-connected version)
 function checkAchievements() {
     const newAchievements = [];
-    
-    // SPEED ACHIEVEMENTS
-    // Lightning Mayor: All decisions under 30s
-    const allFast = gameState.decisions.length > 0 && gameState.decisions.every(d => d.timeSpent <= 30);
-    if (allFast && !gameState.achievements.includes('lightning_mayor')) {
-        newAchievements.push(achievementDefinitions.lightning_mayor);
+
+    // STORY-BASED ACHIEVEMENTS
+    // Riverside Industrial: Built factory near river (tracked in adjacency calculation)
+    if (gameState.achievementTracking.builtNearRiver &&
+        !gameState.achievements.includes('riverside_industrial')) {
+        newAchievements.push(achievementDefinitions.riverside_industrial);
     }
-    
-    // Time Master: 150+ time bonus
-    if (gameState.timeBonus >= 150 && !gameState.achievements.includes('time_master')) {
-        newAchievements.push(achievementDefinitions.time_master);
-    }
-    
-    // BUILDING ACHIEVEMENTS
-    const totalBuildings = gameState.cityGrid.filter(c => c !== null).length;
-    
-    // Architect: 15+ buildings
-    if (totalBuildings >= 15 && !gameState.achievements.includes('architect')) {
-        newAchievements.push(achievementDefinitions.architect);
-    }
-    
-    // City Planner: Efficiency > 85
-    if (gameState.planningEfficiency > 85 && !gameState.achievements.includes('city_planner')) {
-        newAchievements.push(achievementDefinitions.city_planner);
-    }
-    
-    // Green Mayor: 6+ parks
+
+    // Green Guardian: Rejected factory and built 4+ parks
     const parkCount = gameState.cityGrid.filter(c => c && c.type === 'park').length;
-    if (parkCount >= 6 && !gameState.achievements.includes('green_mayor')) {
-        newAchievements.push(achievementDefinitions.green_mayor);
+    if (gameState.achievementTracking.rejectedFactory && parkCount >= 4 &&
+        !gameState.achievements.includes('green_guardian')) {
+        newAchievements.push(achievementDefinitions.green_guardian);
     }
-    
-    // Industrial Tycoon: 8+ factories
-    const factoryCount = gameState.cityGrid.filter(c => c && c.type === 'factory').length;
-    if (factoryCount >= 8 && !gameState.achievements.includes('industrial_tycoon')) {
-        newAchievements.push(achievementDefinitions.industrial_tycoon);
-    }
-    
-    // Urban Designer: Perfect adjacency (all buildings have bonuses)
-    let buildingsWithBonuses = 0;
-    let totalBuildingsChecked = 0;
-    gameState.cityGrid.forEach((cell, index) => {
-        if (cell) {
-            totalBuildingsChecked++;
-            const { bonuses } = calculateAdjacency(index, cell.type);
-            if (Object.keys(bonuses).length > 0) {
-                buildingsWithBonuses++;
-            }
-        }
-    });
-    if (totalBuildingsChecked >= 5 && buildingsWithBonuses === totalBuildingsChecked && 
-        !gameState.achievements.includes('urban_designer')) {
-        newAchievements.push(achievementDefinitions.urban_designer);
-    }
-    
-    // BALANCE ACHIEVEMENTS
-    // Balanced Leader: All stats within 10 points (only check after at least 3 decisions)
+
+    // STAT ACHIEVEMENTS (checked at game end or during gameplay)
+    // Balanced Leader: All stats within 15 points
     const stats = [gameState.happiness, gameState.cityFunds, gameState.specialInterest];
     const maxStat = Math.max(...stats);
     const minStat = Math.min(...stats);
-    if ((maxStat - minStat) <= 10 &&
+    if ((maxStat - minStat) <= 15 &&
         gameState.decisions.length >= 3 &&
         !gameState.achievements.includes('balanced_leader')) {
         newAchievements.push(achievementDefinitions.balanced_leader);
     }
-    
-    // Popular Mayor: Happiness > 85
-    if (gameState.happiness > 85 && !gameState.achievements.includes('popular_mayor')) {
-        newAchievements.push(achievementDefinitions.popular_mayor);
+
+    // People's Champion: Happiness > 80
+    if (gameState.happiness > 80 && !gameState.achievements.includes('peoples_champion')) {
+        newAchievements.push(achievementDefinitions.peoples_champion);
     }
-    
-    // Rich City: Funds > 90
-    if (gameState.cityFunds > 90 && !gameState.achievements.includes('rich_city')) {
-        newAchievements.push(achievementDefinitions.rich_city);
+
+    // Economic Powerhouse: Funds > 80
+    if (gameState.cityFunds > 80 && !gameState.achievements.includes('economic_powerhouse')) {
+        newAchievements.push(achievementDefinitions.economic_powerhouse);
     }
-    
-    // Well-Connected: Interest > 80
-    if (gameState.specialInterest > 80 && !gameState.achievements.includes('well_connected')) {
-        newAchievements.push(achievementDefinitions.well_connected);
+
+    // Master Diplomat: Interest > 80
+    if (gameState.specialInterest > 80 && !gameState.achievements.includes('master_diplomat')) {
+        newAchievements.push(achievementDefinitions.master_diplomat);
     }
-    
-    // PERFECT RUN
-    // Perfect Mayor: All stats > 90, efficiency > 85, time bonus > 200
-    if (gameState.happiness > 90 && gameState.cityFunds > 90 && gameState.specialInterest > 90 &&
-        gameState.planningEfficiency > 85 && gameState.timeBonus > 200 &&
+
+    // GAMEPLAY ACHIEVEMENTS
+    // Master Planner: Efficiency > 85%
+    if (gameState.planningEfficiency > 85 && !gameState.achievements.includes('master_planner')) {
+        newAchievements.push(achievementDefinitions.master_planner);
+    }
+
+    // Swift Decisor: Never let timer expire
+    if (gameState.achievementTracking.neverTimedOut &&
+        gameState.decisions.length >= 3 &&
+        !gameState.achievements.includes('swift_decisor')) {
+        newAchievements.push(achievementDefinitions.swift_decisor);
+    }
+
+    // No Regrets: No undo or relocation used
+    if (gameState.achievementTracking.usedNoUndos &&
+        gameState.achievementTracking.usedNoRelocations &&
+        gameState.decisions.length >= 3 &&
+        !gameState.achievements.includes('no_regrets')) {
+        newAchievements.push(achievementDefinitions.no_regrets);
+    }
+
+    // ULTIMATE ACHIEVEMENT
+    // Perfect Mayor: All stats > 75, efficiency > 80, never timed out
+    if (gameState.happiness > 75 &&
+        gameState.cityFunds > 75 &&
+        gameState.specialInterest > 75 &&
+        gameState.planningEfficiency > 80 &&
+        gameState.achievementTracking.neverTimedOut &&
+        gameState.decisions.length >= 5 &&
         !gameState.achievements.includes('perfect_mayor')) {
         newAchievements.push(achievementDefinitions.perfect_mayor);
     }
-    
+
     // Award new achievements
     newAchievements.forEach(achievement => {
         gameState.achievements.push(achievement.id);
         showToast(`🏆 Achievement: ${achievement.name}!`, 'success');
         console.log(`🏆 Achievement unlocked: ${achievement.name} - ${achievement.description}`);
+
+        // Play achievement sound
+        if (typeof audioManager !== 'undefined') {
+            audioManager.playAchievement();
+        }
     });
-    
+
     // Update achievement counter in header
     updateAchievementCounter();
 }
@@ -1811,31 +2271,46 @@ function updateTimerDisplay() {
         // Critical: Last 10% - SHAKE + URGENT
         timerContainer.classList.add('critical');
         if (barFill) barFill.classList.add('critical');
-        
+
         // Audio hook for critical state (play once)
         if (Math.ceil(criticalThreshold) === gameState.timerSeconds) {
             timerContainer.setAttribute('data-sound-trigger', 'critical');
             console.log('🔊 Audio Hook: Critical warning!');
+
+            // Play critical timer sound
+            if (typeof audioManager !== 'undefined') {
+                audioManager.playTimerCritical();
+            }
         }
     } else if (gameState.timerSeconds <= dangerThreshold) {
         // Danger: Last 20% - RED + URGENT
         timerContainer.classList.add('danger');
         if (barFill) barFill.classList.add('danger');
-        
+
         // Audio hook for danger state (play once)
         if (Math.ceil(dangerThreshold) === gameState.timerSeconds) {
             timerContainer.setAttribute('data-sound-trigger', 'danger');
             console.log('🔊 Audio Hook: Danger warning!');
+
+            // Play danger timer sound
+            if (typeof audioManager !== 'undefined') {
+                audioManager.playTimerDanger();
+            }
         }
     } else if (gameState.timerSeconds <= warningThreshold) {
         // Warning: Last 50% - YELLOW
         timerContainer.classList.add('warning');
         if (barFill) barFill.classList.add('warning');
-        
+
         // Audio hook for warning state (play once)
         if (Math.ceil(warningThreshold) === gameState.timerSeconds) {
             timerContainer.setAttribute('data-sound-trigger', 'warning');
             console.log('🔊 Audio Hook: Warning state');
+
+            // Play warning timer sound
+            if (typeof audioManager !== 'undefined') {
+                audioManager.playTimerWarning();
+            }
         }
     } else {
         // Calm: First 50% - GREEN
@@ -1851,6 +2326,12 @@ function updateTimerDisplay() {
 function handleTimeout() {
     stopTimer();
     gameState.timerExpired = true; // Mark that timer ran out
+    gameState.achievementTracking.neverTimedOut = false; // Track for achievement
+
+    // Play timeout sound
+    if (typeof audioManager !== 'undefined') {
+        audioManager.playTimeOut();
+    }
 
     console.log('⏰ TIME\'S UP! Failed to make a decision - applying penalties');
 
@@ -1934,48 +2415,43 @@ const gameData = {
     choice1: {
         chapter: "Chapter 1: Economic Opportunity",
         title: "A Factory Proposal",
-        story: `<p>A large manufacturing company, TigerTech Industries, has approached the city with an interesting proposition.</p><p>They want to build a factory in Tiger Central, promising to bring 500 jobs to the community and offering $10 million to the city as an incentive.</p><p>However, factories can bring pollution, traffic, and other concerns. What do you decide?</p>`,
+        story: `<p>A large manufacturing company, TigerTech Industries, has approached the city with an interesting proposition.</p><p>They want to build a factory in Tiger Central, promising to bring 500 jobs to the community and offering $10 million to the city as an incentive.</p><p>The factory would be located near the river that flows through our city, giving them access to water for manufacturing. However, factories can bring pollution, traffic, and other concerns. What do you decide?</p>`,
         choices: [
-            { 
-                text: "Accept the factory deal", 
-                icon: "✅", 
-                effects: { happiness: 10, cityFunds: 20, specialInterest: 15, personalProfit: 5 }, 
-                next: 'choice2A', 
-                consequence: "TigerTech Industries is excited to begin construction. Citizens are hopeful about new job opportunities.", 
-                building: 'factory',
-                unlocks: ['factory', 'house'] // Unlock factory and house buildings
+            {
+                text: "Accept the factory deal",
+                icon: "✅",
+                effects: { happiness: 10, cityFunds: 20, specialInterest: 15, personalProfit: 5 },
+                next: 'choice2A',
+                consequence: "TigerTech Industries is excited to begin construction near the river. Citizens are hopeful about new job opportunities. The river will appear on your city map.",
+                unlocks: ['factory', 'house'], // Unlock factory and house buildings
+                placeFeature: 'river' // Place river on the grid
             },
-            { 
-                text: "Reject the factory", 
-                icon: "❌", 
-                effects: { happiness: -10, cityFunds: -10, specialInterest: -15, personalProfit: 0 }, 
-                next: 'choice2B', 
-                consequence: "TigerTech Industries is disappointed. Unemployment remains high, and residents are worried about job prospects.",
-                unlocks: ['park', 'house'] // Unlock environmentally-friendly options
+            {
+                text: "Reject the factory",
+                icon: "❌",
+                effects: { happiness: -10, cityFunds: -10, specialInterest: -15, personalProfit: 0 },
+                next: 'choice2B',
+                consequence: "TigerTech Industries is disappointed. Unemployment remains high, and residents are worried about job prospects. Environmental groups propose protecting the riverside forest instead.",
+                unlocks: ['park', 'house'], // Unlock environmentally-friendly options
+                placeFeature: 'protected_forest', // Place protected forest
+                achievementTag: 'reject_factory'
             }
         ]
     },
     choice2A: {
         chapter: "Chapter 1: Location Matters",
-        title: "Where to Build?",
-        story: `<p>Now that you've approved the factory, you need to decide where to place it.</p><p>The company has given you two options:</p><ul><li><strong>Near the River:</strong> Easy access to water for manufacturing, but potential pollution risks</li><li><strong>Near Suburban Neighborhoods:</strong> Closer to workers' homes, but will increase noise/traffic</li></ul>`,
+        title: "Factory Construction Begins",
+        story: `<p>Now that you've approved the factory, TigerTech needs to place it on your city grid.</p><p>Look at the 🌊 river flowing through your city - the factory <strong>must be placed adjacent to the river</strong> for water access.</p><p><strong>Note:</strong> Only cells next to the river will be available for placement. Choose wisely!</p>`,
         choices: [
-            { 
-                text: "Build near the river", 
-                icon: "🏞️", 
-                effects: { happiness: -5, cityFunds: 5, specialInterest: 10, personalProfit: 3 }, 
-                next: 'choice3A1', 
-                consequence: "Construction begins by the river. Environmental groups are concerned about water quality.",
-                unlocks: ['park'] // Environmental concerns unlock parks
-            },
-            { 
-                text: "Build near suburban area", 
-                icon: "🏘️", 
-                effects: { happiness: -15, cityFunds: -5, specialInterest: 5, personalProfit: 2 }, 
-                next: 'choice3A2', 
-                consequence: "Families are displaced to make room for the factory. Homeowners are upset.", 
-                building: 'house',
-                unlocks: ['shop'] // Suburban development unlocks shops
+            {
+                text: "Approve riverside construction",
+                icon: "🏭",
+                effects: { happiness: -5, cityFunds: 5, specialInterest: 10, personalProfit: 3 },
+                next: 'choice3A1',
+                consequence: "The factory is operational by the river. It has excellent water access for manufacturing.",
+                unlocks: ['park', 'shop'], // Environmental concerns unlock parks, industrial area needs shops
+                building: 'factory', // This will trigger mandatory placement
+                placementConstraints: { adjacentToFeature: 'river' } // Lock to river-adjacent cells only
             }
         ]
     },
@@ -2008,8 +2484,22 @@ const gameData = {
         title: "Water Contamination",
         story: `<p>The factory near the river is now operational, but there's a serious problem.</p><p>Chemical waste from manufacturing is contaminating the water supply. The city needs expensive water treatment to keep it safe.</p><p>Who should pay for this?</p>`,
         choices: [
-            { text: "Tax TigerTech Industries", icon: "🏭", effects: { happiness: 15, cityFunds: 10, specialInterest: -10, personalProfit: 0 }, next: 'choice4A11', consequence: "Citizens appreciate you holding the company accountable." },
-            { text: "Raise water bills for citizens", icon: "💧", effects: { happiness: -20, cityFunds: 15, specialInterest: 10, personalProfit: 5 }, next: 'choice4A12', consequence: "Citizens are outraged that they're paying for corporate pollution." }
+            {
+                text: "Tax TigerTech Industries",
+                icon: "🏭",
+                effects: { happiness: 15, cityFunds: 10, specialInterest: -10, personalProfit: 0 },
+                next: 'choice4A11',
+                consequence: "Citizens appreciate you holding the company accountable. The company agrees to install water treatment systems.",
+                unlocks: ['office'] // Corporate accountability attracts responsible businesses
+            },
+            {
+                text: "Raise water bills for citizens",
+                icon: "💧",
+                effects: { happiness: -20, cityFunds: 15, specialInterest: 10, personalProfit: 5 },
+                next: 'choice4A12',
+                consequence: "Citizens are outraged that they're paying for corporate pollution. The river becomes visibly polluted.",
+                replaceFeature: { oldFeature: 'river', newFeature: 'polluted_river' } // River becomes polluted!
+            }
         ]
     },
     choice3A2: {
@@ -2265,11 +2755,55 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
             if (building) {
                 showUnlockNotification(building);
                 console.log(`🔓 Unlocked building: ${building.name}`);
+
+                // Play building unlock sound
+                if (typeof audioManager !== 'undefined') {
+                    audioManager.playBuildingUnlock();
+                }
             }
         });
-        
+
         // Re-render palette to show unlocked buildings
         renderBuildingPalette();
+    }
+
+    // Handle feature placement from story choices
+    if (choice.placeFeature) {
+        const featureId = choice.placeFeature;
+        let pattern = [];
+
+        // Get pattern for the feature
+        if (featureId === 'river') {
+            pattern = generateRiverPattern();
+        } else if (featureId === 'protected_forest') {
+            pattern = generateForestPattern();
+        } else if (featureId === 'mountain') {
+            pattern = generateMountainPattern();
+        } else if (featureId === 'highway') {
+            pattern = generateHighwayPattern();
+        }
+
+        if (pattern.length > 0) {
+            setTimeout(() => {
+                placeGridFeature(featureId, pattern);
+            }, 500); // Place after a short delay for visual effect
+        }
+    }
+
+    // Handle feature replacement (e.g., river becomes polluted)
+    if (choice.replaceFeature) {
+        const { oldFeature, newFeature } = choice.replaceFeature;
+        setTimeout(() => {
+            replaceGridFeature(oldFeature, newFeature);
+        }, 500);
+    }
+
+    // Track achievement progress
+    if (choice.achievementTag) {
+        if (choice.achievementTag === 'reject_factory') {
+            gameState.achievementTracking.rejectedFactory = true;
+            console.log('🏆 Achievement tracking: Rejected factory');
+        }
     }
 
     // Determine time bank adjustment based on choice quality
@@ -2307,10 +2841,12 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
                 nextScene: choice.next
             };
             gameState.awaitingPlacement = true;
-            
+
             // Show placement overlay after short delay
             setTimeout(() => {
-                showMandatoryPlacementOverlay(building);
+                // Check if choice has placement constraints
+                const constraints = choice.placementConstraints || null;
+                showMandatoryPlacementOverlay(building, constraints);
             }, 2500);
         } else {
             // No building found, continue normally
@@ -2400,10 +2936,48 @@ function renderEnding() {
     let rating = '';
     let message = '';
 
-    // Calculate base score and final score with time bonus
+    // ==================== IMPROVED SCORING SYSTEM ====================
+    // Base score is the average of the three main stats (weighted heavily)
     const baseScore = (gameState.happiness + gameState.cityFunds + gameState.specialInterest) / 3;
-    const achievementBonus = gameState.achievements.length * 10; // 10 points per achievement
-    const finalScore = baseScore + (gameState.timeBonus / 10) + achievementBonus;
+
+    // Time bonus contributes less (max ~20 points instead of unlimited)
+    const timeBonusScore = Math.min(20, gameState.timeBonus / 10);
+
+    // Achievement bonus (5 points per achievement, max ~50 points)
+    const achievementBonus = gameState.achievements.length * 5;
+
+    // Personal profit penalty (high corruption hurts your rating)
+    const profitPenalty = gameState.personalProfit > 15 ? -15 : (gameState.personalProfit > 5 ? -5 : 0);
+
+    // Planning efficiency bonus (good city planning adds up to 10 points)
+    const efficiencyBonus = gameState.planningEfficiency > 85 ? 10 : (gameState.planningEfficiency > 70 ? 5 : 0);
+
+    // Calculate final score (base score is 70% of weight, bonuses are 30%)
+    const finalScore = (baseScore * 0.7) + (timeBonusScore * 0.15) + (achievementBonus * 0.1) + (efficiencyBonus * 0.05) + profitPenalty;
+
+    // Check for critical failures (any stat below 20 = automatic bad rating)
+    const minStat = Math.min(gameState.happiness, gameState.cityFunds, gameState.specialInterest);
+    const hasCriticalFailure = minStat < 20;
+
+    console.log('📊 SCORING BREAKDOWN:');
+    console.log(`  Base Score: ${baseScore.toFixed(1)} (weight: 70%)`);
+    console.log(`  Time Bonus: ${timeBonusScore.toFixed(1)} (weight: 15%)`);
+    console.log(`  Achievements: ${achievementBonus.toFixed(1)} (weight: 10%)`);
+    console.log(`  Efficiency: ${efficiencyBonus.toFixed(1)} (weight: 5%)`);
+    console.log(`  Profit Penalty: ${profitPenalty}`);
+    console.log(`  Final Score: ${finalScore.toFixed(1)}`);
+    console.log(`  Critical Failure: ${hasCriticalFailure}`);
+
+    // Play victory or defeat music based on score
+    if (typeof audioManager !== 'undefined') {
+        if (finalScore >= 65 && !hasCriticalFailure) {
+            audioManager.playMusic('victory', true);
+        } else if (finalScore < 30 || hasCriticalFailure) {
+            audioManager.playMusic('defeat', true);
+        } else {
+            audioManager.playMusic('victory', true); // Medium scores get victory music
+        }
+    }
 
     // Calculate play time in seconds
     const playTimeSeconds = gameState.gameStartTime ? Math.floor((gameState.gameEndTime - gameState.gameStartTime) / 1000) : 0;
@@ -2433,25 +3007,44 @@ function renderEnding() {
         // Stop auto-save
         gameAPI.stopAutoSave();
     }
-    
+
     // Get all earned achievements with details
     const earnedAchievements = gameState.achievements.map(id => {
         const def = achievementDefinitions[id];
         return def ? `${def.icon} ${def.name} - ${def.description}` : null;
     }).filter(a => a !== null);
 
-    if (finalScore >= 70) {
-        rating = '🌟 Excellent Mayor!';
-        message = 'You balanced competing interests masterfully! Tiger Central is thriving under your leadership.';
-    } else if (finalScore >= 50) {
-        rating = '👍 Decent Mayor';
-        message = "You made tough choices and kept the city running. Some groups are happier than others, but that's politics!";
-    } else if (finalScore >= 30) {
-        rating = '😬 Struggling Mayor';
-        message = 'Your term was rocky. Many citizens are unhappy with your decisions.';
+    // ==================== RATING SYSTEM (Improved Logic) ====================
+    // Critical failure check - if any stat is below 20, you can't be excellent
+    if (hasCriticalFailure) {
+        if (baseScore < 25) {
+            rating = '💀 Catastrophic Failure';
+            message = 'Tiger Central is in crisis! One or more critical areas have completely collapsed. Your leadership has been disastrous.';
+        } else if (baseScore < 40) {
+            rating = '❌ Failed Mayor';
+            message = 'Despite some efforts, critical areas of city governance have failed catastrophically. The city council is discussing emergency measures.';
+        } else {
+            rating = '😬 Struggling Mayor';
+            message = 'While you had some successes, critical failures in key areas have severely damaged the city. Major reforms are needed.';
+        }
     } else {
-        rating = '❌ Failed Mayor';
-        message = 'Your decisions have left Tiger Central worse than before. The city is considering a recall election.';
+        // No critical failures - rate based on final score
+        if (finalScore >= 70 && baseScore >= 60) {
+            rating = '👑 Outstanding Mayor!';
+            message = 'You balanced competing interests masterfully! Tiger Central is thriving under your leadership. Citizens are calling for you to run for governor!';
+        } else if (finalScore >= 60) {
+            rating = '🌟 Excellent Mayor';
+            message = 'You made strong decisions and kept the city running well. Most stakeholders are satisfied with your leadership.';
+        } else if (finalScore >= 45) {
+            rating = '👍 Decent Mayor';
+            message = "You made tough choices and kept the city functioning. Some groups are happier than others, but that's politics!";
+        } else if (finalScore >= 30) {
+            rating = '😬 Struggling Mayor';
+            message = 'Your term was rocky. Many citizens are unhappy with your decisions. You may face challenges in re-election.';
+        } else {
+            rating = '❌ Failed Mayor';
+            message = 'Your decisions have left Tiger Central worse than before. The city is considering a recall election.';
+        }
     }
 
     let profitMessage = '';
@@ -2479,26 +3072,30 @@ function renderEnding() {
             </div>
             
             <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);">
-                <h3>⚡ Time Performance</h3>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Base Score:</strong> ${baseScore.toFixed(1)}/100</div>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);"><strong>Time Bonus Earned:</strong> +${gameState.timeBonus} points ⚡</div>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);font-size:1.3em;"><strong>Final Score:</strong> ${finalScore.toFixed(1)}/100 ${finalScore >= 70 ? '🌟' : finalScore >= 50 ? '👍' : '😬'}</div>
+                <h3>📊 Score Breakdown</h3>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Base Score (70% weight):</strong> ${baseScore.toFixed(1)}/100 ${baseScore >= 60 ? '✅' : baseScore >= 40 ? '⚠️' : '❌'}</div>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);"><strong>Time Bonus (15% weight):</strong> +${timeBonusScore.toFixed(1)} points ⚡</div>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #fffbea 0%, #fff4d6 100%);"><strong>Achievement Bonus (10%):</strong> +${achievementBonus.toFixed(1)} points 🏆</div>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f5e9 0%, #d1f2eb 100%);"><strong>Efficiency Bonus (5%):</strong> +${efficiencyBonus.toFixed(1)} points 📐</div>
+                ${profitPenalty < 0 ? `<div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);"><strong>Corruption Penalty:</strong> ${profitPenalty} points ⚠️</div>` : ''}
+                ${hasCriticalFailure ? `<div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);color:#c62828;"><strong>⚠️ Critical Failure:</strong> One or more stats below 20</div>` : ''}
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);font-size:1.4em;font-weight:bold;border:3px solid #0288d1;"><strong>FINAL SCORE:</strong> ${finalScore.toFixed(1)}/100 ${finalScore >= 70 ? '🌟' : finalScore >= 60 ? '👍' : finalScore >= 45 ? '😐' : '😬'}</div>
             </div>
-            
+
             <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
                 <h3>🏙️ City Planning</h3>
                 <div class="final-stat-item" style="background:linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);"><strong>Planning Efficiency:</strong> ${gameState.planningEfficiency}% 📐</div>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Buildings Placed:</strong> ${gameState.cityGrid.filter(c => c !== null).length} total 🏗️</div>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Buildings Placed:</strong> ${gameState.cityGrid.filter(c => c !== null && c.type !== 'feature').length} buildings 🏗️</div>
                 ${gameState.detectedZones.length > 0 ? `
                     <div class="final-stat-item" style="background:white;"><strong>Zones Formed:</strong> ${gameState.detectedZones.map(z => `${z.icon} ${z.name}`).join(', ')}</div>
                 ` : '<div class="final-stat-item" style="background:white;opacity:0.7;">No zones formed</div>'}
             </div>
-            
+
             ${earnedAchievements.length > 0 ? `
                 <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #fff5e5 0%, #ffe5cc 100%);">
                     <h3>🏆 Achievements Unlocked (${earnedAchievements.length}/${Object.keys(achievementDefinitions).length})</h3>
                     <div class="final-stat-item" style="background:linear-gradient(135deg, #fffbea 0%, #fff4d6 100%);font-size:1.1em;">
-                        <strong>Achievement Bonus:</strong> +${achievementBonus} points (${earnedAchievements.length} × 10)
+                        <strong>Achievement Bonus:</strong> +${achievementBonus.toFixed(1)} points (${earnedAchievements.length} × 5)
                     </div>
                     ${earnedAchievements.map(a => `<div class="final-stat-item" style="background:white;border-left:4px solid #f39c12;">${a}</div>`).join('')}
                 </div>
@@ -2758,6 +3355,11 @@ document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     initializeTooltips();
     initializeQuizToggle();
+
+    // Place initial grid features (city hall and existing neighborhood)
+    placeInitialCityHall();
+    placeInitialNeighborhood();
+
     renderBuildingPalette();
     renderCityGrid();
     updateUndoButton();

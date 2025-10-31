@@ -71,11 +71,24 @@ function initializeStartScreen() {
         });
     });
 
-    // Start menu music
+    // Start menu music (will wait for user interaction due to browser autoplay policy)
     if (typeof audioManager !== 'undefined') {
+        // Try to play immediately (will only work if user already interacted)
         setTimeout(() => {
             audioManager.playMusic('menu', true);
         }, 500);
+
+        // Also add a one-time click handler to start music on first interaction
+        const startMusicOnInteraction = () => {
+            if (audioManager.musicEnabled && !audioManager.currentMusic?.paused === false) {
+                audioManager.playMusic('menu', true);
+            }
+            // Remove listener after first interaction
+            document.removeEventListener('click', startMusicOnInteraction);
+            document.removeEventListener('touchstart', startMusicOnInteraction);
+        };
+        document.addEventListener('click', startMusicOnInteraction, { once: true });
+        document.addEventListener('touchstart', startMusicOnInteraction, { once: true });
     }
 
     console.log('🎮 Start screen initialized');

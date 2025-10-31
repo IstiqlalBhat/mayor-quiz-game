@@ -5,51 +5,51 @@ class AudioManager {
     constructor() {
         // Audio file paths (customize these paths to match your audio files)
         this.audioFiles = {
-            // Background Music
+            // Background Music (MP3 format for smaller file sizes)
             music: {
-                menu: 'audio/music/menu.wav',           // Start screen music
-                gameplay: 'audio/music/gameplay.wav',   // Main game music
-                victory: 'audio/music/victory.wav',     // Ending screen (high score)
-                defeat: 'audio/music/defeat.wav'        // Ending screen (low score)
+                menu: 'audio/music/menu.mp3',           // Start screen music
+                gameplay: 'audio/music/gameplay.mp3',   // Main game music
+                victory: 'audio/music/victory.mp3',     // Ending screen (high score)
+                defeat: 'audio/music/defeat.mp3'        // Ending screen (low score)
             },
 
-            // Sound Effects
+            // Sound Effects (MP3 format for smaller file sizes)
             sfx: {
                 // UI Sounds
-                buttonClick: 'audio/sfx/button-click.wav',
-                buttonHover: 'audio/sfx/button-hover.wav',
-                modalOpen: 'audio/sfx/modal-open.wav',
-                modalClose: 'audio/sfx/modal-close.wav',
+                buttonClick: 'audio/sfx/button-click.mp3',
+                buttonHover: 'audio/sfx/button-hover.mp3',
+                modalOpen: 'audio/sfx/modal-open.mp3',
+                modalClose: 'audio/sfx/modal-close.mp3',
 
                 // Game Actions
-                buildingPlace: 'audio/sfx/building-place.wav',
-                buildingUnlock: 'audio/sfx/building-unlock.wav',
-                choiceSelect: 'audio/sfx/choice-select.wav',
+                buildingPlace: 'audio/sfx/building-place.mp3',
+                buildingUnlock: 'audio/sfx/building-unlock.mp3',
+                choiceSelect: 'audio/sfx/choice-select.mp3',
 
                 // Stats Changes
-                happinessUp: 'audio/sfx/happiness-up.wav',
-                happinessDown: 'audio/sfx/happiness-down.wav',
-                moneyGain: 'audio/sfx/money-gain.wav',
-                moneyLoss: 'audio/sfx/money-loss.wav',
+                happinessUp: 'audio/sfx/happiness-up.mp3',
+                happinessDown: 'audio/sfx/happiness-down.mp3',
+                moneyGain: 'audio/sfx/money-gain.mp3',
+                moneyLoss: 'audio/sfx/money-loss.mp3',
 
                 // Timer Sounds
-                timerTick: 'audio/sfx/timer-tick.wav',
-                timerWarning: 'audio/sfx/timer-warning.wav',
-                timerDanger: 'audio/sfx/timer-danger.wav',
-                timerCritical: 'audio/sfx/timer-critical.wav',
-                timeOut: 'audio/sfx/timer-critical.wav',  // Reuse critical for timeout
+                timerTick: 'audio/sfx/timer-tick.mp3',
+                timerWarning: 'audio/sfx/timer-warning.mp3',
+                timerDanger: 'audio/sfx/timer-danger.mp3',
+                timerCritical: 'audio/sfx/timer-critical.mp3',
+                timeOut: 'audio/sfx/timer-critical.mp3',  // Reuse critical for timeout
 
                 // Achievements & Rewards
-                achievement: 'audio/sfx/achievement.wav',
-                levelComplete: 'audio/sfx/level-complete.wav',
+                achievement: 'audio/sfx/achievement.mp3',
+                levelComplete: 'audio/sfx/level-complete.mp3',
 
                 // Zones
-                zoneFormed: 'audio/sfx/zone-formed.wav',
+                zoneFormed: 'audio/sfx/zone-formed.mp3',
 
                 // Notifications
-                notification: 'audio/sfx/notification.wav',
-                success: 'audio/sfx/success.wav',
-                error: 'audio/sfx/error.wav'
+                notification: 'audio/sfx/notification.mp3',
+                success: 'audio/sfx/success.mp3',
+                error: 'audio/sfx/error.mp3'
             }
         };
 
@@ -59,6 +59,7 @@ class AudioManager {
 
         // Current music state
         this.currentMusic = null;
+        this.currentMusicPromise = null; // Track pending play promise
         this.musicVolume = 0.4;  // 40% volume for background music
         this.sfxVolume = 0.6;    // 60% volume for sound effects
 
@@ -148,15 +149,20 @@ class AudioManager {
         // Play with optional fade in
         if (fadeIn) {
             track.volume = 0;
-            track.play().then(() => {
+            this.currentMusicPromise = track.play().then(() => {
                 this.fadeVolume(track, this.musicVolume, 2000); // Fade in over 2 seconds
+                this.currentMusicPromise = null;
             }).catch(err => {
                 console.warn(`⚠️ Could not play music: ${trackName}`, err);
+                this.currentMusicPromise = null;
             });
         } else {
             track.volume = this.musicVolume;
-            track.play().catch(err => {
+            this.currentMusicPromise = track.play().then(() => {
+                this.currentMusicPromise = null;
+            }).catch(err => {
                 console.warn(`⚠️ Could not play music: ${trackName}`, err);
+                this.currentMusicPromise = null;
             });
         }
 
@@ -180,16 +186,32 @@ class AudioManager {
         this.currentMusic = null;
     }
 
-    pauseMusic() {
+    async pauseMusic() {
         if (this.currentMusic) {
+            // Wait for any pending play operation to complete
+            if (this.currentMusicPromise) {
+                await this.currentMusicPromise.catch(() => {});
+            }
             this.currentMusic.pause();
         }
     }
 
-    resumeMusic() {
+    async resumeMusic() {
         if (this.currentMusic && this.musicEnabled) {
-            this.currentMusic.play().catch(err => {
-                console.warn('⚠️ Could not resume music', err);
+            // Wait for any pending operations
+            if (this.currentMusicPromise) {
+                await this.currentMusicPromise.catch(() => {});
+            }
+            this.currentMusicPromise = this.currentMusic.play().then(() => {
+                this.currentMusicPromise = null;
+            }).catch(err => {
+                // Silently handle autoplay restrictions - user hasn't interacted yet
+                if (err.name === 'NotAllowedError') {
+                    console.log('🎵 Music paused - waiting for user interaction');
+                } else {
+                    console.warn('⚠️ Could not resume music', err);
+                }
+                this.currentMusicPromise = null;
             });
         }
     }
