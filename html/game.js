@@ -505,22 +505,25 @@ function placeInitialNeighborhood() {
 // Get all cells adjacent to a specific feature type
 function getCellsAdjacentToFeature(featureId) {
     const adjacentCells = new Set();
+    let featureCellsFound = 0;
 
     // Find all cells with this feature
     gameState.cityGrid.forEach((cell, index) => {
         if (cell && cell.type === 'feature' && cell.featureId === featureId) {
+            featureCellsFound++;
             // Get all adjacent cells for this feature cell
             const neighbors = getAdjacentCells(index);
             neighbors.forEach(neighborIndex => {
-                // Only add if the cell is empty or buildable
+                // Only add if the cell is empty (not a feature, not a building)
                 const neighborCell = gameState.cityGrid[neighborIndex];
-                if (!neighborCell || neighborCell.buildable) {
+                if (!neighborCell || (neighborCell.type === 'feature' && neighborCell.buildable)) {
                     adjacentCells.add(neighborIndex);
                 }
             });
         }
     });
 
+    console.log(`🔍 Found ${featureCellsFound} cells with feature '${featureId}', ${adjacentCells.size} adjacent cells available`);
     return Array.from(adjacentCells);
 }
 
@@ -2856,12 +2859,12 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
             };
             gameState.awaitingPlacement = true;
 
-            // Show placement overlay after short delay
+            // Show placement overlay after short delay (increased to ensure features are placed first)
             setTimeout(() => {
                 // Check if choice has placement constraints
                 const constraints = choice.placementConstraints || null;
                 showMandatoryPlacementOverlay(building, constraints);
-            }, 2500);
+            }, 3000);
         } else {
             // No building found, continue normally
             setTimeout(() => {

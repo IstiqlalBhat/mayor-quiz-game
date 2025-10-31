@@ -1006,10 +1006,10 @@ body {
 
 /* ==================== FLOATING UNHIDE BUTTON ==================== */
 .unhide-button {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    transform: none;
     /* Enhanced glassmorphism */
     background: linear-gradient(
         135deg,
@@ -1020,7 +1020,7 @@ body {
     -webkit-backdrop-filter: blur(15px);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.4);
-    padding: 12px 22px;
+    padding: 10px 20px;
     border-radius: 30px;
     cursor: pointer;
     box-shadow:
@@ -1031,15 +1031,15 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.95em;
+    font-size: 0.9em;
     font-weight: 600;
-    z-index: 1001;
+    z-index: 1250;
     /* Shake animation to grab attention */
     animation: shake 1s ease-in-out infinite, floatIn 0.5s ease-out;
 }
 
 .unhide-button:hover {
-    transform: translateX(-50%) translateY(-3px) scale(1.05);
+    transform: translateY(-3px) scale(1.05);
     box-shadow:
         0 15px 40px rgba(102, 126, 234, 0.7),
         inset 0 0 0 1px rgba(255, 255, 255, 0.3),
@@ -1049,7 +1049,7 @@ body {
 }
 
 .unhide-button:active {
-    transform: translateX(-50%) translateY(-1px) scale(1.02);
+    transform: translateY(-1px) scale(1.02);
 }
 
 .unhide-icon {
@@ -2425,20 +2425,20 @@ body {
     
     /* Compact timer for mobile */
     .timer-seconds {
-        font-size: 1.6em;
-        min-width: 50px;
+        font-size: 1.3em;
+        min-width: 45px;
     }
 
     .timer-icon {
-        font-size: 1.3em;
+        font-size: 1.1em;
     }
 
     .timer-display {
-        padding: 10px 16px;
+        padding: 8px 12px;
     }
 
     .timer-container {
-        margin-top: 10px;
+        margin-top: 8px;
         position: relative;
         z-index: 1200; /* Above game content overlay to stay visible */
     }
@@ -2645,8 +2645,12 @@ body {
 
     .game-content {
         padding: 16px;
-        /* Prevent content from being hidden by rounded corners */
-        padding-bottom: 24px;
+        /* Prevent content from being hidden by rounded corners and ensure scrolling shows all choices */
+        padding-bottom: 100px;
+    }
+
+    .choices {
+        margin-bottom: 50px; /* Extra margin to ensure last choice is fully visible when scrolling */
     }
 
     .story-section {
@@ -2850,16 +2854,16 @@ body {
     }
 
     .timer-seconds {
-        font-size: 1.4em;
-        min-width: 50px;
+        font-size: 1.1em;
+        min-width: 40px;
     }
 
     .timer-icon {
-        font-size: 1.2em;
+        font-size: 1em;
     }
 
     .timer-display {
-        padding: 8px 14px;
+        padding: 6px 10px;
     }
 
     /* Full-width dialog on small phones */
@@ -2937,6 +2941,14 @@ body {
     .action-btn {
         padding: 14px 20px;
         font-size: 1em;
+    }
+
+    .game-content {
+        padding-bottom: 120px; /* Even more padding for small phones */
+    }
+
+    .choices {
+        margin-bottom: 60px;
     }
 
     /* Smaller placement message on small phones */
