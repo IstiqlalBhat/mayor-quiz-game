@@ -3364,6 +3364,57 @@ function initializeQuizToggle() {
     console.log('🎮 Quiz toggle system initialized');
 }
 
+// ==================== ORIENTATION & RESIZE HANDLING ====================
+let resizeTimeout;
+function handleOrientationChange() {
+    // Clear any existing timeout
+    if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+    }
+
+    // Debounce resize handler to avoid too many redraws
+    resizeTimeout = setTimeout(() => {
+        console.log('📱 Orientation/resize detected, updating grid...');
+
+        // Store current grid state
+        const currentGrid = [...gameState.cityGrid];
+
+        // Get new grid size
+        const newGridSize = getGridSize();
+
+        // If grid size changed, we need to reinitialize
+        if (gameState.cityGrid.length !== newGridSize.total) {
+            console.log(`📐 Grid size changed from ${gameState.cityGrid.length} to ${newGridSize.total} cells`);
+
+            // Create new grid
+            gameState.cityGrid = new Array(newGridSize.total).fill(null);
+
+            // Try to preserve buildings in new grid (within bounds)
+            currentGrid.forEach((building, index) => {
+                if (building && index < newGridSize.total) {
+                    gameState.cityGrid[index] = building;
+                }
+            });
+        }
+
+        // Re-render grid with new layout
+        renderCityGrid();
+        renderBuildingPalette();
+        updateEfficiencyDisplay();
+
+        // Trigger haptic feedback on mobile
+        triggerHaptic('light');
+
+        console.log('✅ Layout updated for new orientation/size');
+    }, 300); // Wait 300ms after last resize event
+}
+
+// Listen for orientation changes
+window.addEventListener('orientationchange', handleOrientationChange);
+
+// Listen for window resize (covers desktop and some mobile browsers)
+window.addEventListener('resize', handleOrientationChange);
+
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
@@ -3379,5 +3430,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUndoButton();
     updateEfficiencyDisplay();
     renderScene('intro');
+
+    console.log('🎮 Game initialized - Mobile optimized!');
+    if (isMobileDevice()) {
+        console.log('📱 Mobile device detected - Touch controls enabled');
+    }
 });
 
