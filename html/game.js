@@ -787,7 +787,12 @@ function placeBuilding(cellIndex, building) {
     }
     
     updateUndoButton();
-    
+
+    // Play building place sound
+    if (typeof audioManager !== 'undefined') {
+        audioManager.playBuildingPlace();
+    }
+
     console.log('✅ Building placed:', building.name, 'at cell', cellIndex);
     renderCityGrid();
     return true;
@@ -1710,32 +1715,29 @@ function getTimerDuration() {
 function startTimer() {
     stopTimer();
 
-    // Get timer duration from difficulty
+    // Get consistent timer duration from difficulty (always the same)
     const baseDuration = getTimerDuration();
+    gameState.timerSeconds = baseDuration;
+    gameState.currentDecisionTime = baseDuration; // Track starting time
 
-    // Apply time bank bonuses/penalties
-    const adjustedTime = baseDuration + gameState.timeBankSeconds;
-    gameState.timerSeconds = Math.max(10, Math.min(120, adjustedTime)); // Clamp between 10-120 seconds
-    gameState.currentDecisionTime = gameState.timerSeconds; // Track starting time
-
-    // Reset time bank after applying
+    // Time bank no longer affects timer duration - only used for scoring
+    // This makes timer consistent for every choice
     if (gameState.timeBankSeconds !== 0) {
-        console.log(`⏱️ Time Bank Applied: ${gameState.timeBankSeconds > 0 ? '+' : ''}${gameState.timeBankSeconds}s (Total: ${gameState.timerSeconds}s)`);
+        console.log(`💰 Time Bank: ${gameState.timeBankSeconds > 0 ? '+' : ''}${gameState.timeBankSeconds}s (saved for bonus scoring)`);
     }
-    gameState.timeBankSeconds = 0;
 
     gameState.isTimerRunning = true;
     gameState.timerExpired = false; // Reset expired flag for new timer
-    
+
     const timerContainer = document.getElementById('timer-container');
     timerContainer.classList.add('active');
-    
+
     updateTimerDisplay();
-    
+
     gameState.timerInterval = setInterval(() => {
         gameState.timerSeconds--;
         updateTimerDisplay();
-        
+
         if (gameState.timerSeconds <= 0) {
             handleTimeout();
         }
@@ -2222,6 +2224,11 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
     }
 
     stopTimer();
+
+    // Play choice sound
+    if (!isTimedOut && typeof audioManager !== 'undefined') {
+        audioManager.playChoiceSelect();
+    }
 
     // Haptic feedback on choice
     triggerHaptic('medium');
@@ -2721,23 +2728,21 @@ function toggleQuiz() {
     const unhideBtn = document.getElementById('unhide-button');
     const toggleText = toggleBtn.querySelector('.toggle-text');
     const toggleIcon = toggleBtn.querySelector('.toggle-icon');
-    
+
     isQuizVisible = !isQuizVisible;
-    
+
     if (isQuizVisible) {
         overlay.classList.remove('hidden');
         unhideBtn.style.display = 'none';
         toggleText.textContent = 'Hide';
         toggleIcon.textContent = '👁️';
-        toggleBtn.classList.remove('hidden');
     } else {
         overlay.classList.add('hidden');
-        unhideBtn.style.display = 'flex';
+        unhideBtn.style.display = 'flex'; // Show the shaking unhide button
         toggleText.textContent = 'Show';
         toggleIcon.textContent = '👁️‍🗨️';
-        toggleBtn.classList.add('hidden');
     }
-    
+
     // Trigger haptic feedback
     triggerHaptic('light');
 }

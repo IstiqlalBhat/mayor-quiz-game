@@ -70,7 +70,14 @@ function initializeStartScreen() {
             loadLeaderboard(filter === 'all' ? null : filter);
         });
     });
-    
+
+    // Start menu music
+    if (typeof audioManager !== 'undefined') {
+        setTimeout(() => {
+            audioManager.playMusic('menu', true);
+        }, 500);
+    }
+
     console.log('🎮 Start screen initialized');
 }
 
@@ -94,20 +101,25 @@ function toggleMusic() {
     gameSettings.music = !gameSettings.music;
     localStorage.setItem('manestreet_music', gameSettings.music);
     updateSettingsUI();
-    console.log('🎵 Music:', gameSettings.music ? 'On' : 'Off');
-    
-    // TODO: Implement background music when audio files are added
-    if (gameSettings.music) {
-        // playBackgroundMusic();
-    } else {
-        // stopBackgroundMusic();
+
+    // Use audio manager
+    if (typeof audioManager !== 'undefined') {
+        audioManager.toggleMusic();
     }
+
+    console.log('🎵 Music:', gameSettings.music ? 'On' : 'Off');
 }
 
 function toggleSound() {
     gameSettings.sound = !gameSettings.sound;
     localStorage.setItem('manestreet_sound', gameSettings.sound);
     updateSettingsUI();
+
+    // Use audio manager
+    if (typeof audioManager !== 'undefined') {
+        audioManager.toggleSound();
+    }
+
     console.log('🔊 Sound:', gameSettings.sound ? 'On' : 'Off');
 }
 
@@ -125,21 +137,26 @@ function hidePlayerModal() {
 }
 
 async function handleConfirmStart() {
+    // Play button click sound
+    if (typeof audioManager !== 'undefined') {
+        audioManager.playButtonClick();
+    }
+
     const playerName = playerNameInput.value.trim();
-    
+
     // Validate name
     if (!playerName) {
         alert('Please enter your name!');
         playerNameInput.focus();
         return;
     }
-    
+
     if (playerName.length < 2) {
         alert('Name must be at least 2 characters long!');
         playerNameInput.focus();
         return;
     }
-    
+
     // Show loading state
     confirmStartBtn.textContent = 'Starting...';
     confirmStartBtn.disabled = true;
@@ -211,13 +228,18 @@ function startGame(difficulty) {
 function transitionToGame() {
     // Fade out start screen
     startScreen.classList.add('fade-out');
-    
+
+    // Switch to gameplay music
+    if (typeof audioManager !== 'undefined') {
+        audioManager.playMusic('gameplay', true);
+    }
+
     // After animation, hide start screen and show game
     setTimeout(() => {
         startScreen.style.display = 'none';
         gameWrapper.style.display = 'flex';
         gameWrapper.style.animation = 'fadeIn 0.5s ease';
-        
+
         // Initialize game if needed
         if (typeof initializeGame === 'function') {
             initializeGame();
