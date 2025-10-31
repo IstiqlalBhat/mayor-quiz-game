@@ -177,6 +177,13 @@ app.post('/api/game/complete', async (req, res) => {
       sessionId
     ]);
     
+    if (result.rowCount === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Session not found or already completed' 
+      });
+    }
+    
     res.json({
       success: true,
       session: result.rows[0]
