@@ -75,7 +75,7 @@ const difficultyModes = {
         name: "Relaxed Mayor",
         icon: "🌱",
         color: "#4caf50",
-        timerPerScene: 90,
+        timerPerScene: 45,
         startingFunds: 80,
         buildingRelocations: 5,
         undoLimit: 5,
@@ -86,7 +86,7 @@ const difficultyModes = {
         name: "Working Mayor",
         icon: "⚖️",
         color: "#2196f3",
-        timerPerScene: 60,
+        timerPerScene: 30,
         startingFunds: 60,
         buildingRelocations: 3,
         undoLimit: 3,
@@ -97,7 +97,7 @@ const difficultyModes = {
         name: "Under Pressure",
         icon: "🔥",
         color: "#ff9800",
-        timerPerScene: 40,
+        timerPerScene: 20,
         startingFunds: 50,
         buildingRelocations: 1,
         undoLimit: 1,
@@ -108,7 +108,7 @@ const difficultyModes = {
         name: "Mayor Speedrun",
         icon: "⚡",
         color: "#f44336",
-        timerPerScene: 25,
+        timerPerScene: 15,
         startingFunds: 40,
         buildingRelocations: 0,
         undoLimit: 0,
@@ -128,6 +128,7 @@ const gameState = {
     isTimerRunning: false,
     timerInterval: null,
     timerExpired: false,   // Flag to track if timer ran out
+    choiceMade: false,     // Flag to prevent multiple clicks on same choice
     timeBonus: 0,          // Total time bonus points accumulated
     timeBankSeconds: 0,    // Extra seconds to add to next timer
     currentDecisionTime: 0, // Time when decision was started
@@ -2652,10 +2653,14 @@ function renderScene(sceneKey) {
     const scene = gameData[sceneKey];
     const content = document.getElementById('game-content');
     const quizTitle = document.getElementById('quiz-title');
-    
+
     // Always stop any existing timer first
     stopTimer();
     setCurrentSceneKey(sceneKey);
+
+    // Reset choice flag for new scene
+    gameState.choiceMade = false;
+    gameState.timerExpired = false;
     
     // Update quiz title based on scene
     if (quizTitle) {
@@ -2712,6 +2717,15 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
         showToast('⏰ Time\'s up! Decision was auto-selected', 'error');
         return;
     }
+
+    // Prevent multiple clicks on the same choice
+    if (gameState.choiceMade) {
+        console.log('❌ Choice already made!');
+        return;
+    }
+
+    // Mark that a choice has been made
+    gameState.choiceMade = true;
 
     stopTimer();
 

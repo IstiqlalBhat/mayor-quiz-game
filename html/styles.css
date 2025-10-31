@@ -2221,19 +2221,55 @@ body {
 
 /* ==================== RESPONSIVE DESIGN ==================== */
 
+/* Prevent text selection on touch devices (improves drag UX) */
+@media (hover: none) and (pointer: coarse) {
+    * {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    input, textarea {
+        -webkit-user-select: text;
+        user-select: text;
+    }
+}
+
 /* Tablet (768px - 1024px) */
 @media (max-width: 1024px) and (min-width: 769px) {
     .game-wrapper {
         margin-right: 340px;
         max-width: 100%;
     }
+
+    /* Slightly larger touch targets for tablets */
+    .choice-card {
+        min-height: 90px;
+        font-size: 1em;
+    }
+
+    .building-card {
+        min-height: 140px;
+    }
 }
 
 /* Mobile and Tablet Portrait (≤ 768px) */
 @media (max-width: 768px) {
+    /* Use dvh (dynamic viewport height) to account for mobile browser chrome */
+    body {
+        height: 100dvh;
+        min-height: -webkit-fill-available;
+    }
+
     .header h1 { font-size: 1.6em; margin-bottom: 3px; }
     .header p { font-size: 0.95em; margin-bottom: 3px; }
-    .header { padding: 12px 15px; }
+    .header {
+        padding: 12px 15px;
+        /* Ensure header stays visible */
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
 
     .buildings { flex-wrap: wrap; }
     .stats-panel {
@@ -2276,36 +2312,58 @@ body {
         top: auto;
         left: 0;
         width: 100%;
-        height: 200px;
+        height: auto;
+        max-height: 180px;
         box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.2);
+        border-radius: 20px 20px 0 0;
     }
-    
+
     .palette-header {
-        padding: 10px 15px;
+        padding: 8px 15px;
+        border-radius: 20px 20px 0 0;
     }
-    
+
     .palette-header h3 {
-        font-size: 1.3em;
+        font-size: 1.2em;
+        margin-bottom: 2px;
     }
-    
+
     .palette-subtitle {
-        font-size: 0.85em;
+        font-size: 0.8em;
+        opacity: 0.8;
     }
-    
+
     .palette-buildings {
         flex-direction: row;
         overflow-x: auto;
         overflow-y: hidden;
-        padding: 10px 15px;
+        padding: 8px 15px 12px;
         scroll-snap-type: x mandatory;
+        /* Smooth scrolling on iOS */
+        -webkit-overflow-scrolling: touch;
+        /* Hide scrollbar but keep functionality */
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
-    
+
+    .palette-buildings::-webkit-scrollbar {
+        display: none;
+    }
+
     .building-card {
-        min-width: 240px;
+        min-width: 220px;
+        max-width: 240px;
         flex-shrink: 0;
-        scroll-snap-align: start;
+        scroll-snap-align: center;
         /* Enlarge touch targets */
-        min-height: 120px;
+        min-height: 115px;
+        /* Better tap feedback */
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .building-card:active {
+        transform: scale(0.95);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
     
     .palette-footer {
@@ -2316,39 +2374,73 @@ body {
     .game-wrapper {
         right: 0; /* Full width */
         padding: 5px;
-        bottom: 210px; /* Make room for bottom palette */
+        bottom: 185px; /* Make room for bottom palette */
+    }
+
+    .game-container {
+        max-height: 100%;
+        border-radius: 15px;
     }
     
     /* Quiz overlay adjustments for mobile */
     .game-content-overlay {
         background: rgba(0, 0, 0, 0.98);
+        /* Better scrolling on mobile */
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
-    
+
     .quiz-header {
-        padding: 12px 15px;
+        padding: 14px 16px;
+        position: sticky;
+        top: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: 10;
     }
-    
+
     .quiz-header h3 {
-        font-size: 1.1em;
+        font-size: 1.15em;
+        line-height: 1.3;
     }
-    
+
     .quiz-toggle {
-        padding: 6px 12px;
-        font-size: 0.85em;
+        padding: 8px 14px;
+        font-size: 0.9em;
+        min-width: 44px;
+        min-height: 44px;
     }
-    
+
     .game-content {
-        padding: 12px 15px;
+        padding: 16px;
+        /* Prevent content from being hidden by rounded corners */
+        padding-bottom: 24px;
     }
-    
+
     .story-section {
-        padding: 10px 12px;
-        margin-bottom: 10px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        font-size: 1em;
+        line-height: 1.6;
+    }
+
+    /* Better text readability on mobile */
+    .story-section p {
+        font-size: 1.05em;
+        line-height: 1.7;
+        margin-bottom: 12px;
     }
     
     .choice-card {
-        padding: 12px;
-        font-size: 0.9em;
+        padding: 16px;
+        font-size: 0.95em;
+        min-height: 100px;
+        /* Better tap feedback on mobile */
+        transition: all 0.2s ease;
+    }
+
+    .choice-card:active {
+        transform: scale(0.98);
+        opacity: 0.9;
     }
     
     /* Mobile adjustments for unhide button */
@@ -2363,24 +2455,38 @@ body {
         display: none; /* Hide text on mobile, keep icon */
     }
     
-    /* Mobile grid: 8x4 for better fit */
+    /* Mobile grid: 8x4 for better fit - use flexible units */
     .city-grid {
-        grid-template-columns: repeat(8, 70px);
-        grid-template-rows: repeat(4, 70px);
+        grid-template-columns: repeat(8, minmax(55px, 1fr));
+        grid-template-rows: repeat(4, minmax(55px, 1fr));
         gap: 3px;
         padding: 6px;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 8 / 4;
     }
-    
+
     .grid-cell {
-        width: 70px;
-        height: 70px;
-        /* Minimum touch target size */
-        min-width: 44px;
-        min-height: 44px;
+        width: 100%;
+        height: 100%;
+        /* Minimum touch target size (Apple HIG: 44px, Google Material: 48px) */
+        min-width: 48px;
+        min-height: 48px;
+        /* Better tap feedback */
+        transition: transform 0.1s ease;
     }
-    
+
+    .grid-cell:active {
+        transform: scale(0.92);
+    }
+
+    .grid-cell.drag-over {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.6);
+    }
+
     .grid-cell-icon {
-        font-size: 2.5em;
+        font-size: 2.3em;
     }
     
     /* Mobile toast notifications */
@@ -2426,52 +2532,147 @@ body {
 
 /* Small Mobile (≤ 480px) */
 @media (max-width: 480px) {
-    .header h1 { font-size: 1.6em; }
+    .header h1 {
+        font-size: 1.4em;
+    }
 
-    /* Even smaller grid for very small phones */
+    .header {
+        padding: 10px 12px;
+    }
+
+    /* Compact stats panel for small screens */
+    .stats-panel {
+        gap: 6px;
+        padding: 8px;
+    }
+
+    .stat {
+        padding: 8px;
+    }
+
+    .stat-icon {
+        font-size: 1.4em;
+    }
+
+    .stat-label {
+        font-size: 0.7em;
+    }
+
+    .stat-value {
+        font-size: 1.1em;
+    }
+
+    /* Even smaller grid for very small phones - flexible layout */
     .city-grid {
-        grid-template-columns: repeat(6, 55px);
-        grid-template-rows: repeat(4, 55px);
+        grid-template-columns: repeat(6, minmax(50px, 1fr));
+        grid-template-rows: repeat(4, minmax(50px, 1fr));
         gap: 2px;
+        padding: 4px;
+        aspect-ratio: 6 / 4;
     }
 
     .grid-cell {
-        width: 55px;
-        height: 55px;
+        width: 100%;
+        height: 100%;
+        min-width: 46px;
+        min-height: 46px;
     }
 
     .grid-cell-icon {
-        font-size: 2em;
+        font-size: 1.8em;
     }
 
     .building-card {
-        min-width: 200px;
+        min-width: 180px;
+        max-width: 200px;
+        min-height: 110px;
+    }
+
+    .building-card .building-icon {
+        font-size: 2.2em;
+    }
+
+    .building-card .building-name {
+        font-size: 1em;
+    }
+
+    .building-card .building-cost {
+        font-size: 0.9em;
     }
 
     .choice-card {
-        font-size: 1em;
-        padding: 20px;
+        font-size: 0.95em;
+        padding: 18px;
+        min-height: 90px;
     }
 
     .timer-seconds {
-        font-size: 2.5em;
+        font-size: 2.2em;
+        min-width: 75px;
+    }
+
+    .timer-display {
+        padding: 15px 25px;
     }
 
     /* Full-width dialog on small phones */
     .game-content-overlay {
         width: 98%;
         max-width: none;
-        max-height: 90vh;
-        border-radius: 20px;
+        max-height: 92vh;
+        border-radius: 15px;
     }
 
     .quiz-header {
-        padding: 12px 15px;
+        padding: 12px 14px;
+    }
+
+    .quiz-header h3 {
+        font-size: 1.05em;
+    }
+
+    .game-content {
+        padding: 14px;
+    }
+
+    .story-section {
+        padding: 12px 14px;
     }
 
     .unhide-button {
-        padding: 10px 18px;
-        font-size: 0.9em;
+        padding: 10px 16px;
+        font-size: 0.85em;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Make building palette more compact */
+    .building-palette {
+        max-height: 170px;
+    }
+
+    .palette-header h3 {
+        font-size: 1.1em;
+    }
+
+    .palette-buildings {
+        padding: 6px 12px 10px;
+    }
+
+    .game-wrapper {
+        bottom: 175px;
+        padding: 4px;
+    }
+
+    /* Action menu compact */
+    .action-menu-content {
+        min-width: 280px;
+        padding: 20px 16px;
+    }
+
+    .action-btn {
+        padding: 14px 20px;
+        font-size: 1em;
     }
 }
 
@@ -2482,25 +2683,67 @@ body {
         width: 0;
         height: 0;
     }
-    
+
+    .building-card:hover,
+    .grid-cell:hover {
+        transform: none;
+    }
+
     /* Larger tap targets */
     .choice-card {
         min-height: 100px;
     }
-    
+
     .grid-cell {
         min-width: 50px;
         min-height: 50px;
     }
-    
-    /* Long-press hint */
+
+    /* Better active states for touch */
+    .choice-card:active {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+    }
+
+    .building-card.dragging {
+        opacity: 0.6;
+        transform: scale(0.9) rotate(2deg);
+    }
+
+    /* Tap feedback for all buttons */
+    button:active {
+        transform: scale(0.96);
+    }
+
+    /* Remove hover tooltips on touch devices */
+    .tooltip {
+        display: none !important;
+    }
+
+    /* Long-press hint for occupied cells */
     .grid-cell.occupied::after {
         content: '👆';
         position: absolute;
         bottom: 2px;
         right: 2px;
-        font-size: 0.8em;
+        font-size: 0.7em;
         opacity: 0.4;
+        pointer-events: none;
+    }
+
+    /* Enlarge touch targets for small interactive elements */
+    .quiz-toggle,
+    .unhide-button,
+    .undo-button {
+        min-width: 48px;
+        min-height: 48px;
+    }
+
+    /* Smooth momentum scrolling on iOS */
+    .game-content-overlay,
+    .palette-buildings,
+    .leaderboard-list {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
     }
 }
 
