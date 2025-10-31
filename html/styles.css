@@ -2941,29 +2941,20 @@ body {
 
     /* Smaller placement message on small phones */
     .placement-message {
-        max-width: 280px;
-        padding: 12px 16px;
-        top: 20%;
-        transform: translate(-50%, 0);
+        max-width: 320px;
+        padding: 16px 20px;
     }
 
     .placement-message h3 {
-        font-size: 1em;
-        margin-bottom: 5px;
+        font-size: 1.2em;
     }
 
     .placement-message p {
-        font-size: 0.8em;
+        font-size: 0.9em;
     }
 
     .placement-icon {
-        font-size: 1.5em;
-        margin-bottom: 5px;
-    }
-
-    /* Smaller river on small phones */
-    .river {
-        height: 45px;
+        font-size: 2em;
     }
 }
 
