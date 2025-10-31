@@ -2372,31 +2372,60 @@ function showConsequence(effects, message, earnedTimeBonus = 0, timeBankAdjustme
 
 function renderEnding() {
     const content = document.getElementById('game-content');
-    
+
     // Track game end time
     gameState.gameEndTime = Date.now();
-    
+
     // Check Rush Hour achievement (game completed in under 8 minutes)
     if (gameState.gameStartTime) {
         const gameTime = (gameState.gameEndTime - gameState.gameStartTime) / 1000 / 60; // minutes
         console.log(`🎮 Total game time: ${gameTime.toFixed(2)} minutes`);
-        
+
         if (gameTime < 8 && !gameState.achievements.includes('rush_hour')) {
             gameState.achievements.push('rush_hour');
             showToast('🏃 Achievement: Rush Hour - Completed in under 8 minutes!', 'success');
         }
     }
-    
+
     // Final achievement check
     checkAchievements();
-    
+
     let rating = '';
     let message = '';
-    
+
     // Calculate base score and final score with time bonus
     const baseScore = (gameState.happiness + gameState.cityFunds + gameState.specialInterest) / 3;
     const achievementBonus = gameState.achievements.length * 10; // 10 points per achievement
     const finalScore = baseScore + (gameState.timeBonus / 10) + achievementBonus;
+
+    // Calculate play time in seconds
+    const playTimeSeconds = gameState.gameStartTime ? Math.floor((gameState.gameEndTime - gameState.gameStartTime) / 1000) : 0;
+
+    // Submit final score to backend
+    if (typeof gameAPI !== 'undefined') {
+        gameAPI.completeGame({
+            finalScore: Math.round(finalScore),
+            happiness: gameState.happiness,
+            cityFunds: gameState.cityFunds,
+            specialInterest: gameState.specialInterest,
+            personalProfit: gameState.personalProfit,
+            decisions: gameState.decisions.length,
+            playTime: playTimeSeconds
+        }).then(result => {
+            if (result.success) {
+                console.log('🏆 Game score submitted successfully!');
+                showToast('🏆 Score submitted to leaderboard!', 'success');
+            } else {
+                console.warn('⚠️ Failed to submit score:', result.error);
+                showToast('⚠️ Could not submit score to leaderboard', 'warning');
+            }
+        }).catch(error => {
+            console.error('❌ Error submitting score:', error);
+        });
+
+        // Stop auto-save
+        gameAPI.stopAutoSave();
+    }
     
     // Get all earned achievements with details
     const earnedAchievements = gameState.achievements.map(id => {
@@ -2486,11 +2515,62 @@ function renderEnding() {
                 <p style="margin-top:15px;">Real mayors face these kinds of complex decisions every day. Understanding that politics involves difficult choices and trade-offs helps us be better informed citizens!</p>
             </div>
 
+            <div id="ending-leaderboard" class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #fff9e6 0%, #ffe5cc 100%);">
+                <h3>🏆 Top Mayors Leaderboard</h3>
+                <div style="padding:20px;text-align:center;">Loading leaderboard...</div>
+            </div>
+
             <button class="start-btn" onclick="location.reload()" style="margin-top:30px;"><span class="start-btn-text">🔄 Play Again</span></button>
         </div>
     `;
 
     content.innerHTML = html;
+
+    // Fetch and display leaderboard
+    if (typeof gameAPI !== 'undefined') {
+        const difficultyId = gameState.difficulty ? gameState.difficulty.id : null;
+        gameAPI.getLeaderboard(difficultyId, 10).then(leaderboard => {
+            const leaderboardDiv = document.getElementById('ending-leaderboard');
+            if (leaderboard && leaderboard.length > 0) {
+                const leaderboardHTML = leaderboard.map((entry, index) => {
+                    const rank = index + 1;
+                    let rankBadge = '';
+                    if (rank === 1) rankBadge = '🥇';
+                    else if (rank === 2) rankBadge = '🥈';
+                    else if (rank === 3) rankBadge = '🥉';
+                    else rankBadge = `#${rank}`;
+
+                    return `
+                        <div class="final-stat-item" style="display:flex;justify-content:space-between;align-items:center;background:white;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <strong style="min-width:40px;">${rankBadge}</strong>
+                                <span>${escapeHTML(entry.player_name)}</span>
+                            </div>
+                            <div style="display:flex;gap:15px;align-items:center;">
+                                <span style="color:#666;">😊 ${entry.happiness}</span>
+                                <span style="color:#666;">💰 ${entry.city_funds}</span>
+                                <strong style="color:#f39c12;font-size:1.1em;">${entry.final_score}</strong>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                leaderboardDiv.innerHTML = `<h3>🏆 Top Mayors Leaderboard</h3>${leaderboardHTML}`;
+            } else {
+                leaderboardDiv.innerHTML = '<h3>🏆 Top Mayors Leaderboard</h3><div style="padding:20px;text-align:center;opacity:0.7;">Be the first to complete the game!</div>';
+            }
+        }).catch(error => {
+            console.error('Failed to load leaderboard:', error);
+            const leaderboardDiv = document.getElementById('ending-leaderboard');
+            leaderboardDiv.innerHTML = '<h3>🏆 Top Mayors Leaderboard</h3><div style="padding:20px;text-align:center;opacity:0.7;">Unable to load leaderboard</div>';
+        });
+    }
+}
+
+// Helper function to escape HTML for security
+function escapeHTML(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ==================== TUTORIAL SYSTEM ====================
