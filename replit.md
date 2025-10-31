@@ -10,10 +10,12 @@ A political decision-making game where players act as mayor of Tiger Central, ma
 - **Location**: `html/` directory
 - **Technology**: Vanilla JavaScript, HTML5, CSS3
 - **Main Files**:
-  - `index.html` - Game UI structure
+  - `index.html` - Game UI structure with start screen
   - `game.js` - Game logic (2700+ lines)
-  - `styles.css` - All styling and animations
+  - `styles.css` - All styling and animations (3000+ lines)
   - `api-client.js` - Backend API integration
+  - `start-screen.js` - Start screen logic and modals
+  - `assets/start-background.png` - Background image
 
 ### Backend
 - **Location**: `backend/` directory
@@ -31,13 +33,16 @@ A political decision-making game where players act as mayor of Tiger Central, ma
 ## 🎮 Game Features
 
 ### Core Gameplay
-1. **Story-Driven Decisions** - Make choices that shape the city
-2. **Building System** - Drag-and-drop city planning
-3. **Resource Management** - Balance happiness, funds, and special interests
-4. **Timed Challenges** - Decision countdown timers
-5. **Difficulty Modes** - Easy, Normal, Hard, Expert
-6. **Achievement System** - 13 unlockable achievements
-7. **Tutorial System** - Step-by-step guidance
+1. **Professional Start Screen** - Beautiful menu with background image
+2. **Player Setup** - Enter name and select difficulty before playing
+3. **Story-Driven Decisions** - Make choices that shape the city
+4. **Building System** - Drag-and-drop city planning
+5. **Resource Management** - Balance happiness, funds, and special interests
+6. **Timed Challenges** - Decision countdown timers
+7. **Difficulty Modes** - Easy, Normal, Hard, Expert
+8. **Achievement System** - 13 unlockable achievements
+9. **Tutorial System** - Step-by-step guidance
+10. **In-Game Leaderboard** - View top mayors by difficulty
 
 ### Building Mechanics
 - **Grid System**: 10x6 grid (responsive: 8x4 on tablet, 6x4 on mobile)
@@ -46,9 +51,17 @@ A political decision-making game where players act as mayor of Tiger Central, ma
 - **City Planning Efficiency**: Scored based on layout
 - **Undo System**: Limited undo moves per difficulty
 
+### Frontend Features
+1. **Start Screen** - Full-screen menu with background image
+2. **Player Name Input** - Prompts for name before starting
+3. **Difficulty Selection** - 4 difficulty modes with visual cards
+4. **Music & Sound Toggles** - Persistent settings in localStorage
+5. **Leaderboard Modal** - View top 20 players with filtering
+6. **Smooth Transitions** - Fade animations between screens
+
 ### Backend Features
 1. **Session Management** - Unique game sessions with UUID
-2. **Auto-Save** - Saves every 30 seconds
+2. **Auto-Save** - Saves every 30 seconds during gameplay
 3. **Leaderboards** - Top scores by difficulty
 4. **Analytics** - Aggregate game statistics
 5. **Load/Save Games** - Resume progress anytime
@@ -112,10 +125,13 @@ ORDER BY final_score DESC;
 ```
 .
 ├── html/
-│   ├── index.html          # Main game page
+│   ├── index.html          # Main game page with start screen
 │   ├── game.js             # Game logic (2738 lines)
-│   ├── styles.css          # All styles (2168 lines)
+│   ├── styles.css          # All styles (3000+ lines)
 │   ├── api-client.js       # Backend API client
+│   ├── start-screen.js     # Start screen & modal logic
+│   ├── assets/
+│   │   └── start-background.png  # Background image
 │   ├── abc.html            # Original single-file version
 │   └── README.md           # Frontend documentation
 ├── backend/
@@ -147,6 +163,15 @@ ORDER BY final_score DESC;
 | Expert (⚡) | 25s | 40 | 0 | 0 |
 
 ## 📝 Recent Changes
+
+### 2025-10-31: Start Screen & UI Overhaul
+- ✅ Created professional start screen with background image
+- ✅ Added player name input modal
+- ✅ Built difficulty selection interface (4 modes)
+- ✅ Implemented music/sound toggles (persistent)
+- ✅ Added in-game leaderboard modal with filtering
+- ✅ Created smooth screen transitions
+- ✅ Integrated start screen with backend session creation
 
 ### 2025-10-31: Backend Integration
 - ✅ Created Express.js API server
