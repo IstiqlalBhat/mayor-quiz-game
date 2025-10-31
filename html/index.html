@@ -10,10 +10,108 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Start Screen -->
+    <div class="start-screen" id="start-screen">
+        <div class="start-background"></div>
+        <div class="start-content">
+            <div class="start-header">
+                <h1 class="game-logo">🏛️ ManeStreet</h1>
+                <p class="game-subtitle">Build Your City. Make Tough Choices.</p>
+            </div>
+            
+            <div class="start-menu">
+                <button class="menu-btn menu-btn-primary" id="start-btn">
+                    <span class="btn-icon">🎮</span>
+                    <span class="btn-text">Start Game</span>
+                </button>
+                <button class="menu-btn" id="leaderboard-btn">
+                    <span class="btn-icon">🏆</span>
+                    <span class="btn-text">Leaderboard</span>
+                </button>
+                <button class="menu-btn menu-btn-toggle" id="music-btn">
+                    <span class="btn-icon">🎵</span>
+                    <span class="btn-text">Music: <span id="music-status">On</span></span>
+                </button>
+                <button class="menu-btn menu-btn-toggle" id="sound-btn">
+                    <span class="btn-icon">🔊</span>
+                    <span class="btn-text">Sound: <span id="sound-status">On</span></span>
+                </button>
+                <button class="menu-btn menu-btn-secondary" id="quit-btn">
+                    <span class="btn-icon">🚪</span>
+                    <span class="btn-text">Quit</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Setup Modal -->
+    <div class="modal-overlay" id="player-modal" style="display: none;">
+        <div class="modal-content">
+            <h2>Welcome, Mayor!</h2>
+            <p class="modal-subtitle">Enter your details to begin your term</p>
+            
+            <div class="form-group">
+                <label for="player-name">Your Name:</label>
+                <input type="text" id="player-name" placeholder="Enter your name" maxlength="30" autocomplete="off">
+            </div>
+            
+            <div class="form-group">
+                <label>Select Difficulty:</label>
+                <div class="difficulty-options">
+                    <button class="difficulty-btn" data-difficulty="easy">
+                        <span class="difficulty-icon">🌱</span>
+                        <span class="difficulty-name">Relaxed Mayor</span>
+                        <span class="difficulty-desc">90s timer, 5 undos</span>
+                    </button>
+                    <button class="difficulty-btn active" data-difficulty="normal">
+                        <span class="difficulty-icon">⚖️</span>
+                        <span class="difficulty-name">Working Mayor</span>
+                        <span class="difficulty-desc">60s timer, 3 undos</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="hard">
+                        <span class="difficulty-icon">🔥</span>
+                        <span class="difficulty-name">Under Pressure</span>
+                        <span class="difficulty-desc">40s timer, 1 undo</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="expert">
+                        <span class="difficulty-icon">⚡</span>
+                        <span class="difficulty-name">Mayor Speedrun</span>
+                        <span class="difficulty-desc">25s timer, no undos</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="cancel-start-btn">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="confirm-start-btn">Begin Term</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Modal -->
+    <div class="modal-overlay" id="leaderboard-modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <h2>🏆 Top Mayors Leaderboard</h2>
+            <div class="leaderboard-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="easy">Easy</button>
+                <button class="filter-btn" data-filter="normal">Normal</button>
+                <button class="filter-btn" data-filter="hard">Hard</button>
+                <button class="filter-btn" data-filter="expert">Expert</button>
+            </div>
+            <div class="leaderboard-list" id="leaderboard-list">
+                <div class="loading">Loading leaderboard...</div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="close-leaderboard-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Particle Background -->
     <div class="particles" id="particles"></div>
 
-    <div class="game-wrapper">
+    <div class="game-wrapper" id="game-wrapper" style="display: none;">
         <div class="game-container">
             <!-- Header -->
             <div class="header">
