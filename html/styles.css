@@ -1006,10 +1006,10 @@ body {
 
 /* ==================== FLOATING UNHIDE BUTTON ==================== */
 .unhide-button {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    transform: none;
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
     /* Enhanced glassmorphism */
     background: linear-gradient(
         135deg,
@@ -1020,7 +1020,7 @@ body {
     -webkit-backdrop-filter: blur(15px);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.4);
-    padding: 10px 20px;
+    padding: 8px 18px;
     border-radius: 30px;
     cursor: pointer;
     box-shadow:
@@ -1031,7 +1031,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 0.9em;
+    font-size: 0.85em;
     font-weight: 600;
     z-index: 1250;
     /* Shake animation to grab attention */
@@ -1039,7 +1039,7 @@ body {
 }
 
 .unhide-button:hover {
-    transform: translateY(-3px) scale(1.05);
+    transform: translateX(-50%) translateY(-3px) scale(1.05);
     box-shadow:
         0 15px 40px rgba(102, 126, 234, 0.7),
         inset 0 0 0 1px rgba(255, 255, 255, 0.3),
@@ -1049,7 +1049,7 @@ body {
 }
 
 .unhide-button:active {
-    transform: translateY(-1px) scale(1.02);
+    transform: translateX(-50%) translateY(-1px) scale(1.02);
 }
 
 .unhide-icon {
