@@ -5,12 +5,13 @@ const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
 
 // Database connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Middleware
@@ -293,6 +294,54 @@ app.get('/api/analytics/summary', async (req, res) => {
   }
 });
 
+// Initialize database tables
+async function initDatabase() {
+  try {
+    console.log('🔧 Initializing database tables...');
+
+    // Create game_sessions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS game_sessions (
+        session_id VARCHAR(36) PRIMARY KEY,
+        player_name VARCHAR(100) NOT NULL,
+        difficulty VARCHAR(20) NOT NULL,
+        final_score INTEGER,
+        happiness INTEGER,
+        city_funds INTEGER,
+        special_interest INTEGER,
+        personal_profit INTEGER,
+        decisions_made INTEGER,
+        play_time_seconds INTEGER,
+        created_at TIMESTAMP DEFAULT NOW(),
+        completed_at TIMESTAMP
+      );
+    `);
+
+    // Create game_saves table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS game_saves (
+        session_id VARCHAR(36) PRIMARY KEY REFERENCES game_sessions(session_id) ON DELETE CASCADE,
+        game_state JSONB NOT NULL,
+        score INTEGER DEFAULT 0,
+        current_scene VARCHAR(100),
+        saved_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+
+    // Create indexes for better query performance
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_sessions_score ON game_sessions(final_score DESC);
+      CREATE INDEX IF NOT EXISTS idx_sessions_difficulty ON game_sessions(difficulty);
+      CREATE INDEX IF NOT EXISTS idx_sessions_completed ON game_sessions(completed_at);
+    `);
+
+    console.log('✅ Database tables initialized successfully!');
+  } catch (error) {
+    console.error('❌ Error initializing database:', error);
+    // Don't exit - let the app try to continue
+  }
+}
+
 // Start server
 app.listen(PORT, HOST, async () => {
   console.log('\n🏛️  ManeStreet Backend Server Started!');
@@ -308,6 +357,9 @@ app.listen(PORT, HOST, async () => {
   console.log('   GET  /api/leaderboard - Get top scores');
   console.log('   GET  /api/stats/:sessionId - Get player stats');
   console.log('   GET  /api/analytics/summary - Get game analytics\n');
+
+  // Initialize database after server starts
+  await initDatabase();
 });
 
 // Graceful shutdown
