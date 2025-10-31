@@ -127,6 +127,7 @@ const gameState = {
     timerSeconds: 30,
     isTimerRunning: false,
     timerInterval: null,
+    timerExpired: false,   // Flag to track if timer ran out
     timeBonus: 0,          // Total time bonus points accumulated
     timeBankSeconds: 0,    // Extra seconds to add to next timer
     currentDecisionTime: 0, // Time when decision was started
@@ -1593,11 +1594,13 @@ function checkAchievements() {
     }
     
     // BALANCE ACHIEVEMENTS
-    // Balanced Leader: All stats within 10 points
+    // Balanced Leader: All stats within 10 points (only check after at least 3 decisions)
     const stats = [gameState.happiness, gameState.cityFunds, gameState.specialInterest];
     const maxStat = Math.max(...stats);
     const minStat = Math.min(...stats);
-    if ((maxStat - minStat) <= 10 && !gameState.achievements.includes('balanced_leader')) {
+    if ((maxStat - minStat) <= 10 &&
+        gameState.decisions.length >= 3 &&
+        !gameState.achievements.includes('balanced_leader')) {
         newAchievements.push(achievementDefinitions.balanced_leader);
     }
     
@@ -1702,22 +1705,23 @@ function getTimerDuration() {
 
 function startTimer() {
     stopTimer();
-    
+
     // Get timer duration from difficulty
     const baseDuration = getTimerDuration();
-    
+
     // Apply time bank bonuses/penalties
     const adjustedTime = baseDuration + gameState.timeBankSeconds;
     gameState.timerSeconds = Math.max(10, Math.min(120, adjustedTime)); // Clamp between 10-120 seconds
     gameState.currentDecisionTime = gameState.timerSeconds; // Track starting time
-    
+
     // Reset time bank after applying
     if (gameState.timeBankSeconds !== 0) {
         console.log(`⏱️ Time Bank Applied: ${gameState.timeBankSeconds > 0 ? '+' : ''}${gameState.timeBankSeconds}s (Total: ${gameState.timerSeconds}s)`);
     }
     gameState.timeBankSeconds = 0;
-    
+
     gameState.isTimerRunning = true;
+    gameState.timerExpired = false; // Reset expired flag for new timer
     
     const timerContainer = document.getElementById('timer-container');
     timerContainer.classList.add('active');
@@ -1840,13 +1844,65 @@ function updateTimerDisplay() {
 
 function handleTimeout() {
     stopTimer();
-    
+    gameState.timerExpired = true; // Mark that timer ran out
+
+    console.log('⏰ TIME\'S UP! Failed to make a decision - applying penalties');
+
     const currentSceneKey = getCurrentSceneKey();
     if (currentSceneKey && gameData[currentSceneKey]) {
         const scene = gameData[currentSceneKey];
         if (scene.choices && scene.choices.length > 0) {
-            const randomIndex = Math.floor(Math.random() * scene.choices.length);
-            makeChoice(currentSceneKey, randomIndex);
+            // Apply penalties for indecision
+            const penaltyEffects = {
+                happiness: -10,      // Citizens unhappy with indecisive mayor
+                cityFunds: -5,       // Wasted resources due to delay
+                specialInterest: -8, // Lost trust from stakeholders
+                personalProfit: 0
+            };
+
+            // Track the failed decision
+            gameState.decisions.push({
+                scene: currentSceneKey,
+                choice: 'TIMED OUT - No Decision Made',
+                timeSpent: gameState.currentDecisionTime
+            });
+
+            // Apply penalty effects
+            applyEffects(penaltyEffects);
+
+            // Apply time bank penalty (lose 10 seconds from next decision)
+            gameState.timeBankSeconds -= 10;
+
+            // Show consequence message
+            showConsequence(
+                penaltyEffects,
+                '❌ You failed to make a decision in time! The city suffered from your indecision. Citizens are frustrated by the lack of leadership.',
+                0,  // No time bonus
+                -10 // Time bank penalty
+            );
+
+            // Move to next scene (use first choice's path as default)
+            const nextScene = scene.choices[0].next;
+
+            // Handle any building unlocks from the default path
+            const defaultChoice = scene.choices[0];
+            if (defaultChoice.unlocks && defaultChoice.unlocks.length > 0) {
+                const newUnlocks = defaultChoice.unlocks.filter(b => !gameState.unlockedBuildings.includes(b));
+                newUnlocks.forEach(buildingId => {
+                    gameState.unlockedBuildings.push(buildingId);
+                    const building = buildingPalette.find(b => b.id === buildingId);
+                    if (building) {
+                        showUnlockNotification(building);
+                        console.log(`🔓 Unlocked building: ${building.name} (default path)`);
+                    }
+                });
+                renderBuildingPalette();
+            }
+
+            // Continue to next scene after delay
+            setTimeout(() => {
+                renderScene(nextScene);
+            }, 3000);
         }
     }
 }
@@ -2196,21 +2252,33 @@ function renderDifficultySelection() {
     content.innerHTML = html;
 }
 
-function makeChoice(sceneKey, choiceIndex) {
+function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
+    // Prevent user clicks after timeout
+    if (gameState.timerExpired && !isTimedOut) {
+        console.log('❌ Cannot make choice - timer has expired!');
+        showToast('⏰ Time\'s up! Decision was auto-selected', 'error');
+        return;
+    }
+
     stopTimer();
-    
+
     // Haptic feedback on choice
     triggerHaptic('medium');
-    
+
     const scene = gameData[sceneKey];
     const choice = scene.choices[choiceIndex];
 
     // Calculate time bonus (2 points per second remaining)
-    const secondsRemaining = gameState.timerSeconds;
-    const earnedTimeBonus = secondsRemaining * 2;
-    gameState.timeBonus += earnedTimeBonus;
-    
-    console.log(`⚡ Time Bonus: +${earnedTimeBonus} points (${secondsRemaining}s remaining)`);
+    // No bonus if timeout occurred
+    let earnedTimeBonus = 0;
+    if (!isTimedOut) {
+        const secondsRemaining = gameState.timerSeconds;
+        earnedTimeBonus = secondsRemaining * 2;
+        gameState.timeBonus += earnedTimeBonus;
+        console.log(`⚡ Time Bonus: +${earnedTimeBonus} points (${secondsRemaining}s remaining)`);
+    } else {
+        console.log(`⏰ No time bonus - timer expired`);
+    }
 
     // Track decision time for achievements
     const timeSpent = gameState.currentDecisionTime - gameState.timerSeconds;
@@ -2511,6 +2579,13 @@ function checkFirstTime() {
 
 function startTutorial() {
     currentTutorialStep = 0;
+
+    // Hide the question overlay during tutorial
+    const gameContentOverlay = document.getElementById('game-content-overlay');
+    if (gameContentOverlay) {
+        gameContentOverlay.style.display = 'none';
+    }
+
     showTutorialStep(0);
     localStorage.setItem('manestreet_tutorial', 'started');
 }
@@ -2572,12 +2647,19 @@ function skipTutorial() {
 function completeTutorial() {
     const overlay = document.getElementById('tutorial-overlay');
     overlay.style.display = 'none';
+
+    // Show the question overlay again after tutorial
+    const gameContentOverlay = document.getElementById('game-content-overlay');
+    if (gameContentOverlay) {
+        gameContentOverlay.style.display = 'block';
+    }
+
     localStorage.setItem('manestreet_played', 'true');
     localStorage.setItem('manestreet_tutorial', 'completed');
-    
+
     // Add time bonus for first choice
     gameState.timeBankSeconds += 30;
-    
+
     console.log('📚 Tutorial completed! +30s bonus for first decision');
 }
 
