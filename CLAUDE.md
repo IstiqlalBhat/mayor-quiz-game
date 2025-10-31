@@ -8,37 +8,100 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Technology Stack
 
-- **Pure HTML/CSS/JavaScript** - No frameworks or build tools
-- **Runs entirely client-side** - Static files, no server required
+- **Frontend**: Pure HTML/CSS/JavaScript - No frameworks or build tools required
+- **Backend**: Node.js with Express, PostgreSQL database
+- **Deployment**: Can run client-side only OR with backend for persistence
 - **Mobile-responsive** - Touch and desktop support with haptic feedback
 
 ## File Structure
 
 ```
 html/
-├── index.html       # Main HTML structure (179 lines)
-├── styles.css       # All CSS styles and animations (~1,450 lines)
-├── game.js          # Complete game logic (~1,750+ lines)
-└── abc.html         # Original single-file backup version
+├── index.html          # Main HTML structure with start screen
+├── styles.css          # All CSS styles and animations (~1,450 lines)
+├── game.js             # Core game logic (~1,750+ lines)
+├── start-screen.js     # Start screen, player setup, settings
+├── api-client.js       # Backend API integration and auto-save
+└── abc.html            # Original single-file backup version
+
+backend/
+└── server.js           # Express server with PostgreSQL integration
+
+package.json            # Node dependencies and scripts
+BACKEND_FEATURES.md     # Complete backend API documentation
 ```
 
-All active development occurs in the `html/` directory with the three-file structure.
+Active development occurs in `html/` (frontend) and `backend/` (server) directories.
 
 ## Running the Game
 
-**No build process required!** Simply open `html/index.html` in any modern browser:
+### Option 1: Frontend Only (No Backend)
+No build process required! Simply open `html/index.html` in any modern browser:
 
 ```bash
-# Option 1: Open directly
+# Open directly in browser
 open html/index.html
 
-# Option 2: Use a local server (optional)
+# OR use a simple HTTP server
 cd html
 python3 -m http.server 8000
 # Then visit http://localhost:8000
 ```
 
+Note: Without backend, game progress won't persist and leaderboard features won't work.
+
+### Option 2: Full Stack (With Backend)
+Run the complete application with persistence and leaderboard features:
+
+```bash
+# Install dependencies (first time only)
+npm install
+
+# Start the backend server (serves frontend + API)
+npm start
+# OR
+node backend/server.js
+
+# Server runs on http://localhost:5000
+```
+
+The backend automatically serves the frontend from the `html/` directory and provides REST API endpoints at `/api/*`.
+
+**Environment Requirements:**
+- Node.js (for backend)
+- PostgreSQL database (configured via `DATABASE_URL` env variable)
+- See `package.json` for dependencies: express, cors, pg, uuid, dotenv
+
 ## Architecture Overview
+
+### Application Architecture
+
+The game has a **dual-mode architecture**:
+
+1. **Client-Side Mode**: Fully functional standalone game in browser
+2. **Full-Stack Mode**: Client + Express backend + PostgreSQL for persistence
+
+**Frontend Flow:**
+```
+Start Screen (start-screen.js)
+    → Player Setup Modal
+    → Difficulty Selection
+    → API Client Session Creation (api-client.js)
+    → Main Game (game.js)
+    → Auto-save every 30s
+    → Leaderboard on completion
+```
+
+**Backend Flow:**
+```
+Express Server (backend/server.js)
+    ↓
+Routes: /api/game/*, /api/leaderboard, /api/stats
+    ↓
+PostgreSQL Database (game_sessions, game_saves)
+    ↓
+Returns JSON responses to frontend
+```
 
 ### Game State Management
 
@@ -59,6 +122,8 @@ const gameState = {
     // ... more state properties
 };
 ```
+
+When backend is available, `gameState` is persisted via `gameAPI.saveGame()` and can be restored via `gameAPI.loadGame()`.
 
 ### Core Systems
 
@@ -115,6 +180,21 @@ const gameState = {
    - Mayor: 25s timer, $30M starting funds, 1 relocation, 1 undo
    - Affects `gameState` initialization in `selectDifficulty()`
 
+8. **Backend Integration** (api-client.js)
+   - Session management with UUID-based session IDs
+   - Auto-save system (every 30 seconds when enabled)
+   - Game state persistence to PostgreSQL
+   - Leaderboard retrieval and ranking
+   - Functions: `createNewSession()`, `saveGame()`, `loadGame()`, `completeGame()`, `getLeaderboard()`
+
+9. **Start Screen System** (start-screen.js)
+   - Player name input and setup modal
+   - Difficulty selection UI
+   - Settings management (music/sound toggles, stored in localStorage)
+   - Leaderboard display modal
+   - Initializes backend session before game starts
+   - Functions: `handleConfirmStart()`, `showLeaderboard()`, `updateSettingsUI()`
+
 ### Building Types Reference
 
 | Building | Icon | Cost | Base Effect | Adjacency Rules |
@@ -140,7 +220,9 @@ const gameState = {
 
 The story tree branches based on choices (e.g., `choice1` → `choice2A` or `choice2B`). See `gameData` object starting at line 1866 for complete narrative structure.
 
-## Code Organization in game.js
+## Code Organization
+
+### game.js (Core Game Logic)
 
 The file is organized into clearly commented sections:
 
@@ -160,6 +242,36 @@ The file is organized into clearly commented sections:
 14. **Scene Rendering** (lines 2104-2198): Display logic
 15. **Stats Management** (lines 2074-2103): `updateStats()`, progress bars
 16. **Initialization** (end of file): `createParticles()`, `initGame()`
+
+### start-screen.js (Pre-Game UI)
+
+Handles the initial player experience:
+- Settings initialization and persistence (localStorage)
+- Player name input and validation
+- Difficulty button selection and state management
+- Modal management (player setup, leaderboard)
+- Integration with backend session creation
+- Game start transition logic
+
+### api-client.js (Backend Communication)
+
+Provides a clean API wrapper for backend interactions:
+- `GameAPI` class with session management
+- RESTful endpoint wrappers (POST, GET)
+- Auto-save interval management
+- LocalStorage integration for session persistence
+- Error handling and fallback for offline mode
+- All methods return promises for async operations
+
+### backend/server.js (Express Server)
+
+Backend API implementation:
+- Express middleware setup (CORS, JSON, static file serving)
+- Database connection pooling with pg
+- 8 REST endpoints for game operations
+- Database schema creation on startup
+- Static file serving from `html/` directory
+- Cache control headers for development
 
 ## Common Development Tasks
 
@@ -235,22 +347,111 @@ Edit `difficultyModes` object (line 72). Properties:
 - `buildingRelocations`: Max building moves
 - `undoLimit`: Max undo operations
 
-## Important State Functions
+### Working with Backend API
 
+**Creating a new API endpoint:**
+
+1. Add route in `backend/server.js`:
+```javascript
+app.post('/api/your-endpoint', async (req, res) => {
+  try {
+    const { param1, param2 } = req.body;
+    const result = await pool.query('SELECT * FROM table WHERE ...', [param1]);
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+```
+
+2. Add method in `api-client.js`:
+```javascript
+async yourMethod(param1, param2) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/your-endpoint`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ param1, param2 })
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    return null;
+  }
+}
+```
+
+3. Call from game code:
+```javascript
+const result = await gameAPI.yourMethod(value1, value2);
+```
+
+**Testing backend endpoints:**
+```bash
+# Health check
+curl http://localhost:5000/api/health
+
+# Create session
+curl -X POST http://localhost:5000/api/game/new \
+  -H "Content-Type: application/json" \
+  -d '{"playerName":"Test","difficulty":"normal"}'
+
+# Get leaderboard
+curl http://localhost:5000/api/leaderboard?limit=5
+```
+
+## Important Functions Reference
+
+### Game Logic (game.js)
 - `updateStats()`: Updates all stat displays and progress bars (line 2074)
 - `renderScene(sceneKey)`: Loads and displays a story scene (line 2104)
 - `makeChoice(sceneKey, choiceIndex)`: Processes player decision (line 2199)
 - `calculateEfficiency()`: Computes city planning score 0-100% (line 1331)
 - `detectZones()`: Identifies formed zones from adjacency (line ~1000)
 - `unlockBuildings(buildingIds)`: Unlocks buildings with animations (in choice processing)
+- `startTimer()`, `stopTimer()`, `handleTimeout()`: Timer lifecycle management
+
+### Start Screen (start-screen.js)
+- `initializeStartScreen()`: Sets up event listeners and UI state
+- `handleConfirmStart()`: Validates input, creates backend session, starts game
+- `showLeaderboard()`: Fetches and displays top scores via API
+- `updateSettingsUI()`: Syncs UI with localStorage settings
+- `toggleMusic()`, `toggleSound()`: Settings management
+
+### Backend API (api-client.js)
+- `createNewSession(playerName, difficulty)`: Creates game session, returns session ID
+- `saveGame(gameState, score, currentScene)`: Persists current game state
+- `loadGame(sessionId)`: Retrieves saved game data
+- `completeGame(finalStats)`: Submits final score and stats
+- `getLeaderboard(difficulty, limit)`: Fetches top scores
+- `startAutoSave(stateFn, scoreFn, sceneFn)`: Begins 30s auto-save interval
+- `stopAutoSave()`: Clears auto-save interval
 
 ## Debugging Tips
 
+### Frontend Debugging
 1. **Check browser console** for all game events (extensive logging built-in)
 2. **Inspect `gameState`**: Type `gameState` in console to see full state
 3. **Manual scene navigation**: Use `loadScene('scene_key')` in console
 4. **Check grid state**: `gameState.cityGrid` shows all placed buildings
 5. **Unlock all buildings**: `gameState.unlockedBuildings = ['house', 'shop', 'factory', 'park', 'office']`
+6. **Check session**: `gameAPI.sessionId` to see current session ID
+7. **Check localStorage**: `localStorage.getItem('manestreet_session_id')`
+
+### Backend Debugging
+1. **Check server status**: `curl http://localhost:5000/api/health`
+2. **View server logs**: Console output shows all API requests and database queries
+3. **Query database directly**: Use PostgreSQL client or Replit database console
+4. **Test endpoints**: Use curl or Postman (see BACKEND_FEATURES.md for examples)
+5. **Check environment vars**: Ensure `DATABASE_URL` is set correctly
+6. **View recent sessions**:
+   ```sql
+   SELECT * FROM game_sessions ORDER BY created_at DESC LIMIT 10;
+   ```
+7. **View saved games**:
+   ```sql
+   SELECT session_id, score, current_scene FROM game_saves ORDER BY saved_at DESC;
+   ```
 
 ## Mobile Considerations
 
@@ -273,11 +474,33 @@ Edit `difficultyModes` object (line 72). Properties:
 
 Check via `gameState.unlockedAchievements` array.
 
+## Backend API Endpoints
+
+The backend provides 8 REST endpoints (see BACKEND_FEATURES.md for complete documentation):
+
+1. `GET /api/health` - Health check
+2. `POST /api/game/new` - Create new game session
+3. `POST /api/game/save` - Save game state
+4. `GET /api/game/load/:sessionId` - Load saved game
+5. `POST /api/game/complete` - Submit final score
+6. `GET /api/leaderboard?difficulty=X&limit=Y` - Get top scores
+7. `GET /api/stats/:sessionId` - Get session statistics
+8. `GET /api/analytics/summary` - Get aggregate analytics
+
+**Database Schema:**
+- `game_sessions` table: Player sessions, scores, stats, timestamps
+- `game_saves` table: JSONB game state snapshots for save/load
+
 ## Notes for AI Development
 
-- **No transpilation needed**: All code runs directly in browser
-- **State is centralized**: Almost all game logic reads/writes `gameState`
-- **Modular functions**: Each system has clear function boundaries
+- **Dual-mode architecture**: Game works standalone (client-only) or with backend (full-stack)
+- **No transpilation needed**: Frontend runs directly in browser, backend is plain Node.js
+- **State is centralized**: Almost all game logic reads/writes `gameState` object
+- **Modular functions**: Each system (game, start-screen, api-client) has clear boundaries
 - **Visual feedback**: Every action has toast notifications, animations, or color changes
-- **Extensive comments**: game.js has section headers and inline documentation
+- **Extensive comments**: All JS files have section headers and inline documentation
+- **API-first backend**: Clean REST API with consistent JSON responses
+- **Graceful degradation**: Frontend handles backend unavailability (offline mode)
 - **Educational purpose**: Game teaches civic engagement and decision-making tradeoffs
+- **Session persistence**: Backend stores full game state as JSONB for flexible queries
+- **Auto-save system**: Transparent to gameplay, runs every 30s when enabled
