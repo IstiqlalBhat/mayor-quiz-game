@@ -2352,24 +2352,89 @@ body {
         left: 0;
         width: 100%;
         height: auto;
-        max-height: 180px;
+        max-height: 30vh; /* Use viewport height for better control */
+        min-height: 140px;
         box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.2);
         border-radius: 20px 20px 0 0;
+        z-index: 1000; /* Below modals but above game content */
+        transition: max-height 0.3s ease;
+    }
+
+    /* Collapsed state for palette */
+    .building-palette.collapsed {
+        max-height: 60px;
     }
 
     .palette-header {
-        padding: 8px 15px;
+        padding: 12px 15px 8px;
         border-radius: 20px 20px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        user-select: none;
+        position: relative;
+    }
+
+    /* Add drag handle indicator */
+    .palette-header::before {
+        content: '';
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+    }
+
+    .palette-header-content {
+        flex: 1;
     }
 
     .palette-header h3 {
-        font-size: 1.2em;
+        font-size: 1.1em;
         margin-bottom: 2px;
+        margin-top: 6px;
     }
 
     .palette-subtitle {
-        font-size: 0.8em;
+        font-size: 0.75em;
         opacity: 0.8;
+    }
+
+    /* Palette resize button - shown on mobile */
+    .palette-resize-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.8em;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex !important; /* Override inline style on mobile */
+        align-items: center;
+        gap: 5px;
+        min-height: 36px;
+        min-width: 70px;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .palette-resize-btn:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Hide buildings list when collapsed */
+    .building-palette.collapsed .palette-buildings {
+        display: none;
+    }
+
+    .building-palette.collapsed .palette-header::before {
+        transform: translateX(-50%) rotate(180deg);
     }
 
     .palette-buildings {
@@ -2413,7 +2478,8 @@ body {
     .game-wrapper {
         right: 0; /* Full width */
         padding: 5px;
-        bottom: 185px; /* Make room for bottom palette */
+        bottom: calc(30vh + 5px); /* Dynamic based on palette height */
+        transition: bottom 0.3s ease;
     }
 
     .game-container {
@@ -2443,10 +2509,13 @@ body {
     }
 
     .quiz-toggle {
-        padding: 8px 14px;
+        padding: 10px 16px;
         font-size: 0.9em;
-        min-width: 44px;
-        min-height: 44px;
+        min-width: 48px;
+        min-height: 48px;
+        /* Ensure visibility on mobile */
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.6);
+        border: 2px solid rgba(255, 255, 255, 0.4);
     }
 
     .game-content {
@@ -2687,11 +2756,22 @@ body {
 
     /* Make building palette more compact */
     .building-palette {
-        max-height: 170px;
+        max-height: 28vh;
+        min-height: 130px;
     }
 
     .palette-header h3 {
-        font-size: 1.1em;
+        font-size: 1em;
+    }
+
+    .palette-subtitle {
+        font-size: 0.7em;
+    }
+
+    .palette-resize-btn {
+        font-size: 0.75em;
+        padding: 5px 10px;
+        min-width: 65px;
     }
 
     .palette-buildings {
@@ -2699,7 +2779,7 @@ body {
     }
 
     .game-wrapper {
-        bottom: 175px;
+        bottom: calc(28vh + 5px);
         padding: 4px;
     }
 
@@ -3081,7 +3161,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 50000; /* Much higher to be above building palette */
     animation: fadeIn 0.3s ease;
     backdrop-filter: blur(5px);
 }
@@ -3213,6 +3293,11 @@ body {
     transition: all 0.3s ease;
     font-family: 'Fredoka', Arial, sans-serif;
     flex: 1;
+    /* iOS Safari fixes */
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 48px; /* Ensure tappable on mobile */
+    touch-action: manipulation; /* Prevent double-tap zoom */
 }
 
 .modal-btn-cancel {
@@ -3379,27 +3464,45 @@ body {
     .game-logo {
         font-size: 3em;
     }
-    
+
     .game-subtitle {
         font-size: 1.1em;
     }
-    
+
     .menu-btn {
         font-size: 1.1em;
         padding: 16px 25px;
+        min-height: 48px;
     }
-    
+
     .menu-btn-primary {
         font-size: 1.3em;
         padding: 20px 35px;
     }
-    
+
     .difficulty-options {
         grid-template-columns: 1fr;
     }
-    
+
+    .difficulty-btn {
+        min-height: 70px;
+        padding: 14px;
+    }
+
     .modal-content {
         padding: 30px 20px;
+        max-height: 85vh;
+        overflow-y: auto;
+    }
+
+    .modal-actions {
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .modal-btn {
+        font-size: 1em;
+        padding: 14px 25px;
     }
 }
 

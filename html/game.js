@@ -3415,6 +3415,45 @@ window.addEventListener('orientationchange', handleOrientationChange);
 // Listen for window resize (covers desktop and some mobile browsers)
 window.addEventListener('resize', handleOrientationChange);
 
+// ==================== PALETTE RESIZE FUNCTIONALITY ====================
+let paletteCollapsed = false;
+
+function togglePaletteSize() {
+    const palette = document.getElementById('building-palette');
+    const gameWrapper = document.getElementById('game-wrapper');
+    const resizeIcon = document.getElementById('palette-resize-icon');
+    const resizeText = document.getElementById('palette-resize-text');
+
+    paletteCollapsed = !paletteCollapsed;
+
+    if (paletteCollapsed) {
+        palette.classList.add('collapsed');
+        resizeIcon.textContent = '▲';
+        resizeText.textContent = 'Show';
+        // Adjust game wrapper to give more space
+        if (isMobileDevice()) {
+            gameWrapper.style.bottom = '65px';
+        }
+        console.log('📦 Palette collapsed - more game space');
+    } else {
+        palette.classList.remove('collapsed');
+        resizeIcon.textContent = '▼';
+        resizeText.textContent = 'Hide';
+        // Reset game wrapper bottom
+        if (isMobileDevice()) {
+            if (window.innerWidth <= 480) {
+                gameWrapper.style.bottom = 'calc(28vh + 5px)';
+            } else {
+                gameWrapper.style.bottom = 'calc(30vh + 5px)';
+            }
+        }
+        console.log('📦 Palette expanded');
+    }
+
+    // Trigger haptic feedback
+    triggerHaptic('light');
+}
+
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
@@ -3431,9 +3470,15 @@ document.addEventListener('DOMContentLoaded', () => {
     updateEfficiencyDisplay();
     renderScene('intro');
 
-    console.log('🎮 Game initialized - Mobile optimized!');
+    // Show palette resize button on mobile
     if (isMobileDevice()) {
+        const resizeBtn = document.getElementById('palette-resize-btn');
+        if (resizeBtn) {
+            resizeBtn.style.display = 'flex';
+        }
         console.log('📱 Mobile device detected - Touch controls enabled');
     }
+
+    console.log('🎮 Game initialized - Mobile optimized!');
 });
 
