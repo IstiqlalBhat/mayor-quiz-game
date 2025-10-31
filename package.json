@@ -2,9 +2,9 @@
   "name": "manestreet-mayor-game",
   "version": "1.0.0",
   "description": "Interactive city-building decision game where you play as mayor",
-  "main": "backend/server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node backend/server.js",
+    "start": "node server.js",
     "dev": "node backend/server.js"
   },
   "keywords": [

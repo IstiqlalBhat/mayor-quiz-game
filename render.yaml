@@ -9,10 +9,10 @@ services:
   # Web Service (Backend + Frontend)
   - type: web
     name: mayor-quiz-game
-    env: node
+    runtime: node
     plan: free
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
