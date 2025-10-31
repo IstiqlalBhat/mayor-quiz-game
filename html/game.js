@@ -1647,34 +1647,37 @@ function updateAchievementCounter() {
 }
 
 // ==================== DIFFICULTY SYSTEM ====================
+// NOTE: Difficulty selection is now handled in start-screen.js
+// This function is no longer used but kept for reference
+/*
 function selectDifficulty(difficultyId) {
     const mode = difficultyModes[difficultyId];
     if (!mode) {
         console.error('Invalid difficulty:', difficultyId);
         return;
     }
-    
+
     gameState.difficulty = mode;
-    
+
     // Apply difficulty modifiers
     gameState.cityFunds = mode.startingFunds;
     gameState.maxRelocations = mode.buildingRelocations;
     gameState.undoCount = mode.undoLimit;
-    
+
     console.log(`🎮 Difficulty selected: ${mode.name}`);
     console.log(`  ⏰ Timer: ${mode.timerPerScene}s`);
     console.log(`  💰 Starting Funds: $${mode.startingFunds}M`);
     console.log(`  🔄 Relocations: ${mode.buildingRelocations}`);
     console.log(`  ↶ Undos: ${mode.undoLimit}`);
-    
+
     // Update displays
     updateStats();
     updateUndoButton();
     updateDifficultyBadge();
-    
+
     // Track game start time for Rush Hour achievement
     gameState.gameStartTime = Date.now();
-    
+
     // Check if tutorial should be shown
     const tutorialStatus = localStorage.getItem('manestreet_tutorial');
     if (tutorialStatus === 'started' || (checkFirstTime() && tutorialStatus !== 'declined' && tutorialStatus !== 'skipped')) {
@@ -1688,6 +1691,7 @@ function selectDifficulty(difficultyId) {
         renderScene('choice1');
     }
 }
+*/
 
 function updateDifficultyBadge() {
     const badge = document.getElementById('difficulty-badge');
@@ -1923,12 +1927,7 @@ const gameData = {
     intro: {
         title: "Welcome to Tiger Central",
         story: `<p>Congratulations! You've just won the election to become the mayor of Tiger Central, a city with a population of 300,000.</p><p>The previous mayor was corrupt—embezzling money, stealing from residents, and ultimately disappearing without a trace, leaving Tiger Central in shambles.</p><p>The city needs strong leadership to rebuild. Every decision you make will have consequences that affect different groups of people. There are no perfect solutions—only choices and their outcomes.</p><p>Can you restore Tiger Central to its former glory while keeping everyone happy?</p>`,
-        choices: [{ text: "🎮 Start Your Mayoral Journey", icon: "🚀", next: 'difficulty_selection' }]
-    },
-    difficulty_selection: {
-        title: "Choose Your Challenge",
-        story: `<p>Before you begin your term, select your preferred difficulty level. Each mode offers a different challenge:</p>`,
-        isDifficultySelection: true
+        choices: [{ text: "🎮 Start Your Mayoral Journey", icon: "🚀", next: 'choice1' }]
     },
     choice1: {
         chapter: "Chapter 1: Economic Opportunity",
@@ -2172,20 +2171,13 @@ function renderScene(sceneKey) {
             quizTitle.textContent = 'Welcome';
         } else if (sceneKey === 'ending') {
             quizTitle.textContent = 'Game Complete';
-        } else if (scene.isDifficultySelection) {
-            quizTitle.textContent = 'Choose Difficulty';
         } else {
             quizTitle.textContent = scene.chapter || 'Decision Time';
         }
     }
-    
+
     if (sceneKey === 'ending') {
         renderEnding();
-        return;
-    }
-    
-    if (scene.isDifficultySelection) {
-        renderDifficultySelection();
         return;
     }
 
@@ -2198,7 +2190,7 @@ function renderScene(sceneKey) {
     html += `<div class="story-section"><h2>${scene.title}</h2><div class="story-text">${scene.story}</div></div>`;
 
     if (sceneKey === 'intro') {
-        html += `<div class="intro-screen"><button class="start-btn" onclick="startGame()"><span class="start-btn-text">Let's Begin!</span></button></div>`;
+        html += `<div class="intro-screen"><button class="start-btn" onclick="renderScene('choice1')"><span class="start-btn-text">Let's Begin!</span></button></div>`;
     } else {
         html += `<div class="choices">`;
         scene.choices.forEach((choice, index) => {
@@ -2211,45 +2203,14 @@ function renderScene(sceneKey) {
     }
 
     content.innerHTML = html;
-    
-    // Start timer for ALL decision scenes (not intro, difficulty, or ending)
-    if (sceneKey !== 'intro' && sceneKey !== 'ending' && sceneKey !== 'difficulty_selection') {
+
+    // Start timer for ALL decision scenes (not intro or ending)
+    if (sceneKey !== 'intro' && sceneKey !== 'ending') {
         console.log('🎮 Starting timer for scene:', sceneKey);
         setTimeout(() => {
             startTimer();
         }, 100);
     }
-}
-
-// Render difficulty selection screen
-function renderDifficultySelection() {
-    const content = document.getElementById('game-content');
-    const scene = gameData.difficulty_selection;
-    
-    let html = `<div class="story-section"><h2>${scene.title}</h2><div class="story-text">${scene.story}</div></div>`;
-    
-    html += `<div class="difficulty-grid">`;
-    
-    Object.values(difficultyModes).forEach(mode => {
-        html += `
-            <div class="difficulty-card" onclick="selectDifficulty('${mode.id}')" 
-                 style="border-color: ${mode.color};">
-                <div class="difficulty-icon" style="color: ${mode.color};">${mode.icon}</div>
-                <h3 class="difficulty-name">${mode.name}</h3>
-                <p class="difficulty-desc">${mode.description}</p>
-                <div class="difficulty-stats">
-                    <div class="diff-stat">⏰ <strong>${mode.timerPerScene}s</strong> per decision</div>
-                    <div class="diff-stat">💰 <strong>$${mode.startingFunds}M</strong> starting funds</div>
-                    <div class="diff-stat">🔄 <strong>${mode.buildingRelocations}</strong> relocations</div>
-                    <div class="diff-stat">↶ <strong>${mode.undoLimit}</strong> undos</div>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += `</div>`;
-    
-    content.innerHTML = html;
 }
 
 function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
@@ -2664,27 +2625,11 @@ function completeTutorial() {
 }
 
 // ==================== GAME START ====================
+// Note: Difficulty selection is now handled in start-screen.js
+// This function is kept for compatibility but just goes to first choice
 function startGame() {
-    // Check if first time playing
-    const isFirstTime = checkFirstTime();
-    
-    if (isFirstTime) {
-        // Show tutorial prompt
-        const proceed = confirm("First time playing? Would you like to see a quick tutorial? (Recommended for new players)");
-        if (proceed) {
-            // Go to difficulty selection, then tutorial will show
-            renderScene('difficulty_selection');
-            
-            // Start tutorial after difficulty is selected
-            // This will be triggered after selectDifficulty
-        } else {
-            localStorage.setItem('manestreet_played', 'true');
-            localStorage.setItem('manestreet_tutorial', 'declined');
-            renderScene('difficulty_selection');
-        }
-    } else {
-        renderScene('difficulty_selection');
-    }
+    // Go directly to first decision (difficulty already selected in start-screen.js)
+    renderScene('choice1');
 }
 
 // ==================== DYNAMIC QUIZ SYSTEM ====================
