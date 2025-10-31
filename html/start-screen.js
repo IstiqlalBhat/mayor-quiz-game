@@ -233,7 +233,7 @@ function startGame(difficulty) {
         gameAPI.startAutoSave(
             () => gameState,
             () => calculateFinalScore(),
-            () => 'current_scene' // Update this based on your game state
+            () => gameState.currentScene // Track actual current scene
         );
     }
 }

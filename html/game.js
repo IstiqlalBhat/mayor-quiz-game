@@ -122,6 +122,7 @@ const gameState = {
     cityFunds: 50,
     specialInterest: 50,
     personalProfit: 0,
+    currentScene: 'intro', // Track current scene for auto-save
     decisions: [],
     buildings: ['city-hall', 'house', 'house'],
     timerSeconds: 30,
@@ -721,25 +722,21 @@ function renderCityGrid() {
             }
 
         } else {
-            // Check if cell is allowed based on placement constraints
+            // Visual indicator for placement constraints (for mandatory building only)
             if (gameState.placementConstraints) {
                 const isAllowed = gameState.placementConstraints.allowedCells.includes(i);
                 if (!isAllowed) {
                     cell.classList.add('locked-cell');
-                    cell.setAttribute('title', 'This cell is locked for this placement');
+                    cell.setAttribute('title', 'Factory must be placed adjacent to river (other buildings can go anywhere)');
                 } else {
                     cell.classList.add('allowed-cell');
-                    // Add drop event listeners only to allowed cells
-                    cell.addEventListener('dragover', handleGridDragOver);
-                    cell.addEventListener('dragleave', handleGridDragLeave);
-                    cell.addEventListener('drop', handleGridDrop);
                 }
-            } else {
-                // No constraints - all empty cells are droppable
-                cell.addEventListener('dragover', handleGridDragOver);
-                cell.addEventListener('dragleave', handleGridDragLeave);
-                cell.addEventListener('drop', handleGridDrop);
             }
+
+            // All empty cells are droppable (constraints checked during drop)
+            cell.addEventListener('dragover', handleGridDragOver);
+            cell.addEventListener('dragleave', handleGridDragLeave);
+            cell.addEventListener('drop', handleGridDrop);
         }
 
         container.appendChild(cell);
@@ -826,7 +823,12 @@ function handleTouchMove(e) {
         if (cell && !cell.classList.contains('occupied')) {
             const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
             const canAfford = gameState.cityFunds >= touchDragData.building.cost;
-            const isConstrained = gameState.placementConstraints && !gameState.placementConstraints.allowedCells.includes(cellIndex);
+            // Only apply constraint if this is the mandatory building
+            const isConstrained = gameState.placementConstraints &&
+                gameState.awaitingPlacement &&
+                gameState.pendingBuildingPlacement &&
+                touchDragData.building.id === gameState.pendingBuildingPlacement.building.id &&
+                !gameState.placementConstraints.allowedCells.includes(cellIndex);
 
             if (canAfford && !isConstrained) {
                 cell.classList.add('drag-over');
@@ -865,8 +867,11 @@ function handleTouchEnd(e) {
             const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
             const building = touchDragData.building;
 
-            // Check placement constraints
-            if (gameState.placementConstraints) {
+            // Check placement constraints (only for mandatory building)
+            if (gameState.placementConstraints &&
+                gameState.awaitingPlacement &&
+                gameState.pendingBuildingPlacement &&
+                building.id === gameState.pendingBuildingPlacement.building.id) {
                 if (!gameState.placementConstraints.allowedCells.includes(cellIndex)) {
                     showToast('❌ Cannot place here! Must be adjacent to the river.', 'error');
                     triggerHaptic('error');
@@ -970,7 +975,13 @@ function handleGridDragOver(e) {
     // Check if this is a valid drop
     const isOccupied = gameState.cityGrid[cellIndex] !== null;
     const canAfford = currentDraggedBuilding ? gameState.cityFunds >= currentDraggedBuilding.cost : true;
-    const isConstrained = gameState.placementConstraints && !gameState.placementConstraints.allowedCells.includes(cellIndex);
+    // Only apply constraint if this is the mandatory building
+    const isConstrained = gameState.placementConstraints &&
+        gameState.awaitingPlacement &&
+        gameState.pendingBuildingPlacement &&
+        currentDraggedBuilding &&
+        currentDraggedBuilding.id === gameState.pendingBuildingPlacement.building.id &&
+        !gameState.placementConstraints.allowedCells.includes(cellIndex);
 
     if (isOccupied || !canAfford || isConstrained) {
         cell.classList.add('invalid-drop');
@@ -1011,8 +1022,12 @@ function handleGridDrop(e) {
     const cell = e.target.closest('.grid-cell');
     const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
 
-    // Check placement constraints
-    if (gameState.placementConstraints) {
+    // Check placement constraints (only for mandatory building)
+    if (gameState.placementConstraints &&
+        gameState.awaitingPlacement &&
+        gameState.pendingBuildingPlacement &&
+        currentDraggedBuilding &&
+        currentDraggedBuilding.id === gameState.pendingBuildingPlacement.building.id) {
         if (!gameState.placementConstraints.allowedCells.includes(cellIndex)) {
             showToast('❌ Cannot place here! Must be adjacent to the river.', 'error');
             triggerHaptic('error');
@@ -1413,22 +1428,55 @@ function applyBuildingEffects(building) {
     }
 }
 
-// Show toast notification
+// Toast notification tracking
+let activeToasts = [];
+
+// Show toast notification with stacking
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.textContent = message;
-    
+
     document.body.appendChild(toast);
-    
+
+    // Add to active toasts array
+    activeToasts.push(toast);
+
+    // Position all toasts vertically
+    repositionToasts();
+
     // Trigger animation
     setTimeout(() => toast.classList.add('show'), 10);
-    
+
     // Remove after 3 seconds
     setTimeout(() => {
         toast.classList.remove('show');
-        setTimeout(() => document.body.removeChild(toast), 300);
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+            // Remove from active toasts array
+            activeToasts = activeToasts.filter(t => t !== toast);
+            // Reposition remaining toasts
+            repositionToasts();
+        }, 300);
     }, 3000);
+}
+
+// Reposition all active toasts to stack vertically
+function repositionToasts() {
+    const isMobile = window.innerWidth <= 768;
+    const baseTop = isMobile ? 80 : 100;
+    const spacing = 10; // Gap between toasts
+
+    let currentTop = baseTop;
+
+    activeToasts.forEach(toast => {
+        toast.style.top = currentTop + 'px';
+        // Get height including padding and border
+        const toastHeight = toast.offsetHeight || 60; // Fallback to estimated height
+        currentTop += toastHeight + spacing;
+    });
 }
 
 // Show celebration effect on building placement
@@ -2407,6 +2455,7 @@ function getCurrentSceneKey() {
 
 function setCurrentSceneKey(key) {
     currentSceneKey = key;
+    gameState.currentScene = key; // Keep game state in sync for auto-save
 }
 
 // ==================== GAME DATA ====================
