@@ -3,53 +3,56 @@
 
 class AudioManager {
     constructor() {
+        // Cache-busting version - increment this whenever you replace audio files
+        const audioVersion = '?v=2';
+
         // Audio file paths (customize these paths to match your audio files)
         this.audioFiles = {
             // Background Music (MP3 format for smaller file sizes)
             music: {
-                menu: 'audio/music/menu.mp3',           // Start screen music
-                gameplay: 'audio/music/gameplay.mp3',   // Main game music
-                victory: 'audio/music/victory.mp3',     // Ending screen (high score)
-                defeat: 'audio/music/defeat.mp3'        // Ending screen (low score)
+                menu: 'audio/music/menu.mp3' + audioVersion,           // Start screen music
+                gameplay: 'audio/music/gameplay.mp3' + audioVersion,   // Main game music
+                victory: 'audio/music/victory.mp3' + audioVersion,     // Ending screen (high score)
+                defeat: 'audio/music/defeat.mp3' + audioVersion        // Ending screen (low score)
             },
 
             // Sound Effects (MP3 format for smaller file sizes)
             sfx: {
                 // UI Sounds
-                buttonClick: 'audio/sfx/button-click.mp3',
-                buttonHover: 'audio/sfx/button-hover.mp3',
-                modalOpen: 'audio/sfx/modal-open.mp3',
-                modalClose: 'audio/sfx/modal-close.mp3',
+                buttonClick: 'audio/sfx/button-click.mp3' + audioVersion,
+                buttonHover: 'audio/sfx/button-hover.mp3' + audioVersion,
+                modalOpen: 'audio/sfx/modal-open.mp3' + audioVersion,
+                modalClose: 'audio/sfx/modal-close.mp3' + audioVersion,
 
                 // Game Actions
-                buildingPlace: 'audio/sfx/building-place.mp3',
-                buildingUnlock: 'audio/sfx/building-unlock.mp3',
-                choiceSelect: 'audio/sfx/choice-select.mp3',
+                buildingPlace: 'audio/sfx/building-place.mp3' + audioVersion,
+                buildingUnlock: 'audio/sfx/building-unlock.mp3' + audioVersion,
+                choiceSelect: 'audio/sfx/choice-select.mp3' + audioVersion,
 
                 // Stats Changes
-                happinessUp: 'audio/sfx/happiness-up.mp3',
-                happinessDown: 'audio/sfx/happiness-down.mp3',
-                moneyGain: 'audio/sfx/money-gain.mp3',
-                moneyLoss: 'audio/sfx/money-loss.mp3',
+                happinessUp: 'audio/sfx/happiness-up.mp3' + audioVersion,
+                happinessDown: 'audio/sfx/happiness-down.mp3' + audioVersion,
+                moneyGain: 'audio/sfx/money-gain.mp3' + audioVersion,
+                moneyLoss: 'audio/sfx/money-loss.mp3' + audioVersion,
 
                 // Timer Sounds
-                timerTick: 'audio/sfx/timer-tick.mp3',
-                timerWarning: 'audio/sfx/timer-warning.mp3',
-                timerDanger: 'audio/sfx/timer-danger.mp3',
-                timerCritical: 'audio/sfx/timer-critical.mp3',
-                timeOut: 'audio/sfx/timer-critical.mp3',  // Reuse critical for timeout
+                timerTick: 'audio/sfx/timer-tick.mp3' + audioVersion,
+                timerWarning: 'audio/sfx/timer-warning.mp3' + audioVersion,
+                timerDanger: 'audio/sfx/timer-danger.mp3' + audioVersion,
+                timerCritical: 'audio/sfx/timer-critical.mp3' + audioVersion,
+                timeOut: 'audio/sfx/timer-critical.mp3' + audioVersion,  // Reuse critical for timeout
 
                 // Achievements & Rewards
-                achievement: 'audio/sfx/achievement.mp3',
-                levelComplete: 'audio/sfx/level-complete.mp3',
+                achievement: 'audio/sfx/achievement.mp3' + audioVersion,
+                levelComplete: 'audio/sfx/level-complete.mp3' + audioVersion,
 
                 // Zones
-                zoneFormed: 'audio/sfx/zone-formed.mp3',
+                zoneFormed: 'audio/sfx/zone-formed.mp3' + audioVersion,
 
                 // Notifications
-                notification: 'audio/sfx/notification.mp3',
-                success: 'audio/sfx/success.mp3',
-                error: 'audio/sfx/error.mp3'
+                notification: 'audio/sfx/notification.mp3' + audioVersion,
+                success: 'audio/sfx/success.mp3' + audioVersion,
+                error: 'audio/sfx/error.mp3' + audioVersion
             }
         };
 
@@ -97,36 +100,66 @@ class AudioManager {
         // Preload background music
         for (const [key, path] of Object.entries(this.audioFiles.music)) {
             try {
-                const audio = new Audio(path);
+                const audio = new Audio();
+                audio.src = path;
                 audio.volume = this.musicVolume;
                 audio.loop = (key === 'menu' || key === 'gameplay'); // Loop menu and gameplay music
                 audio.preload = 'auto';
+
+                // Force immediate loading
+                audio.load();
+
                 this.musicTracks[key] = audio;
+
+                // Add event listener to confirm loading
+                audio.addEventListener('canplaythrough', () => {
+                    console.log(`✅ Music loaded: ${key}`);
+                }, { once: true });
             } catch (error) {
                 console.warn(`⚠️ Could not load music: ${key}`, error);
             }
         }
 
-        // Preload sound effects (only common ones to save memory)
-        const prioritySfx = [
-            'buttonClick', 'choiceSelect', 'buildingPlace',
-            'achievement', 'timerCritical', 'success', 'error'
-        ];
+        // PERFORMANCE OPTIMIZATION: Preload ALL sound effects for instant playback
+        // Creates audio pool for frequently used sounds (multiple instances)
+        const audioPool = {
+            buttonClick: 3,    // 3 instances for rapid clicks
+            choiceSelect: 2,
+            buildingPlace: 2,
+            timerCritical: 2
+        };
 
-        for (const key of prioritySfx) {
-            if (this.audioFiles.sfx[key]) {
-                try {
-                    const audio = new Audio(this.audioFiles.sfx[key]);
+        for (const [key, path] of Object.entries(this.audioFiles.sfx)) {
+            try {
+                const poolSize = audioPool[key] || 1;
+                const instances = [];
+
+                for (let i = 0; i < poolSize; i++) {
+                    const audio = new Audio();
+                    audio.src = path;
                     audio.volume = this.sfxVolume;
                     audio.preload = 'auto';
-                    this.soundEffects[key] = audio;
-                } catch (error) {
-                    console.warn(`⚠️ Could not load SFX: ${key}`, error);
+
+                    // Force immediate loading
+                    audio.load();
+
+                    instances.push(audio);
+
+                    // Log when loaded
+                    audio.addEventListener('canplaythrough', () => {
+                        if (i === 0) console.log(`✅ SFX loaded: ${key}`);
+                    }, { once: true });
                 }
+
+                // Store array of instances for pooling
+                this.soundEffects[key] = instances.length === 1 ? instances[0] : instances;
+
+            } catch (error) {
+                console.warn(`⚠️ Could not load SFX: ${key}`, error);
             }
         }
 
-        console.log('🎵 Audio files preloaded');
+        console.log('🎵 Audio files preloaded with pooling for instant playback');
     }
 
     // ==================== MUSIC CONTROLS ====================
@@ -243,14 +276,17 @@ class AudioManager {
     playSfx(sfxName, volume = null) {
         if (!this.soundEnabled) return;
 
-        // Check if already loaded
+        // Get the sound effect (could be single audio or array of pooled instances)
         let sfx = this.soundEffects[sfxName];
 
-        // If not preloaded, load it now
+        // If not preloaded, load it now (fallback)
         if (!sfx && this.audioFiles.sfx[sfxName]) {
             try {
-                sfx = new Audio(this.audioFiles.sfx[sfxName]);
+                sfx = new Audio();
+                sfx.src = this.audioFiles.sfx[sfxName];
                 sfx.volume = volume !== null ? volume : this.sfxVolume;
+                sfx.preload = 'auto';
+                sfx.load();
                 this.soundEffects[sfxName] = sfx;
             } catch (error) {
                 console.warn(`⚠️ Could not load SFX: ${sfxName}`, error);
@@ -263,13 +299,31 @@ class AudioManager {
             return;
         }
 
-        // Clone the audio node to allow overlapping sounds
-        const sfxClone = sfx.cloneNode();
-        sfxClone.volume = volume !== null ? volume : this.sfxVolume;
+        // PERFORMANCE OPTIMIZATION: Use audio pooling for instant playback
+        if (Array.isArray(sfx)) {
+            // Find a free instance in the pool (one that's not currently playing)
+            let availableAudio = sfx.find(audio => audio.paused || audio.ended);
 
-        sfxClone.play().catch(err => {
-            console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
-        });
+            // If all instances are playing, use the first one anyway (will restart it)
+            if (!availableAudio) {
+                availableAudio = sfx[0];
+            }
+
+            // Reset and play
+            availableAudio.currentTime = 0;
+            availableAudio.volume = volume !== null ? volume : this.sfxVolume;
+            availableAudio.play().catch(err => {
+                console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
+            });
+        } else {
+            // Single instance - clone for overlapping sounds
+            const sfxClone = sfx.cloneNode();
+            sfxClone.volume = volume !== null ? volume : this.sfxVolume;
+
+            sfxClone.play().catch(err => {
+                console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
+            });
+        }
     }
 
     setSfxVolume(volume) {
