@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Debug Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background: #667eea;
+            color: white;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>🎵 Audio Debug Tool</h1>
+
+    <div class="section">
+        <h2>Audio Manager Status</h2>
+        <div id="manager-status"></div>
+    </div>
+
+    <div class="section">
+        <h2>Test Music Tracks</h2>
+        <button onclick="testMusic('menu')">Play Menu Music</button>
+        <button onclick="testMusic('gameplay')">Play Gameplay Music</button>
+        <button onclick="testMusic('victory')">Play Victory Music</button>
+        <button onclick="testMusic('defeat')">Play Defeat Music</button>
+        <button onclick="stopMusic()">Stop Music</button>
+        <div id="music-status"></div>
+    </div>
+
+    <div class="section">
+        <h2>Test Sound Effects</h2>
+        <button onclick="testSfx('buttonClick')">Button Click</button>
+        <button onclick="testSfx('choiceSelect')">Choice Select</button>
+        <button onclick="testSfx('buildingPlace')">Building Place</button>
+        <button onclick="testSfx('buildingUnlock')">Building Unlock</button>
+        <button onclick="testSfx('achievement')">Achievement</button>
+        <button onclick="testSfx('timerCritical')">Timer Critical</button>
+        <div id="sfx-status"></div>
+    </div>
+
+    <div class="section">
+        <h2>Settings</h2>
+        <button onclick="toggleMusic()">Toggle Music</button>
+        <button onclick="toggleSound()">Toggle Sound</button>
+        <div id="settings-status"></div>
+    </div>
+
+    <div class="section">
+        <h2>Audio Files Check</h2>
+        <button onclick="checkAudioFiles()">Check All Audio Files</button>
+        <div id="files-status"></div>
+    </div>
+
+    <script src="audio-manager.js"></script>
+    <script>
+        function updateManagerStatus() {
+            const status = document.getElementById('manager-status');
+            if (typeof audioManager === 'undefined') {
+                status.innerHTML = '<div class="error">❌ audioManager is NOT defined!</div>';
+                return;
+            }
+
+            status.innerHTML = `
+                <div class="success">✅ audioManager is loaded</div>
+                <div class="info">🎵 Music Enabled: ${audioManager.musicEnabled}</div>
+                <div class="info">🔊 Sound Enabled: ${audioManager.soundEnabled}</div>
+                <div class="info">📦 Music Tracks Loaded: ${Object.keys(audioManager.musicTracks).length}</div>
+                <div class="info">📦 Sound Effects Loaded: ${Object.keys(audioManager.soundEffects).length}</div>
+                <div class="info">🎼 Current Music: ${audioManager.currentMusic ? 'Playing' : 'None'}</div>
+            `;
+        }
+
+        function testMusic(trackName) {
+            const status = document.getElementById('music-status');
+            if (typeof audioManager === 'undefined') {
+                status.innerHTML = '<div class="error">❌ audioManager not available</div>';
+                return;
+            }
+
+            try {
+                audioManager.playMusic(trackName, true);
+                status.innerHTML = `<div class="success">✅ Playing ${trackName} music...</div>`;
+                setTimeout(updateManagerStatus, 500);
+            } catch (error) {
+                status.innerHTML = `<div class="error">❌ Error playing ${trackName}: ${error.message}</div>`;
+                console.error('Music error:', error);
+            }
+        }
+
+        function stopMusic() {
+            const status = document.getElementById('music-status');
+            if (typeof audioManager === 'undefined') {
+                status.innerHTML = '<div class="error">❌ audioManager not available</div>';
+                return;
+            }
+
+            try {
+                audioManager.stopMusic();
+                status.innerHTML = '<div class="success">✅ Music stopped</div>';
+                setTimeout(updateManagerStatus, 500);
+            } catch (error) {
+                status.innerHTML = `<div class="error">❌ Error stopping music: ${error.message}</div>`;
+            }
+        }
+
+        function testSfx(sfxName) {
+            const status = document.getElementById('sfx-status');
+            if (typeof audioManager === 'undefined') {
+                status.innerHTML = '<div class="error">❌ audioManager not available</div>';
+                return;
+            }
+
+            try {
+                audioManager.playSfx(sfxName);
+                status.innerHTML = `<div class="success">✅ Played ${sfxName} sound effect</div>`;
+            } catch (error) {
+                status.innerHTML = `<div class="error">❌ Error playing ${sfxName}: ${error.message}</div>`;
+                console.error('SFX error:', error);
+            }
+        }
+
+        function toggleMusic() {
+            const status = document.getElementById('settings-status');
+            if (typeof audioManager === 'undefined') {
+                status.innerHTML = '<div class="error">❌ audioManager not available</div>';
+                return;
+            }
+
+            const enabled = audioManager.toggleMusic();
+            status.innerHTML = `<div class="info">🎵 Music: ${enabled ? 'ON' : 'OFF'}</div>`;
+            setTimeout(updateManagerStatus, 100);
+        }
+
+        function toggleSound() {
+            const status = document.getElementById('settings-status');
+            if (typeof audioManager === 'undefined') {
+                status.innerHTML = '<div class="error">❌ audioManager not available</div>';
+                return;
+            }
+
+            const enabled = audioManager.toggleSound();
+            status.innerHTML = `<div class="info">🔊 Sound: ${enabled ? 'ON' : 'OFF'}</div>`;
+            setTimeout(updateManagerStatus, 100);
+        }
+
+        async function checkAudioFiles() {
+            const status = document.getElementById('files-status');
+            status.innerHTML = '<div class="info">⏳ Checking audio files...</div>';
+
+            if (typeof audioManager === 'undefined') {
+                status.innerHTML = '<div class="error">❌ audioManager not available</div>';
+                return;
+            }
+
+            let results = '<h3>Music Files:</h3>';
+            for (const [key, audio] of Object.entries(audioManager.musicTracks)) {
+                const state = audio.readyState;
+                const states = ['HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_CURRENT_DATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA'];
+                const stateText = states[state] || 'UNKNOWN';
+                const className = state >= 4 ? 'success' : (state > 0 ? 'info' : 'error');
+                results += `<div class="${className}">${key}: ${stateText} (${state}/4) - ${audio.src}</div>`;
+            }
+
+            results += '<h3>Sound Effects:</h3>';
+            for (const [key, sfx] of Object.entries(audioManager.soundEffects)) {
+                if (Array.isArray(sfx)) {
+                    const state = sfx[0].readyState;
+                    const states = ['HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_CURRENT_DATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA'];
+                    const stateText = states[state] || 'UNKNOWN';
+                    const className = state >= 4 ? 'success' : (state > 0 ? 'info' : 'error');
+                    results += `<div class="${className}">${key}: ${stateText} (${state}/4) [Pool: ${sfx.length}] - ${sfx[0].src}</div>`;
+                } else {
+                    const state = sfx.readyState;
+                    const states = ['HAVE_NOTHING', 'HAVE_METADATA', 'HAVE_CURRENT_DATA', 'HAVE_FUTURE_DATA', 'HAVE_ENOUGH_DATA'];
+                    const stateText = states[state] || 'UNKNOWN';
+                    const className = state >= 4 ? 'success' : (state > 0 ? 'info' : 'error');
+                    results += `<div class="${className}">${key}: ${stateText} (${state}/4) - ${sfx.src}</div>`;
+                }
+            }
+
+            status.innerHTML = results;
+        }
+
+        // Initialize on load
+        setTimeout(() => {
+            updateManagerStatus();
+            checkAudioFiles();
+        }, 1000);
+    </script>
+</body>
+</html>

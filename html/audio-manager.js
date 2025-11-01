@@ -97,6 +97,9 @@ class AudioManager {
     }
 
     preloadAudio() {
+        let musicLoaded = 0;
+        let sfxLoaded = 0;
+
         // Preload background music
         for (const [key, path] of Object.entries(this.audioFiles.music)) {
             try {
@@ -114,6 +117,12 @@ class AudioManager {
                 // Add event listener to confirm loading
                 audio.addEventListener('canplaythrough', () => {
                     console.log(`✅ Music loaded: ${key}`);
+                    musicLoaded++;
+                }, { once: true });
+
+                // Add error handler
+                audio.addEventListener('error', (e) => {
+                    console.error(`❌ Failed to load music ${key}:`, e);
                 }, { once: true });
             } catch (error) {
                 console.warn(`⚠️ Could not load music: ${key}`, error);
@@ -147,7 +156,17 @@ class AudioManager {
 
                     // Log when loaded
                     audio.addEventListener('canplaythrough', () => {
-                        if (i === 0) console.log(`✅ SFX loaded: ${key}`);
+                        if (i === 0) {
+                            console.log(`✅ SFX loaded: ${key}`);
+                            sfxLoaded++;
+                        }
+                    }, { once: true });
+
+                    // Add error handler
+                    audio.addEventListener('error', (e) => {
+                        if (i === 0) {
+                            console.error(`❌ Failed to load SFX ${key}:`, e);
+                        }
                     }, { once: true });
                 }
 
@@ -159,17 +178,30 @@ class AudioManager {
             }
         }
 
-        console.log('🎵 Audio files preloaded with pooling for instant playback');
+        // Log summary after a short delay to let files load
+        setTimeout(() => {
+            console.log(`🎵 Audio preload summary: ${musicLoaded}/${Object.keys(this.audioFiles.music).length} music tracks, ${sfxLoaded}/${Object.keys(this.audioFiles.sfx).length} sound effects`);
+        }, 2000);
+
+        console.log('🎵 Audio files preloading with pooling for instant playback');
     }
 
     // ==================== MUSIC CONTROLS ====================
 
-    playMusic(trackName, fadeIn = true) {
-        if (!this.musicEnabled) return;
+    async playMusic(trackName, fadeIn = true) {
+        if (!this.musicEnabled) {
+            console.log(`🎵 Music disabled, skipping ${trackName}`);
+            return;
+        }
 
-        // Stop current music
+        // Wait for any pending music operations
+        if (this.currentMusicPromise) {
+            await this.currentMusicPromise.catch(() => {});
+        }
+
+        // Stop current music and wait for it to finish
         if (this.currentMusic) {
-            this.stopMusic(fadeIn);
+            await this.stopMusic(fadeIn);
         }
 
         // Get the track
@@ -178,6 +210,9 @@ class AudioManager {
             console.warn(`⚠️ Music track not found: ${trackName}`);
             return;
         }
+
+        // Reset the track
+        track.currentTime = 0;
 
         // Play with optional fade in
         if (fadeIn) {
@@ -203,20 +238,20 @@ class AudioManager {
         console.log(`🎵 Playing music: ${trackName}`);
     }
 
-    stopMusic(fadeOut = true) {
+    async stopMusic(fadeOut = true) {
         if (!this.currentMusic) return;
 
-        if (fadeOut) {
-            this.fadeVolume(this.currentMusic, 0, 1000).then(() => {
-                this.currentMusic.pause();
-                this.currentMusic.currentTime = 0;
-            });
-        } else {
-            this.currentMusic.pause();
-            this.currentMusic.currentTime = 0;
-        }
-
+        const musicToStop = this.currentMusic;
         this.currentMusic = null;
+
+        if (fadeOut) {
+            await this.fadeVolume(musicToStop, 0, 1000);
+            musicToStop.pause();
+            musicToStop.currentTime = 0;
+        } else {
+            musicToStop.pause();
+            musicToStop.currentTime = 0;
+        }
     }
 
     async pauseMusic() {
@@ -274,7 +309,10 @@ class AudioManager {
     // ==================== SOUND EFFECTS ====================
 
     playSfx(sfxName, volume = null) {
-        if (!this.soundEnabled) return;
+        if (!this.soundEnabled) {
+            console.log(`🔇 Sound disabled, skipping SFX: ${sfxName}`);
+            return;
+        }
 
         // Get the sound effect (could be single audio or array of pooled instances)
         let sfx = this.soundEffects[sfxName];
@@ -312,15 +350,19 @@ class AudioManager {
             // Reset and play
             availableAudio.currentTime = 0;
             availableAudio.volume = volume !== null ? volume : this.sfxVolume;
-            availableAudio.play().catch(err => {
+            availableAudio.play().then(() => {
+                console.log(`🔊 Played SFX: ${sfxName}`);
+            }).catch(err => {
                 console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
             });
         } else {
-            // Single instance - clone for overlapping sounds
-            const sfxClone = sfx.cloneNode();
-            sfxClone.volume = volume !== null ? volume : this.sfxVolume;
+            // Single instance - reset and play
+            sfx.currentTime = 0;
+            sfx.volume = volume !== null ? volume : this.sfxVolume;
 
-            sfxClone.play().catch(err => {
+            sfx.play().then(() => {
+                console.log(`🔊 Played SFX: ${sfxName}`);
+            }).catch(err => {
                 console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
             });
         }
