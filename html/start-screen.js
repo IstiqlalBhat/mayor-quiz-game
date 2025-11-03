@@ -80,7 +80,7 @@ function initializeStartScreen() {
 
         // Also add a one-time click handler to start music on first interaction
         const startMusicOnInteraction = () => {
-            if (audioManager.musicEnabled && !audioManager.currentMusic?.paused === false) {
+            if (audioManager.musicEnabled && (!audioManager.currentMusic || audioManager.currentMusic.paused)) {
                 audioManager.playMusic('menu', true);
             }
             // Remove listener after first interaction
