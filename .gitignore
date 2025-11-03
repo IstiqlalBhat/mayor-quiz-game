@@ -12,3 +12,7 @@ npm-debug.log
 !README.md
 !ARCHITECTURE.md
 !GAME_FEATURES_SHOWCASE.md
+
+# Large audio files (use mp3 instead)
+*.wav
+html/audio/**/*.wav
