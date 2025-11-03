@@ -888,9 +888,9 @@ body {
 /* ==================== DYNAMIC QUIZ OVERLAY ==================== */
 .game-content-overlay {
     position: fixed; /* Changed from absolute to fixed to match placement-overlay stacking context */
-    /* Center the dialog box */
+    /* Center the dialog box, accounting for building palette on desktop (320px on right) */
     top: 50%;
-    left: 50%;
+    left: calc(50% - 160px); /* Shift left by half of palette width (320px / 2) */
     transform: translate(-50%, -50%);
     /* Dialog box dimensions */
     width: 90%;
@@ -2460,6 +2460,7 @@ body {
         max-width: 600px;
         max-height: 85vh;
         border-radius: 25px;
+        left: 50%; /* Center normally on tablets (palette is at bottom) */
     }
     
     /* Compact timer for mobile */
@@ -2657,6 +2658,7 @@ body {
         /* Better scrolling on mobile */
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+        left: 50%; /* Center normally on mobile (palette is at bottom) */
     }
 
     .quiz-header {
@@ -2911,6 +2913,7 @@ body {
         max-width: none;
         max-height: 92vh;
         border-radius: 15px;
+        left: 50%; /* Center normally on small phones (palette is at bottom) */
     }
 
     .quiz-header {
@@ -3205,6 +3208,7 @@ body {
     .game-content-overlay {
         width: 90%;
         max-height: 88vh;
+        left: calc(50% - 100px); /* Shift left by half of palette width (200px / 2) for landscape */
     }
 
     .game-content {
