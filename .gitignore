@@ -4,6 +4,9 @@ npm-debug.log
 *.log
 .env
 
+# Claude Code settings
+.claude/
+
 # Documentation files
 *.md
 !README.md
