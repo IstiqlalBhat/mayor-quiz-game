@@ -13,3 +13,5 @@ DROP TABLE IF EXISTS game_sessions;
 -- Note: Indexes are automatically dropped when tables are dropped
 
 
+
+

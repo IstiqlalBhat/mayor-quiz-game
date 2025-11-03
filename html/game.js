@@ -100,7 +100,7 @@ const difficultyModes = {
         timerPerScene: 20,
         startingFunds: 50,
         buildingRelocations: 1,
-        undoLimit: 1,
+        undoLimit: 2,
         description: "Quick decisions, tough choices"
     },
     expert: {
@@ -111,7 +111,7 @@ const difficultyModes = {
         timerPerScene: 15,
         startingFunds: 40,
         buildingRelocations: 0,
-        undoLimit: 0,
+        undoLimit: 1,
         description: "No mistakes allowed!"
     }
 };
@@ -501,6 +501,13 @@ function placeInitialNeighborhood() {
     }
 
     placeGridFeature('existing_neighborhood', pattern, true); // Silent placement
+}
+
+// Place river at start (permanent feature)
+function placeInitialRiver() {
+    const pattern = generateRiverPattern();
+    placeGridFeature('river', pattern, true); // Silent placement
+    console.log('🌊 River placed on grid (permanent feature)');
 }
 
 // Get all cells adjacent to a specific feature type
@@ -2221,7 +2228,10 @@ function updateDifficultyBadge() {
 
 // ==================== TIMER SYSTEM ====================
 function getTimerDuration() {
-    return gameState.difficulty ? gameState.difficulty.timerPerScene : 60;
+    const duration = gameState.difficulty ? gameState.difficulty.timerPerScene : 60;
+    console.log('🔍 getTimerDuration - gameState.difficulty:', gameState.difficulty);
+    console.log('🔍 getTimerDuration - returning:', duration);
+    return duration;
 }
 
 function startTimer() {
@@ -2229,6 +2239,7 @@ function startTimer() {
 
     // Get consistent timer duration from difficulty (always the same)
     const baseDuration = getTimerDuration();
+    console.log('⏰ startTimer - baseDuration:', baseDuration);
     gameState.timerSeconds = baseDuration;
     gameState.currentDecisionTime = baseDuration; // Track starting time
 
@@ -2475,9 +2486,8 @@ const gameData = {
                 icon: "✅",
                 effects: { happiness: 10, cityFunds: 20, specialInterest: 15, personalProfit: 5 },
                 next: 'choice2A',
-                consequence: "TigerTech Industries is excited to begin construction near the river. Citizens are hopeful about new job opportunities. The river will appear on your city map.",
-                unlocks: ['factory', 'house'], // Unlock factory and house buildings
-                placeFeature: 'river' // Place river on the grid
+                consequence: "TigerTech Industries is excited to begin construction near the river. Citizens are hopeful about new job opportunities.",
+                unlocks: ['factory', 'house'] // Unlock factory and house buildings
             },
             {
                 text: "Reject the factory",
@@ -2695,8 +2705,12 @@ function applyEffects(effects) {
     if (effects.happiness) gameState.happiness += effects.happiness;
     if (effects.cityFunds) gameState.cityFunds += effects.cityFunds;
     if (effects.specialInterest) gameState.specialInterest += effects.specialInterest;
-    if (effects.personalProfit) gameState.personalProfit += effects.personalProfit;
-    
+    if (effects.personalProfit) {
+        const oldProfit = gameState.personalProfit;
+        gameState.personalProfit += effects.personalProfit;
+        console.log(`💵 Personal Profit: $${oldProfit}M → $${gameState.personalProfit}M (${effects.personalProfit > 0 ? '+' : ''}${effects.personalProfit}M)`);
+    }
+
     updateStats();
 }
 
@@ -2756,9 +2770,28 @@ function renderScene(sceneKey) {
     // Start timer for ALL decision scenes (not intro or ending)
     if (sceneKey !== 'intro' && sceneKey !== 'ending') {
         console.log('🎮 Starting timer for scene:', sceneKey);
-        setTimeout(() => {
-            startTimer();
-        }, 100);
+
+        // Check if tutorial should be shown (first-time player on first choice)
+        if (sceneKey === 'choice1' && window.shouldShowTutorial) {
+            console.log('📚 Showing tutorial for first-time player');
+            window.shouldShowTutorial = false; // Only show once
+
+            // Delay tutorial slightly so all UI elements are ready
+            setTimeout(() => {
+                if (typeof startTutorial === 'function') {
+                    startTutorial();
+                } else {
+                    console.warn('⚠️ startTutorial function not found');
+                    // Start timer if tutorial can't be shown
+                    startTimer();
+                }
+            }, 500);
+        } else {
+            // Normal timer start
+            setTimeout(() => {
+                startTimer();
+            }, 100);
+        }
     }
 }
 
@@ -2779,7 +2812,8 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
     // Mark that a choice has been made
     gameState.choiceMade = true;
 
-    stopTimer();
+    // Timer continues running - it will be stopped when the next scene loads
+    // This allows the timer to keep counting during consequence display and building placement
 
     // Play choice sound
     if (!isTimedOut && typeof audioManager !== 'undefined') {
@@ -3003,9 +3037,37 @@ function renderEnding() {
     let message = '';
 
     // ==================== IMPROVED SCORING SYSTEM ====================
-    // Base score is the average of the three main stats (weighted heavily)
-    const baseScore = (gameState.happiness + gameState.cityFunds + gameState.specialInterest) / 3;
 
+    // STEP 1: Normalize City Funds to 0-100 scale
+    // City funds are in millions and vary by difficulty, so we need to normalize them
+    const startingFunds = gameState.difficulty?.startingFunds || 60; // Default to normal mode
+    const fundsRatio = gameState.cityFunds / startingFunds;
+
+    // Calculate funds score (0-100) - spending money on buildings is GOOD!
+    let fundsScore;
+    if (fundsRatio >= 1.0) {
+        // Made profit! Excellent financial management
+        fundsScore = 100;
+    } else if (fundsRatio >= 0.5) {
+        // Still have 50%+ of starting funds - very good
+        fundsScore = 75 + ((fundsRatio - 0.5) * 50);
+    } else if (fundsRatio >= 0.2) {
+        // Have 20-50% of funds - reasonable (spent on city development)
+        fundsScore = 50 + ((fundsRatio - 0.2) * 83.33);
+    } else if (fundsRatio >= 0) {
+        // Have 0-20% of funds - low but not debt
+        fundsScore = 25 + (fundsRatio * 125);
+    } else {
+        // Negative funds (debt) - bad
+        fundsScore = Math.max(0, 25 + (fundsRatio * 125));
+    }
+
+    // STEP 2: Calculate weighted base score
+    // Happiness is most important (50%), Special Interest (30%), Funds (20%)
+    // This reflects that citizen happiness is the primary goal of a mayor
+    const baseScore = (gameState.happiness * 0.5) + (gameState.specialInterest * 0.3) + (fundsScore * 0.2);
+
+    // STEP 3: Calculate bonus scores
     // Time bonus contributes less (max ~20 points instead of unlimited)
     const timeBonusScore = Math.min(20, gameState.timeBonus / 10);
 
@@ -3018,20 +3080,25 @@ function renderEnding() {
     // Planning efficiency bonus (good city planning adds up to 10 points)
     const efficiencyBonus = gameState.planningEfficiency > 85 ? 10 : (gameState.planningEfficiency > 70 ? 5 : 0);
 
-    // Calculate final score (base score is 70% of weight, bonuses are 30%)
+    // STEP 4: Calculate final score (base score is 70% of weight, bonuses are 30%)
     const finalScore = (baseScore * 0.7) + (timeBonusScore * 0.15) + (achievementBonus * 0.1) + (efficiencyBonus * 0.05) + profitPenalty;
 
-    // Check for critical failures (any stat below 20 = automatic bad rating)
-    const minStat = Math.min(gameState.happiness, gameState.cityFunds, gameState.specialInterest);
+    // STEP 5: Check for critical failures (any NORMALIZED stat below 20 = automatic bad rating)
+    // Use normalized funds score, not raw dollar amount!
+    const minStat = Math.min(gameState.happiness, fundsScore, gameState.specialInterest);
     const hasCriticalFailure = minStat < 20;
 
     console.log('📊 SCORING BREAKDOWN:');
-    console.log(`  Base Score: ${baseScore.toFixed(1)} (weight: 70%)`);
-    console.log(`  Time Bonus: ${timeBonusScore.toFixed(1)} (weight: 15%)`);
-    console.log(`  Achievements: ${achievementBonus.toFixed(1)} (weight: 10%)`);
-    console.log(`  Efficiency: ${efficiencyBonus.toFixed(1)} (weight: 5%)`);
-    console.log(`  Profit Penalty: ${profitPenalty}`);
-    console.log(`  Final Score: ${finalScore.toFixed(1)}`);
+    console.log(`  Happiness: ${gameState.happiness}/100`);
+    console.log(`  Special Interest: ${gameState.specialInterest}/100`);
+    console.log(`  City Funds: $${gameState.cityFunds}M (normalized: ${fundsScore.toFixed(1)}/100)`);
+    console.log(`  Personal Profit: $${gameState.personalProfit}M`);
+    console.log(`  Base Score: ${baseScore.toFixed(1)}/100 (weight: 70%)`);
+    console.log(`  Time Bonus: ${timeBonusScore.toFixed(1)} points (weight: 15%)`);
+    console.log(`  Achievements: ${achievementBonus.toFixed(1)} points (weight: 10%)`);
+    console.log(`  Efficiency: ${efficiencyBonus.toFixed(1)} points (weight: 5%)`);
+    console.log(`  Profit Penalty: ${profitPenalty} points`);
+    console.log(`  Final Score: ${finalScore.toFixed(1)}/100`);
     console.log(`  Critical Failure: ${hasCriticalFailure}`);
 
     // Play victory or defeat music based on score
@@ -3291,6 +3358,16 @@ function checkFirstTime() {
 function startTutorial() {
     currentTutorialStep = 0;
 
+    // Stop the timer during tutorial, but keep it visible
+    stopTimer();
+
+    // Keep timer visible during tutorial by adding 'active' class back
+    const timerContainer = document.getElementById('timer-container');
+    if (timerContainer) {
+        timerContainer.classList.add('active');
+        console.log('⏸️ Timer paused for tutorial (but kept visible)');
+    }
+
     // Hide the question overlay during tutorial
     const gameContentOverlay = document.getElementById('game-content-overlay');
     if (gameContentOverlay) {
@@ -3309,34 +3386,57 @@ function showTutorialStep(stepIndex) {
     const text = document.getElementById('tutorial-text');
     const progress = document.getElementById('tutorial-progress');
     const nextBtn = document.querySelector('.tutorial-next');
-    
+
     overlay.style.display = 'block';
     title.textContent = step.title;
     text.textContent = step.text;
     progress.textContent = `Step ${stepIndex + 1} of ${tutorialSteps.length}`;
-    
+
     if (stepIndex === tutorialSteps.length - 1) {
         nextBtn.textContent = 'Start Game! →';
     } else {
         nextBtn.textContent = 'Next →';
     }
-    
-    // Highlight element if specified
+
+    // Highlight element if specified - with delay to ensure rendering
     if (step.highlightElement) {
-        const element = document.getElementById(step.highlightElement) || 
-                       document.querySelector(`.${step.highlightElement}`);
-        if (element) {
-            const rect = element.getBoundingClientRect();
-            highlight.style.top = rect.top - 10 + 'px';
-            highlight.style.left = rect.left - 10 + 'px';
-            highlight.style.width = rect.width + 20 + 'px';
-            highlight.style.height = rect.height + 20 + 'px';
-            highlight.style.display = 'block';
-        }
+        // Small delay to ensure DOM has rendered and CSS has applied
+        setTimeout(() => {
+            const element = document.getElementById(step.highlightElement) ||
+                           document.querySelector(`.${step.highlightElement}`);
+
+            if (element) {
+                // Force a reflow to ensure accurate measurements
+                element.offsetHeight;
+
+                const rect = element.getBoundingClientRect();
+
+                // Debug logging
+                console.log(`🎯 Highlighting element: ${step.highlightElement}`);
+                console.log(`  Position: top=${rect.top}, left=${rect.left}`);
+                console.log(`  Size: width=${rect.width}, height=${rect.height}`);
+
+                // Check if element has valid dimensions
+                if (rect.width > 0 && rect.height > 0) {
+                    highlight.style.top = rect.top - 10 + 'px';
+                    highlight.style.left = rect.left - 10 + 'px';
+                    highlight.style.width = rect.width + 20 + 'px';
+                    highlight.style.height = rect.height + 20 + 'px';
+                    highlight.style.display = 'block';
+                    console.log('✅ Highlight applied successfully');
+                } else {
+                    console.warn('⚠️ Element has zero dimensions, skipping highlight');
+                    highlight.style.display = 'none';
+                }
+            } else {
+                console.warn(`⚠️ Element not found: ${step.highlightElement}`);
+                highlight.style.display = 'none';
+            }
+        }, 100); // 100ms delay to ensure rendering
     } else {
         highlight.style.display = 'none';
     }
-    
+
     console.log(`📚 Tutorial step ${stepIndex + 1}/${tutorialSteps.length}: ${step.title}`);
 }
 
@@ -3357,7 +3457,13 @@ function skipTutorial() {
 
 function completeTutorial() {
     const overlay = document.getElementById('tutorial-overlay');
+    const highlight = document.getElementById('tutorial-highlight');
+
+    // Ensure both overlay and highlight are completely hidden
     overlay.style.display = 'none';
+    if (highlight) {
+        highlight.style.display = 'none';
+    }
 
     // Show the question overlay again after tutorial
     const gameContentOverlay = document.getElementById('game-content-overlay');
@@ -3372,6 +3478,11 @@ function completeTutorial() {
     gameState.timeBankSeconds += 30;
 
     console.log('📚 Tutorial completed! +30s bonus for first decision');
+    console.log('🎯 Tutorial overlay and highlight hidden');
+
+    // Resume the timer after tutorial
+    startTimer();
+    console.log('▶️ Timer resumed after tutorial');
 }
 
 // ==================== GAME START ====================
@@ -3507,20 +3618,25 @@ function togglePaletteSize() {
 }
 
 // ==================== INITIALIZATION ====================
+
+// Initialize game UI elements (called on page load)
 document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     initializeTooltips();
     initializeQuizToggle();
 
-    // Place initial grid features (city hall and existing neighborhood)
+    // Place initial grid features (city hall, river, and existing neighborhood)
     placeInitialCityHall();
+    placeInitialRiver();
     placeInitialNeighborhood();
 
     renderBuildingPalette();
     renderCityGrid();
     updateUndoButton();
     updateEfficiencyDisplay();
-    renderScene('intro');
+
+    // DON'T render scene yet - wait for user to start game from start screen
+    // renderScene('intro'); // <-- Moved to initializeGame()
 
     // Show palette resize button on mobile
     if (isMobileDevice()) {
@@ -3531,6 +3647,21 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('📱 Mobile device detected - Touch controls enabled');
     }
 
-    console.log('🎮 Game initialized - Mobile optimized!');
+    console.log('🎮 Game UI initialized - Waiting for player to start');
 });
+
+// Initialize gameplay (called when user clicks "Start Game")
+function initializeGame() {
+    console.log('🎮 Starting gameplay from intro scene');
+
+    // Start the game from the intro scene
+    renderScene('intro');
+
+    // Track game start time for achievements
+    if (!gameState.gameStartTime) {
+        gameState.gameStartTime = Date.now();
+    }
+
+    console.log('✅ Game started!');
+}
 

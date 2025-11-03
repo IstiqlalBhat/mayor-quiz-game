@@ -181,13 +181,50 @@ async function handleConfirmStart() {
         
         if (session) {
             console.log('✅ Session created successfully:', session.session_id);
-            
+
             // Hide modal
             hidePlayerModal();
-            
-            // Start the game with selected difficulty
-            startGame(selectedDifficulty);
-            
+
+            // Set difficulty directly (game.js is loaded by the time user clicks)
+            if (typeof gameState !== 'undefined' && typeof difficultyModes !== 'undefined') {
+                const mode = difficultyModes[selectedDifficulty];
+                if (mode) {
+                    gameState.difficulty = mode;
+                    gameState.cityFunds = mode.startingFunds;
+                    gameState.maxRelocations = mode.buildingRelocations;
+                    gameState.undoCount = mode.undoLimit;
+
+                    console.log('🎮 Difficulty set:', mode.name);
+                    console.log('  ⏰ Timer:', mode.timerPerScene + 's');
+                    console.log('  💰 Starting Funds: $' + mode.startingFunds + 'M');
+                    console.log('  🔄 Relocations:', mode.buildingRelocations);
+                    console.log('  ↶ Undos:', mode.undoLimit);
+                    console.log('  🔍 gameState.difficulty:', gameState.difficulty);
+
+                    // Update UI elements if functions are available
+                    if (typeof updateStats === 'function') {
+                        updateStats();
+                    }
+                    if (typeof updateUndoButton === 'function') {
+                        updateUndoButton();
+                    }
+
+                    // Update difficulty badge
+                    const badge = document.getElementById('difficulty-badge');
+                    if (badge) {
+                        badge.textContent = mode.icon + ' ' + mode.name;
+                        badge.style.background = mode.color;
+                    }
+
+                    // Track game start time for achievements
+                    gameState.gameStartTime = Date.now();
+                } else {
+                    console.error('❌ Invalid difficulty mode:', selectedDifficulty);
+                }
+            } else {
+                console.error('❌ gameState or difficultyModes not available');
+            }
+
             // Transition from start screen to game
             transitionToGame();
         } else {
@@ -202,41 +239,8 @@ async function handleConfirmStart() {
     }
 }
 
-function startGame(difficulty) {
-    // Set difficulty in game state
-    if (typeof gameState !== 'undefined') {
-        gameState.difficulty = difficulty;
-        
-        // Apply difficulty settings
-        const difficultySettings = difficultyModes[difficulty];
-        if (difficultySettings) {
-            gameState.cityFunds = difficultySettings.startingFunds;
-            gameState.undoCount = difficultySettings.undoLimit;
-            gameState.maxRelocations = difficultySettings.buildingRelocations;
-            
-            // Update UI
-            updateStats();
-            
-            // Update difficulty badge
-            const badge = document.getElementById('difficulty-badge');
-            if (badge) {
-                badge.textContent = `${difficultySettings.icon} ${difficultySettings.name}`;
-                badge.style.background = difficultySettings.color;
-            }
-            
-            console.log('🎮 Game started with difficulty:', difficulty);
-        }
-    }
-    
-    // Start auto-save
-    if (typeof gameAPI !== 'undefined') {
-        gameAPI.startAutoSave(
-            () => gameState,
-            () => calculateFinalScore(),
-            () => gameState.currentScene // Track actual current scene
-        );
-    }
-}
+// Note: Difficulty is now set using selectDifficulty() from game.js
+// This function has been removed to avoid conflicts with game.js's startGame()
 
 function transitionToGame() {
     // Fade out start screen
@@ -245,6 +249,15 @@ function transitionToGame() {
     // Switch to gameplay music
     if (typeof audioManager !== 'undefined') {
         audioManager.playMusic('gameplay', true);
+    }
+
+    // Start auto-save
+    if (typeof gameAPI !== 'undefined') {
+        gameAPI.startAutoSave(
+            () => gameState,
+            () => calculateFinalScore(),
+            () => gameState.currentScene // Track actual current scene
+        );
     }
 
     // After animation, hide start screen and show game
@@ -257,7 +270,31 @@ function transitionToGame() {
         if (typeof initializeGame === 'function') {
             initializeGame();
         }
+
+        // Check if tutorial should be shown for first-time players
+        checkAndShowTutorial();
     }, 500);
+}
+
+// Check if this is the player's first time and show tutorial
+// Note: Tutorial will be shown when first choice scene renders, not immediately
+function checkAndShowTutorial() {
+    const hasPlayed = localStorage.getItem('manestreet_played');
+    const tutorialStatus = localStorage.getItem('manestreet_tutorial');
+
+    // Flag that tutorial should show when first timed choice appears
+    if (!hasPlayed && tutorialStatus !== 'declined' && tutorialStatus !== 'skipped' && tutorialStatus !== 'completed') {
+        console.log('📚 First-time player detected - tutorial will show on first choice');
+        // Set flag so renderScene knows to show tutorial
+        window.shouldShowTutorial = true;
+    } else {
+        console.log('📚 Returning player - skipping tutorial');
+        window.shouldShowTutorial = false;
+        // Mark as played if not already
+        if (!hasPlayed) {
+            localStorage.setItem('manestreet_played', 'true');
+        }
+    }
 }
 
 // ==================== LEADERBOARD ====================

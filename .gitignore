@@ -3,3 +3,7 @@ npm-debug.log
 .DS_Store
 *.log
 .env
+
+# Documentation files
+*.md
+!README.md

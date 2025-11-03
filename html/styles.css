@@ -2285,7 +2285,7 @@ body {
 }
 
 .tutorial-highlight {
-    position: absolute;
+    position: fixed;  /* Fixed positioning to match getBoundingClientRect() viewport coordinates */
     border: 4px solid #ffd93d;
     border-radius: 15px;
     box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.8),

@@ -6,6 +6,11 @@ class AudioManager {
         // Cache-busting version - increment this whenever you replace audio files
         const audioVersion = '?v=2';
 
+        // Audio queue system to prevent overlapping
+        this.audioQueue = [];
+        this.isPlayingAudio = false;
+        this.currentPlayingAudio = null;
+
         // Audio file paths (customize these paths to match your audio files)
         this.audioFiles = {
             // Background Music (MP3 format for smaller file sizes)
@@ -186,9 +191,92 @@ class AudioManager {
         console.log('🎵 Audio files preloading with pooling for instant playback');
     }
 
+    // ==================== AUDIO QUEUE SYSTEM ====================
+
+    async processAudioQueue() {
+        // If already playing or queue is empty, return
+        if (this.isPlayingAudio || this.audioQueue.length === 0) {
+            return;
+        }
+
+        // Mark as playing
+        this.isPlayingAudio = true;
+
+        // Get next item from queue
+        const audioItem = this.audioQueue.shift();
+        console.log(`🎬 Processing queued audio: ${audioItem.type} - ${audioItem.name}`);
+
+        try {
+            if (audioItem.type === 'music') {
+                await this._playMusicDirect(audioItem.name, audioItem.fadeIn);
+            } else if (audioItem.type === 'sfx') {
+                await this._playSfxDirect(audioItem.name, audioItem.volume);
+            }
+        } catch (error) {
+            console.error(`❌ Error playing queued audio:`, error);
+        }
+
+        // Mark as not playing
+        this.isPlayingAudio = false;
+
+        // Process next item in queue
+        setTimeout(() => this.processAudioQueue(), 10);
+    }
+
+    queueAudio(type, name, options = {}) {
+        this.audioQueue.push({
+            type,
+            name,
+            ...options
+        });
+        console.log(`📥 Queued ${type}: ${name} (Queue size: ${this.audioQueue.length})`);
+
+        // Start processing if not already processing
+        this.processAudioQueue();
+    }
+
+    clearQueue() {
+        const queueSize = this.audioQueue.length;
+        this.audioQueue = [];
+        console.log(`🗑️ Cleared audio queue (${queueSize} items removed)`);
+    }
+
+    getQueueInfo() {
+        return {
+            queueSize: this.audioQueue.length,
+            isPlaying: this.isPlayingAudio,
+            currentAudio: this.currentPlayingAudio ? 'Playing' : 'None',
+            queue: this.audioQueue.map(item => `${item.type}:${item.name}`)
+        };
+    }
+
     // ==================== MUSIC CONTROLS ====================
 
     async playMusic(trackName, fadeIn = true) {
+        // For music, we want to switch immediately, not queue
+        // Clear any queued music (but keep SFX)
+        this.audioQueue = this.audioQueue.filter(item => item.type !== 'music');
+
+        // Add new music to front of queue (priority)
+        this.audioQueue.unshift({
+            type: 'music',
+            name: trackName,
+            fadeIn
+        });
+
+        console.log(`🎵 Prioritizing music: ${trackName}`);
+
+        // If currently playing music, stop it to switch immediately
+        if (this.currentMusic && this.currentMusic.loop) {
+            console.log(`⏹️ Stopping current music to switch tracks`);
+            this.isPlayingAudio = false;
+        }
+
+        // Start processing
+        this.processAudioQueue();
+    }
+
+    async _playMusicDirect(trackName, fadeIn = true) {
         if (!this.musicEnabled) {
             console.log(`🎵 Music disabled, skipping ${trackName}`);
             return;
@@ -217,25 +305,37 @@ class AudioManager {
         // Play with optional fade in
         if (fadeIn) {
             track.volume = 0;
-            this.currentMusicPromise = track.play().then(() => {
-                this.fadeVolume(track, this.musicVolume, 2000); // Fade in over 2 seconds
-                this.currentMusicPromise = null;
-            }).catch(err => {
+            await track.play().catch(err => {
                 console.warn(`⚠️ Could not play music: ${trackName}`, err);
-                this.currentMusicPromise = null;
+                throw err;
             });
+            await this.fadeVolume(track, this.musicVolume, 2000); // Fade in over 2 seconds
         } else {
             track.volume = this.musicVolume;
-            this.currentMusicPromise = track.play().then(() => {
-                this.currentMusicPromise = null;
-            }).catch(err => {
+            await track.play().catch(err => {
                 console.warn(`⚠️ Could not play music: ${trackName}`, err);
-                this.currentMusicPromise = null;
+                throw err;
             });
         }
 
         this.currentMusic = track;
+        this.currentPlayingAudio = track;
         console.log(`🎵 Playing music: ${trackName}`);
+
+        // For looping music (menu, gameplay), we consider it "done" immediately
+        // since it will loop indefinitely
+        if (track.loop) {
+            console.log(`🔄 Music ${trackName} is looping`);
+            return;
+        }
+
+        // For non-looping music (victory, defeat), wait for it to finish
+        return new Promise((resolve) => {
+            track.addEventListener('ended', () => {
+                console.log(`✅ Music ${trackName} finished`);
+                resolve();
+            }, { once: true });
+        });
     }
 
     async stopMusic(fadeOut = true) {
@@ -309,6 +409,11 @@ class AudioManager {
     // ==================== SOUND EFFECTS ====================
 
     playSfx(sfxName, volume = null) {
+        // Add to queue instead of playing directly
+        this.queueAudio('sfx', sfxName, { volume });
+    }
+
+    async _playSfxDirect(sfxName, volume = null) {
         if (!this.soundEnabled) {
             console.log(`🔇 Sound disabled, skipping SFX: ${sfxName}`);
             return;
@@ -338,6 +443,8 @@ class AudioManager {
         }
 
         // PERFORMANCE OPTIMIZATION: Use audio pooling for instant playback
+        let audioToPlay;
+
         if (Array.isArray(sfx)) {
             // Find a free instance in the pool (one that's not currently playing)
             let availableAudio = sfx.find(audio => audio.paused || audio.ended);
@@ -347,25 +454,43 @@ class AudioManager {
                 availableAudio = sfx[0];
             }
 
-            // Reset and play
-            availableAudio.currentTime = 0;
-            availableAudio.volume = volume !== null ? volume : this.sfxVolume;
-            availableAudio.play().then(() => {
-                console.log(`🔊 Played SFX: ${sfxName}`);
-            }).catch(err => {
-                console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
-            });
+            audioToPlay = availableAudio;
         } else {
-            // Single instance - reset and play
-            sfx.currentTime = 0;
-            sfx.volume = volume !== null ? volume : this.sfxVolume;
-
-            sfx.play().then(() => {
-                console.log(`🔊 Played SFX: ${sfxName}`);
-            }).catch(err => {
-                console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
-            });
+            // Single instance
+            audioToPlay = sfx;
         }
+
+        // Reset and play
+        audioToPlay.currentTime = 0;
+        audioToPlay.volume = volume !== null ? volume : this.sfxVolume;
+        this.currentPlayingAudio = audioToPlay;
+
+        // Play and wait for it to finish
+        return new Promise((resolve, reject) => {
+            audioToPlay.play()
+                .then(() => {
+                    console.log(`🔊 Playing SFX: ${sfxName} (duration: ${audioToPlay.duration}s)`);
+
+                    // Wait for the sound to finish
+                    const onEnded = () => {
+                        console.log(`✅ SFX finished: ${sfxName}`);
+                        audioToPlay.removeEventListener('ended', onEnded);
+                        resolve();
+                    };
+
+                    audioToPlay.addEventListener('ended', onEnded);
+
+                    // Fallback timeout in case 'ended' doesn't fire
+                    setTimeout(() => {
+                        audioToPlay.removeEventListener('ended', onEnded);
+                        resolve();
+                    }, (audioToPlay.duration * 1000) + 100);
+                })
+                .catch(err => {
+                    console.warn(`⚠️ Could not play SFX: ${sfxName}`, err);
+                    reject(err);
+                });
+        });
     }
 
     setSfxVolume(volume) {
