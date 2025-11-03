@@ -887,7 +887,7 @@ body {
 
 /* ==================== DYNAMIC QUIZ OVERLAY ==================== */
 .game-content-overlay {
-    position: absolute;
+    position: fixed; /* Changed from absolute to fixed to match placement-overlay stacking context */
     /* Center the dialog box */
     top: 50%;
     left: 50%;
@@ -910,7 +910,7 @@ body {
         0 20px 60px 0 rgba(0, 0, 0, 0.5),
         inset 0 0 0 1px rgba(255, 255, 255, 0.2),
         0 0 80px rgba(102, 126, 234, 0.3);
-    z-index: 1000;
+    z-index: 1000; /* Higher than placement-overlay (999) */
     display: flex;
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -941,6 +941,8 @@ body {
         0 4px 16px 0 rgba(0, 0, 0, 0.2),
         inset 0 0 0 1px rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
+    position: relative;
+    z-index: 1000; /* Ensure visibility above placement overlay (z-index: 999) */
 }
 
 .quiz-header h3 {
