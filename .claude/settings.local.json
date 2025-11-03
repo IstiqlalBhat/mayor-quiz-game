@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(python -m http.server:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

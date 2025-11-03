@@ -7,3 +7,5 @@ npm-debug.log
 # Documentation files
 *.md
 !README.md
+!ARCHITECTURE.md
+!GAME_FEATURES_SHOWCASE.md
