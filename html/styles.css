@@ -953,6 +953,12 @@ body {
     text-shadow:
         0 2px 8px rgba(0, 0, 0, 0.5),
         0 0 20px rgba(102, 126, 234, 0.3);
+    flex: 1 1 auto; /* Allow to grow and shrink */
+    min-width: 0; /* Allow text to shrink below content size */
+    overflow: hidden; /* Hide overflow text */
+    text-overflow: ellipsis; /* Show ... for overflow */
+    white-space: nowrap; /* Prevent wrapping */
+    margin-right: 12px; /* Ensure spacing from button */
 }
 
 .quiz-toggle {
@@ -978,6 +984,8 @@ body {
     font-size: 0.9em;
     font-weight: 600;
     position: relative;
+    flex-shrink: 0; /* Prevent button from shrinking */
+    white-space: nowrap; /* Prevent text wrapping in button */
 }
 
 .quiz-toggle:hover {
