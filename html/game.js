@@ -76,7 +76,7 @@ const difficultyModes = {
         icon: "🌱",
         color: "#4caf50",
         timerPerScene: 45,
-        startingFunds: 80,
+        startingFunds: 100,
         buildingRelocations: 5,
         undoLimit: 5,
         description: "Take your time and experiment"
@@ -87,7 +87,7 @@ const difficultyModes = {
         icon: "⚖️",
         color: "#2196f3",
         timerPerScene: 30,
-        startingFunds: 60,
+        startingFunds: 80,
         buildingRelocations: 3,
         undoLimit: 3,
         description: "Balanced challenge"
@@ -98,7 +98,7 @@ const difficultyModes = {
         icon: "🔥",
         color: "#ff9800",
         timerPerScene: 20,
-        startingFunds: 50,
+        startingFunds: 70,
         buildingRelocations: 1,
         undoLimit: 2,
         description: "Quick decisions, tough choices"
@@ -109,7 +109,7 @@ const difficultyModes = {
         icon: "⚡",
         color: "#f44336",
         timerPerScene: 15,
-        startingFunds: 40,
+        startingFunds: 60,
         buildingRelocations: 0,
         undoLimit: 1,
         description: "No mistakes allowed!"
@@ -1726,6 +1726,24 @@ function showUnlockNotification(building) {
 
 // Show mandatory placement overlay
 function showMandatoryPlacementOverlay(building, constraints = null) {
+    // CHECK FOR INSUFFICIENT FUNDS - TRIGGER BANKRUPTCY ENDING
+    if (gameState.cityFunds < building.cost) {
+        console.log(`💸 BANKRUPTCY: Cannot afford mandatory building ${building.name} ($${building.cost}M, have $${gameState.cityFunds}M)`);
+
+        // Stop timer if running
+        stopTimer();
+
+        // Show bankruptcy ending
+        showToast('💸 BANKRUPTCY! City has run out of funds!', 'error');
+
+        // Delay slightly for dramatic effect
+        setTimeout(() => {
+            renderBankruptcyEnding();
+        }, 2000);
+
+        return;
+    }
+
     const overlay = document.getElementById('placement-overlay');
     const icon = document.getElementById('placement-icon');
     const text = document.getElementById('placement-text');
@@ -3301,6 +3319,110 @@ function renderEnding() {
             leaderboardDiv.innerHTML = '<h3>🏆 Top Mayors Leaderboard</h3><div style="padding:20px;text-align:center;opacity:0.7;">Unable to load leaderboard</div>';
         });
     }
+}
+
+// ==================== BANKRUPTCY ENDING ====================
+// Called when player cannot afford a mandatory building
+function renderBankruptcyEnding() {
+    const content = document.getElementById('game-content');
+
+    // Track game end time
+    gameState.gameEndTime = Date.now();
+
+    // Play defeat music
+    if (typeof audioManager !== 'undefined') {
+        audioManager.playMusic('defeat', true);
+    }
+
+    // Calculate play time in seconds
+    const playTimeSeconds = gameState.gameStartTime ? Math.floor((gameState.gameEndTime - gameState.gameStartTime) / 1000) : 0;
+
+    // Submit bankruptcy score to backend with very low score
+    if (typeof gameAPI !== 'undefined') {
+        gameAPI.completeGame({
+            finalScore: 0,
+            happiness: gameState.happiness,
+            cityFunds: gameState.cityFunds,
+            specialInterest: gameState.specialInterest,
+            personalProfit: gameState.personalProfit,
+            decisions: gameState.decisions.length,
+            playTime: playTimeSeconds
+        }).then(result => {
+            if (result.success) {
+                console.log('💸 Bankruptcy score submitted!');
+            }
+        }).catch(error => {
+            console.error('❌ Error submitting bankruptcy score:', error);
+        });
+
+        // Stop auto-save
+        gameAPI.stopAutoSave();
+    }
+
+    const html = `
+        <div class="game-over">
+            <h2 style="color:#d63031;">💸 City Bankruptcy!</h2>
+            <p style="font-size:1.4em;margin:20px 0;font-weight:600;color:#d63031;">
+                Tiger Central has run out of funds! The city cannot afford essential infrastructure.
+            </p>
+            <p style="font-size:1.2em;margin:20px 0;">
+                Your financial decisions have led the city into bankruptcy. Without enough money to build critical infrastructure,
+                the city council has called an emergency session and voted to remove you from office.
+            </p>
+
+            <div class="final-stats" style="border:3px solid #d63031;">
+                <h3>💰 Financial Situation</h3>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);"><strong>City Funds:</strong> $${gameState.cityFunds}M 💸</div>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);"><strong>Required Building Cost:</strong> $${gameState.pendingBuildingPlacement ? gameState.pendingBuildingPlacement.building.cost : '??'}M</div>
+                <div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);"><strong>Deficit:</strong> -$${gameState.pendingBuildingPlacement ? (gameState.pendingBuildingPlacement.building.cost - gameState.cityFunds) : '??'}M ⚠️</div>
+            </div>
+
+            <div class="final-stats" style="margin-top:20px;">
+                <h3>📊 Your Term Statistics</h3>
+                <div class="final-stat-item"><strong>Population Happiness:</strong> ${gameState.happiness}/100 ${gameState.happiness >= 40 ? '😐' : '😞'}</div>
+                <div class="final-stat-item"><strong>Special Interest Support:</strong> ${gameState.specialInterest}/100 ${gameState.specialInterest >= 40 ? '👌' : '👎'}</div>
+                <div class="final-stat-item"><strong>Your Personal Profit:</strong> $${gameState.personalProfit}M ${gameState.personalProfit > 10 ? '⚠️' : gameState.personalProfit > 0 ? '💵' : '✨'}</div>
+                <div class="final-stat-item"><strong>Decisions Made:</strong> ${gameState.decisions.length} choices 🎯</div>
+            </div>
+
+            ${gameState.personalProfit > 5 ? `
+                <div class="story-section" style="margin-top:20px;background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);border-left:4px solid #d63031;">
+                    <h3>⚠️ Corruption Investigation</h3>
+                    <p>While the city went bankrupt, you managed to accumulate $${gameState.personalProfit}M in personal profit.
+                    The state attorney general has announced an investigation into possible corruption and misuse of public funds.</p>
+                </div>
+            ` : ''}
+
+            <div class="story-section" style="margin-top:20px;text-align:left;">
+                <h3>🎓 What Went Wrong</h3>
+                <p>As mayor, fiscal responsibility is crucial:</p>
+                <ul style="margin-left:20px;margin-top:10px;line-height:1.8;">
+                    <li>Every decision has financial consequences</li>
+                    <li>You must balance spending with revenue</li>
+                    <li>Choices that decrease city funds can lead to bankruptcy</li>
+                    <li>Strategic planning requires keeping an eye on the budget</li>
+                    <li>Personal profit-taking shouldn't come before city needs</li>
+                </ul>
+                <p style="margin-top:15px;">💡 <strong>Tip:</strong> Choose options that maintain or increase city funds, especially early in the game.
+                Watch the City Funds meter and avoid consecutive choices that drain the treasury!</p>
+            </div>
+
+            <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);">
+                <h3>🎮 Difficulty Tip</h3>
+                <p style="padding:15px;margin:0;">Consider trying an easier difficulty mode where you start with more funds.
+                Easy mode starts with $100M and gives you more time to make decisions!</p>
+            </div>
+
+            <button class="start-btn" onclick="location.reload()" style="margin-top:30px;"><span class="start-btn-text">🔄 Try Again</span></button>
+        </div>
+    `;
+
+    content.innerHTML = html;
+
+    console.log('💸 GAME ENDED: City Bankruptcy');
+    console.log(`  Final Funds: $${gameState.cityFunds}M`);
+    console.log(`  Decisions Made: ${gameState.decisions.length}`);
+    console.log(`  Personal Profit: $${gameState.personalProfit}M`);
 }
 
 // Helper function to escape HTML for security
