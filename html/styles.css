@@ -1399,6 +1399,140 @@ body {
     z-index: 1;
 }
 
+/* Continue button - Liquid Glass Effect */
+.continue-btn {
+    /* Glassmorphism background */
+    background: linear-gradient(135deg,
+        rgba(0, 206, 201, 0.2) 0%,
+        rgba(0, 184, 148, 0.3) 50%,
+        rgba(0, 206, 201, 0.2) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    /* Glass border with gradient */
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+
+    color: white;
+    width: 70px;
+    height: 70px;
+    min-width: 70px;
+    min-height: 70px;
+    border-radius: 50%;
+    font-size: 1.4em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Layered shadows for depth */
+    box-shadow:
+        0 8px 32px rgba(0, 206, 201, 0.3),
+        0 4px 16px rgba(0, 184, 148, 0.2),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+
+    overflow: visible;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px auto 0;
+    padding: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient border effect */
+.continue-btn::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: linear-gradient(135deg,
+        rgba(0, 255, 255, 0.4) 0%,
+        rgba(0, 206, 201, 0.6) 25%,
+        rgba(0, 184, 148, 0.5) 50%,
+        rgba(0, 206, 201, 0.6) 75%,
+        rgba(0, 255, 255, 0.4) 100%);
+    z-index: -1;
+    opacity: 0.8;
+    animation: borderPulse 3s ease-in-out infinite;
+}
+
+/* Liquid shimmer effect */
+.continue-btn::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 70%
+    );
+    transform: rotate(0deg);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: liquidFlow 4s linear infinite;
+}
+
+@keyframes liquidFlow {
+    0% {
+        transform: rotate(0deg) translateX(-10%);
+    }
+    100% {
+        transform: rotate(360deg) translateX(-10%);
+    }
+}
+
+@keyframes borderPulse {
+    0%, 100% {
+        opacity: 0.6;
+        filter: brightness(1);
+    }
+    50% {
+        opacity: 1;
+        filter: brightness(1.2);
+    }
+}
+
+.continue-btn:hover {
+    transform: scale(1.15) translateY(-2px);
+    box-shadow:
+        0 12px 48px rgba(0, 206, 201, 0.5),
+        0 8px 24px rgba(0, 184, 148, 0.4),
+        inset 0 2px 4px rgba(255, 255, 255, 0.4),
+        inset 0 -3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.continue-btn:hover::before {
+    animation: liquidFlow 2s linear infinite;
+}
+
+.continue-btn:hover::after {
+    opacity: 1;
+    filter: brightness(1.3);
+}
+
+.continue-btn:active {
+    transform: scale(1.05) translateY(0px);
+    box-shadow:
+        0 4px 20px rgba(0, 206, 201, 0.4),
+        inset 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile specific adjustments for Continue button */
+@media (max-width: 768px) {
+    .continue-btn {
+        width: 80px;
+        height: 80px;
+        min-width: 80px;
+        min-height: 80px;
+        font-size: 1.6em;
+    }
+}
+
 .intro-screen {
     text-align: center;
     padding: 30px 0;
@@ -1977,37 +2111,49 @@ body {
 .palette-buildings {
     flex: 1;
     overflow-y: auto;
-    padding: 15px;
+    overflow-x: hidden;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
 .palette-buildings::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
 .palette-buildings::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.08);
     border-radius: 10px;
+    margin: 4px 0;
 }
 
 .palette-buildings::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.3);
     border-radius: 10px;
+    transition: background 0.2s ease;
+}
+
+.palette-buildings::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.45);
 }
 
 /* Building Cards */
 .building-card {
     background: rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 12px;
+    border-radius: 10px;
+    padding: 10px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
     cursor: grab;
     transition: all 0.3s ease;
     border: 2px solid rgba(255,255,255,0.2);
     position: relative;
     overflow: hidden;
+    /* More compact layout */
+    min-height: fit-content;
 }
 
 .building-card:hover {
@@ -2087,12 +2233,12 @@ body {
 .building-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
+    gap: 10px;
+    margin-bottom: 6px;
 }
 
 .building-icon {
-    font-size: 2.2em;
+    font-size: 1.8em;
     line-height: 1;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
@@ -2102,20 +2248,21 @@ body {
 }
 
 .building-name {
-    font-size: 1.1em;
+    font-size: 1em;
     font-weight: 600;
     color: #fff;
-    margin: 0 0 4px 0;
+    margin: 0 0 3px 0;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    line-height: 1.2;
 }
 
 .building-cost {
     display: inline-block;
     background: rgba(255,255,255,0.9);
     color: #333;
-    padding: 4px 12px;
-    border-radius: 15px;
-    font-size: 0.9em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.85em;
     font-weight: bold;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
@@ -2126,14 +2273,15 @@ body {
 }
 
 .building-effect {
-    margin-top: 10px;
-    padding: 8px 12px;
+    margin-top: 6px;
+    padding: 6px 10px;
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    border-radius: 10px;
-    font-size: 0.85em;
+    border-radius: 8px;
+    font-size: 0.8em;
     color: #1976d2;
     font-weight: 600;
     border-left: 3px solid #2196f3;
+    line-height: 1.3;
 }
 
 .building-card.disabled .building-effect {
@@ -2589,26 +2737,38 @@ body {
         flex-direction: row;
         overflow-x: auto;
         overflow-y: hidden;
-        padding: 8px 15px 12px;
-        scroll-snap-type: x mandatory;
+        padding: 8px 12px 12px;
+        gap: 10px;
+        scroll-snap-type: x proximity;
         /* Smooth scrolling on iOS */
         -webkit-overflow-scrolling: touch;
-        /* Hide scrollbar but keep functionality */
-        scrollbar-width: none;
-        -ms-overflow-style: none;
+        scroll-behavior: smooth;
+        /* Show scrollbar on tablets for better UX */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.3) rgba(255,255,255,0.05);
     }
 
     .palette-buildings::-webkit-scrollbar {
-        display: none;
+        height: 4px;
+    }
+
+    .palette-buildings::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.05);
+        border-radius: 2px;
+    }
+
+    .palette-buildings::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.3);
+        border-radius: 2px;
     }
 
     .building-card {
-        min-width: 220px;
-        max-width: 240px;
+        min-width: 200px;
+        max-width: 220px;
         flex-shrink: 0;
-        scroll-snap-align: center;
+        scroll-snap-align: start;
         /* Enlarge touch targets */
-        min-height: 115px;
+        min-height: fit-content;
         /* Better tap feedback */
         transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
@@ -2879,13 +3039,14 @@ body {
     }
 
     .building-card {
-        min-width: 180px;
-        max-width: 200px;
-        min-height: 110px;
+        min-width: 170px;
+        max-width: 190px;
+        min-height: fit-content;
+        padding: 8px;
     }
 
     .building-card .building-icon {
-        font-size: 2.2em;
+        font-size: 1.8em;
     }
 
     .building-card .building-name {
@@ -3165,13 +3326,17 @@ body {
         flex-direction: column;
         overflow-x: hidden;
         overflow-y: auto;
-        padding: 10px;
+        padding: 8px;
+        gap: 6px;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
     }
 
     .building-card {
         min-width: 100%;
         max-width: 100%;
-        min-height: 100px;
+        min-height: fit-content;
+        padding: 8px;
     }
 
     .palette-footer {

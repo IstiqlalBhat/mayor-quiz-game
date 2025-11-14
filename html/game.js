@@ -160,12 +160,223 @@ const gameState = {
 
 // ==================== BUILDING SYSTEM ====================
 const buildingTypes = {
-    'city-hall': { width: 120, height: 140, windows: 12, color: '#3498db', icon: '🏛️' },
-    'house': { width: 80, height: 100, windows: 6, color: '#e67e22', icon: '🏠' },
-    'factory': { width: 150, height: 120, windows: 16, color: '#95a5a6', icon: '🏭' },
-    'park': { width: 100, height: 80, windows: 0, color: '#2ecc71', icon: '🌳' },
-    'office': { width: 90, height: 130, windows: 12, color: '#9b59b6', icon: '🏢' },
-    'shop': { width: 70, height: 90, windows: 4, color: '#e74c3c', icon: '🏪' }
+    // ============ CHAPTER 1 BUILDINGS ============
+    'city-hall': {
+        width: 120,
+        height: 140,
+        windows: 12,
+        color: '#3498db',
+        icon: '🏛️',
+        cost: 0, // Pre-placed
+        baseEffects: { happiness: 5, cityFunds: 0, specialInterest: 5 },
+        adjacencyBonus: {
+            near: ['office', 'park'],
+            effect: { specialInterest: 3 }
+        },
+        description: 'City Hall - Government center'
+    },
+    'house': {
+        width: 80,
+        height: 100,
+        windows: 6,
+        color: '#e67e22',
+        icon: '🏠',
+        cost: 10,
+        baseEffects: { happiness: 5, cityFunds: 0, specialInterest: 0 },
+        adjacencyBonus: {
+            near: ['park', 'shop', 'school'],
+            effect: { happiness: 2 }
+        },
+        adjacencyPenalty: {
+            near: ['factory', 'skyscraper'],
+            effect: { happiness: -4 }
+        },
+        description: 'Residential Housing - Homes for citizens, relocation'
+    },
+    'shop': {
+        width: 70,
+        height: 90,
+        windows: 4,
+        color: '#e74c3c',
+        icon: '🏪',
+        cost: 15,
+        baseEffects: { happiness: 3, cityFunds: 5, specialInterest: 3 },
+        adjacencyBonus: {
+            near: ['house', 'office', 'event_venue'],
+            effect: { cityFunds: 2 }
+        },
+        description: 'Small Business - Local commerce'
+    },
+    'factory': {
+        width: 150,
+        height: 120,
+        windows: 16,
+        color: '#95a5a6',
+        icon: '🏭',
+        cost: 20,
+        baseEffects: { happiness: -5, cityFunds: 10, specialInterest: 15 },
+        adjacencyBonus: {
+            near: ['river'],
+            effect: { cityFunds: 5 }
+        },
+        adjacencyPenalty: {
+            near: ['house', 'park', 'school', 'hospital'],
+            effect: { happiness: -4 }
+        },
+        description: 'Industrial Factory - Heavy manufacturing'
+    },
+    'park': {
+        width: 100,
+        height: 80,
+        windows: 0,
+        color: '#2ecc71',
+        icon: '🌳',
+        cost: 12,
+        baseEffects: { happiness: 8, cityFunds: 0, specialInterest: 0 },
+        adjacencyBonus: {
+            near: ['house', 'school', 'hospital', 'flooded_area'],
+            effect: { happiness: 3 }
+        },
+        adjacencyPenalty: {
+            near: ['factory', 'skyscraper'],
+            effect: { happiness: -3 }
+        },
+        description: 'Public Park - Green space, community healing'
+    },
+    'office': {
+        width: 90,
+        height: 130,
+        windows: 12,
+        color: '#9b59b6',
+        icon: '🏢',
+        cost: 18,
+        baseEffects: { happiness: 0, cityFunds: 5, specialInterest: 8 },
+        adjacencyBonus: {
+            near: ['shop', 'park', 'city-hall'],
+            effect: { specialInterest: 2 }
+        },
+        description: 'Office Building - White collar jobs'
+    },
+
+    // ============ CHAPTER 2 - EMERGENCY RESPONSE ============
+    'shelter': {
+        width: 110,
+        height: 95,
+        windows: 8,
+        color: '#f39c12',
+        icon: '🏕️',
+        cost: 12,
+        baseEffects: { happiness: 8, cityFunds: 0, specialInterest: 5 },
+        adjacencyBonus: {
+            near: ['house', 'hospital', 'flooded_area', 'storm_damage'],
+            effect: { happiness: 6 }
+        },
+        description: 'Emergency Shelter - Evacuation & disaster relief'
+    },
+    'police': {
+        width: 95,
+        height: 105,
+        windows: 10,
+        color: '#2980b9',
+        icon: '🚓',
+        cost: 15,
+        baseEffects: { happiness: 5, cityFunds: -5, specialInterest: 10 },
+        adjacencyBonus: {
+            near: ['house', 'shop', 'flooded_area', 'storm_damage'],
+            effect: { happiness: 4 }
+        },
+        adjacencyPenalty: {
+            near: ['park', 'school'],
+            effect: { happiness: -2 }
+        },
+        description: 'Police Station - Emergency coordination & security'
+    },
+    'hospital': {
+        width: 140,
+        height: 120,
+        windows: 16,
+        color: '#c0392b',
+        icon: '🏥',
+        cost: 22,
+        baseEffects: { happiness: 15, cityFunds: -10, specialInterest: 0 },
+        adjacencyBonus: {
+            near: ['house', 'shelter', 'flooded_area'],
+            effect: { happiness: 10 }
+        },
+        adjacencyPenalty: {
+            near: ['factory', 'skyscraper'],
+            effect: { happiness: -4 }
+        },
+        description: 'Hospital - Critical medical care & disaster response'
+    },
+
+    // ============ CHAPTER 2 - RECOVERY & INFRASTRUCTURE ============
+    'school': {
+        width: 120,
+        height: 100,
+        windows: 12,
+        color: '#16a085',
+        icon: '🏫',
+        cost: 18,
+        baseEffects: { happiness: 12, cityFunds: -8, specialInterest: -5 },
+        adjacencyBonus: {
+            near: ['house', 'park'],
+            effect: { happiness: 6 }
+        },
+        adjacencyPenalty: {
+            near: ['factory', 'police', 'skyscraper'],
+            effect: { happiness: -4 }
+        },
+        description: 'School - Education, standing up to donors'
+    },
+    'event_venue': {
+        width: 130,
+        height: 110,
+        windows: 0,
+        color: '#8e44ad',
+        icon: '🎪',
+        cost: 20,
+        baseEffects: { happiness: 10, cityFunds: 5, specialInterest: 8 },
+        adjacencyBonus: {
+            near: ['park', 'shop', 'office'],
+            effect: { happiness: 4, specialInterest: 5 }
+        },
+        description: 'Event Venue - Fundraisers, town halls, PR events'
+    },
+    'water_pump': {
+        width: 80,
+        height: 70,
+        windows: 0,
+        color: '#3498db',
+        icon: '💧',
+        cost: 14,
+        baseEffects: { happiness: 5, cityFunds: -5, specialInterest: 3 },
+        adjacencyBonus: {
+            near: ['flooded_area', 'river'],
+            effect: { happiness: 8, cityFunds: 5 }
+        },
+        description: 'Water Pump - Flood control & recovery infrastructure'
+    },
+
+    // ============ CHAPTER 2 - CORRUPTION PATH ============
+    'skyscraper': {
+        width: 100,
+        height: 160,
+        windows: 20,
+        color: '#34495e',
+        icon: '🏙️',
+        cost: 25,
+        baseEffects: { happiness: -5, cityFunds: 15, specialInterest: 15 },
+        adjacencyBonus: {
+            near: ['office', 'shop', 'flooded_area'],
+            effect: { cityFunds: 7, specialInterest: 5 }
+        },
+        adjacencyPenalty: {
+            near: ['house', 'park', 'school', 'hospital'],
+            effect: { happiness: -6 }
+        },
+        description: 'Skyscraper - Luxury development, disaster capitalism'
+    }
 };
 
 // ==================== GRID FEATURES SYSTEM ====================
@@ -260,16 +471,57 @@ const gridFeatures = {
             park: { bonus: { happiness: 3 }, message: '🌳 Park for the neighborhood!' },
             factory: { penalty: { happiness: -6 }, message: '🏭 Residents protest factory!' }
         }
+    },
+    // Chapter 2 Features - Storm & Flood
+    flooded_area: {
+        id: 'flooded_area',
+        name: 'Flood Zone',
+        icon: '🌊',
+        description: 'Area affected by flooding',
+        buildable: false, // Can't build on flooded areas
+        color: '#5dade2',
+        adjacencyEffects: {
+            house: { penalty: { happiness: -10 }, message: '🏠 Homes damaged by flood!' },
+            shop: { penalty: { cityFunds: -5 }, message: '🏪 Business disrupted by water!' },
+            hospital: { bonus: { happiness: 5 }, message: '🏥 Hospital helps flood victims!' },
+            shelter: { bonus: { happiness: 8 }, message: '🏕️ Shelter aids displaced families!' }
+        }
+    },
+    storm_damage: {
+        id: 'storm_damage',
+        name: 'Storm Damage',
+        icon: '💥',
+        description: 'Area damaged by storm',
+        buildable: true, // Can rebuild here
+        color: '#95a5a6',
+        adjacencyEffects: {
+            police: { bonus: { happiness: 4 }, message: '🚓 Police secure damaged area!' },
+            shelter: { bonus: { happiness: 6 }, message: '🏕️ Shelter helps victims!' }
+        }
     }
 };
 
 // Building Palette for drag-and-drop
 const buildingPalette = [
+    // Chapter 1 Buildings
     { id: 'house', name: 'House', icon: '🏠', cost: 10, effect: 'Happiness +5' },
-    { id: 'shop', name: 'Shop', icon: '🏪', cost: 15, effect: 'Funds +5' },
+    { id: 'shop', name: 'Shop', icon: '🏪', cost: 15, effect: 'Funds +5, Happiness +3' },
     { id: 'factory', name: 'Factory', icon: '🏭', cost: 20, effect: 'Funds +10, Happiness -5' },
     { id: 'park', name: 'Park', icon: '🌳', cost: 12, effect: 'Happiness +8' },
-    { id: 'office', name: 'Office', icon: '🏢', cost: 18, effect: 'Interest +8' }
+    { id: 'office', name: 'Office', icon: '🏢', cost: 18, effect: 'Interest +8, Funds +5' },
+
+    // Chapter 2 - Emergency Response Buildings
+    { id: 'shelter', name: 'Emergency Shelter', icon: '🏕️', cost: 12, effect: 'Happiness +8, Interest +5' },
+    { id: 'police', name: 'Police Station', icon: '🚓', cost: 15, effect: 'Happiness +5, Interest +10' },
+    { id: 'hospital', name: 'Hospital', icon: '🏥', cost: 22, effect: 'Happiness +15, Funds -10' },
+
+    // Chapter 2 - Recovery & Infrastructure
+    { id: 'school', name: 'School', icon: '🏫', cost: 18, effect: 'Happiness +12, Funds -8' },
+    { id: 'event_venue', name: 'Event Venue', icon: '🎪', cost: 20, effect: 'Happiness +10, Funds +5' },
+    { id: 'water_pump', name: 'Water Pump', icon: '💧', cost: 14, effect: 'Happiness +5 (near floods)' },
+
+    // Chapter 2 - Corruption Path
+    { id: 'skyscraper', name: 'Skyscraper', icon: '🏙️', cost: 25, effect: 'Funds +15, Happiness -5' }
 ];
 
 // Adjacency Rules for strategic placement
@@ -544,14 +796,22 @@ function addBuilding(type) {
 function renderBuildingPalette() {
     const container = document.getElementById('palette-buildings');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
-    buildingPalette.forEach(building => {
+
+    // If in mandatory placement mode, only show the mandatory building
+    let buildingsToShow = buildingPalette;
+    if (gameState.awaitingPlacement && gameState.pendingBuildingPlacement) {
+        const mandatoryBuilding = gameState.pendingBuildingPlacement.building;
+        buildingsToShow = buildingPalette.filter(b => b.id === mandatoryBuilding.id);
+        console.log(`🔒 Mandatory placement mode: Only showing ${mandatoryBuilding.name}`);
+    }
+
+    buildingsToShow.forEach(building => {
         const isUnlocked = gameState.unlockedBuildings.includes(building.id);
         const canAfford = gameState.cityFunds >= building.cost;
         const canDrag = isUnlocked && canAfford;
-        
+
         const card = document.createElement('div');
         card.className = `building-card ${!isUnlocked ? 'locked' : !canAfford ? 'disabled' : ''}`;
         card.setAttribute('data-building-id', building.id);
@@ -645,15 +905,81 @@ function renderCityGrid() {
     
     const now = Date.now();
     const gridSize = getGridSize();
-    
+
     // Ensure cityGrid array matches current grid size
     if (gameState.cityGrid.length !== gridSize.total) {
-        // Resize grid (preserve existing buildings if possible)
-        const newGrid = Array(gridSize.total).fill(null);
-        for (let i = 0; i < Math.min(gameState.cityGrid.length, gridSize.total); i++) {
-            newGrid[i] = gameState.cityGrid[i];
-        }
-        gameState.cityGrid = newGrid;
+        console.log(`📐 Grid size mismatch in renderCityGrid: ${gameState.cityGrid.length} → ${gridSize.total}`);
+
+        // Detect which features are currently placed (before clearing grid)
+        const placedFeatures = new Set();
+        gameState.gridFeatures.forEach(item => {
+            if (!placedFeatures.has(item.featureId)) {
+                placedFeatures.add(item.featureId);
+            }
+        });
+
+        // Create new grid
+        gameState.cityGrid = Array(gridSize.total).fill(null);
+        gameState.gridFeatures = []; // Clear feature tracking
+
+        // Re-place all permanent features with new patterns for new grid size
+        placedFeatures.forEach(featureId => {
+            let pattern = [];
+
+            if (featureId === 'river') {
+                pattern = generateRiverPattern();
+            } else if (featureId === 'city_hall') {
+                const gridSize = getGridSize();
+                if (gridSize.total === 60) {
+                    pattern = [25];
+                } else if (gridSize.total === 32) {
+                    pattern = [13];
+                } else {
+                    pattern = [9];
+                }
+            } else if (featureId === 'existing_neighborhood') {
+                const gridSize = getGridSize();
+                if (gridSize.total === 60) {
+                    pattern = [14, 15, 24];
+                } else if (gridSize.total === 32) {
+                    pattern = [12, 20];
+                } else {
+                    pattern = [8, 14];
+                }
+            } else if (featureId === 'mountain') {
+                pattern = generateMountainPattern();
+            } else if (featureId === 'protected_forest') {
+                pattern = generateForestPattern();
+            } else if (featureId === 'highway') {
+                pattern = generateHighwayPattern();
+            } else if (featureId === 'polluted_river') {
+                pattern = generateRiverPattern();
+            } else if (featureId === 'flooded_area') {
+                pattern = generateRiverPattern();
+            }
+
+            if (pattern.length > 0) {
+                const feature = gridFeatures[featureId];
+                if (feature) {
+                    pattern.forEach(cellIndex => {
+                        if (cellIndex >= 0 && cellIndex < gameState.cityGrid.length) {
+                            gameState.cityGrid[cellIndex] = {
+                                type: 'feature',
+                                featureId: featureId,
+                                icon: feature.icon,
+                                name: feature.name,
+                                buildable: feature.buildable,
+                                isBuilding: feature.isBuilding || false
+                            };
+                            gameState.gridFeatures.push({
+                                featureId: featureId,
+                                cellIndex: cellIndex
+                            });
+                        }
+                    });
+                }
+            }
+        });
     }
     
     // Create cells based on current screen size
@@ -874,6 +1200,18 @@ function handleTouchEnd(e) {
             const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
             const building = touchDragData.building;
 
+            // Check if timer is running (allow placement during mandatory placement mode)
+            if (!gameState.isTimerRunning && !gameState.awaitingPlacement) {
+                showToast('⏸️ Cannot build when there is no active decision!', 'warning');
+                triggerHaptic('warning');
+                // Clear touch data
+                touchDragData = null;
+                document.querySelectorAll('.grid-cell').forEach(c => {
+                    c.classList.remove('drag-over', 'invalid-drop', 'adjacent-good', 'adjacent-bad');
+                });
+                return;
+            }
+
             // Check placement constraints (only for mandatory building)
             if (gameState.placementConstraints &&
                 gameState.awaitingPlacement &&
@@ -1028,6 +1366,13 @@ function handleGridDrop(e) {
 
     const cell = e.target.closest('.grid-cell');
     const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
+
+    // Check if timer is running (allow placement during mandatory placement mode)
+    if (!gameState.isTimerRunning && !gameState.awaitingPlacement) {
+        showToast('⏸️ Cannot build when there is no active decision!', 'warning');
+        triggerHaptic('warning');
+        return;
+    }
 
     // Check placement constraints (only for mandatory building)
     if (gameState.placementConstraints &&
@@ -1778,6 +2123,9 @@ function showMandatoryPlacementOverlay(building, constraints = null) {
     // Re-render grid to show locked/allowed cells
     renderCityGrid();
 
+    // Re-render building palette to show only the mandatory building
+    renderBuildingPalette();
+
     console.log(`🏗️ Mandatory placement required: ${building.name}`);
 }
 
@@ -1803,6 +2151,9 @@ function completeMandatoryPlacement() {
 
     // Re-render grid to remove locked cells
     renderCityGrid();
+
+    // Re-render building palette to show all buildings again
+    renderBuildingPalette();
 
     // Continue to next scene
     renderScene(nextScene);
@@ -2467,10 +2818,10 @@ function handleTimeout() {
                 renderBuildingPalette();
             }
 
-            // Continue to next scene after delay
+            // Continue to next scene after delay (gives player time to read consequences)
             setTimeout(() => {
                 renderScene(nextScene);
-            }, 3000);
+            }, 4500);
         }
     }
 }
@@ -2599,7 +2950,7 @@ const gameData = {
         story: `<p>The unemployment tax has created serious social tensions in Tiger Central.</p><p>Employed and unemployed citizens are clashing. Crime is increasing, and neighborhood disputes are common.</p>`,
         choices: [
             { text: "Increase surveillance", icon: "📹", effects: { happiness: -10, cityFunds: -10, specialInterest: 10, personalProfit: 0 }, next: 'choice4B11', consequence: "More cameras and police patrol the streets. Crime drops, but citizens feel watched." },
-            { text: "Fund job-training programs", icon: "📚", effects: { happiness: 15, cityFunds: -15, specialInterest: -5, personalProfit: 0 }, next: 'choice4B12', consequence: "Training programs begin. Unemployed citizens are learning new skills.", building: 'office' }
+            { text: "Fund job-training programs", icon: "📚", effects: { happiness: 15, cityFunds: -15, specialInterest: -5, personalProfit: 0 }, next: 'choice4B12', consequence: "Training programs begin. Unemployed citizens are learning new skills.", building: 'office', unlocks: ['office'] }
         ]
     },
     choice3B2: {
@@ -2616,8 +2967,8 @@ const gameData = {
         title: "Labor Dispute",
         story: `<p>TigerTech Industries is retaliating against the pollution taxes you imposed.</p><p>They're threatening to cut wages and hours for their 500 employees. Do you intervene?</p>`,
         choices: [
-            { text: "Implement labor protection laws", icon: "⚖️", effects: { happiness: 15, cityFunds: 0, specialInterest: -15, personalProfit: 0 }, next: 'ending', consequence: "Workers are protected, but TigerTech considers leaving Tiger Central." },
-            { text: "Let the company cut wages", icon: "📉", effects: { happiness: -15, cityFunds: 0, specialInterest: 10, personalProfit: 3 }, next: 'ending', consequence: "Workers face pay cuts. Families struggle." }
+            { text: "Implement labor protection laws", icon: "⚖️", effects: { happiness: 15, cityFunds: 0, specialInterest: -15, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Workers are protected, but TigerTech considers leaving Tiger Central." },
+            { text: "Let the company cut wages", icon: "📉", effects: { happiness: -15, cityFunds: 0, specialInterest: 10, personalProfit: 3 }, next: 'chapter1_ending', consequence: "Workers face pay cuts. Families struggle." }
         ]
     },
     choice4A12: {
@@ -2625,8 +2976,8 @@ const gameData = {
         title: "Citizens Revolt",
         story: `<p>Protests have erupted throughout Tiger Central!</p><p>Citizens are furious that they're paying for water treatment while the polluting company faces no consequences.</p>`,
         choices: [
-            { text: "Meet with protest leaders", icon: "🤝", effects: { happiness: 10, cityFunds: -5, specialInterest: -10, personalProfit: 0 }, next: 'ending', consequence: "You listen to citizens' concerns and promise reform. Trust begins to rebuild." },
-            { text: "Send in police", icon: "🚔", effects: { happiness: -25, cityFunds: -5, specialInterest: 5, personalProfit: 0 }, next: 'ending', consequence: "Protests are dispersed by force. Resentment grows." }
+            { text: "Meet with protest leaders", icon: "🤝", effects: { happiness: 10, cityFunds: -5, specialInterest: -10, personalProfit: 0 }, next: 'chapter1_ending', consequence: "You listen to citizens' concerns and promise reform. Trust begins to rebuild." },
+            { text: "Send in police", icon: "🚔", effects: { happiness: -25, cityFunds: -5, specialInterest: 5, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Protests are dispersed by force. Resentment grows." }
         ]
     },
     choice4A21: {
@@ -2634,8 +2985,8 @@ const gameData = {
         title: "Financial Strain",
         story: `<p>Compensating residents has created a budget shortfall. You need to balance the budget somehow.</p>`,
         choices: [
-            { text: "Raise local taxes", icon: "📊", effects: { happiness: -15, cityFunds: 15, specialInterest: -5, personalProfit: 0 }, next: 'ending', consequence: "Tax increases anger citizens, but the budget is stabilized." },
-            { text: "Cut education and parks funding", icon: "✂️", effects: { happiness: -20, cityFunds: 15, specialInterest: 5, personalProfit: 0 }, next: 'ending', consequence: "Schools and parks suffer. Families with children are upset." }
+            { text: "Raise local taxes", icon: "📊", effects: { happiness: -15, cityFunds: 15, specialInterest: -5, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Tax increases anger citizens, but the budget is stabilized." },
+            { text: "Cut education and parks funding", icon: "✂️", effects: { happiness: -20, cityFunds: 15, specialInterest: 5, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Schools and parks suffer. Families with children are upset." }
         ]
     },
     choice4A22: {
@@ -2643,8 +2994,8 @@ const gameData = {
         title: "Housing Crisis",
         story: `<p>The new homes for relocated residents are behind schedule. The contractor is having trouble finding materials and costs are rising.</p>`,
         choices: [
-            { text: "Rush with cheaper materials", icon: "⏰", effects: { happiness: -10, cityFunds: 5, specialInterest: 5, personalProfit: 3 }, next: 'ending', consequence: "Homes are completed quickly but quality is poor." },
-            { text: "Spend extra for quality", icon: "💎", effects: { happiness: 15, cityFunds: -20, specialInterest: -5, personalProfit: 0 }, next: 'ending', consequence: "Beautiful, safe homes are built. The budget takes a hit.", building: 'house' }
+            { text: "Rush with cheaper materials", icon: "⏰", effects: { happiness: -10, cityFunds: 5, specialInterest: 5, personalProfit: 3 }, next: 'chapter1_ending', consequence: "Homes are completed quickly but quality is poor." },
+            { text: "Spend extra for quality", icon: "💎", effects: { happiness: 15, cityFunds: -20, specialInterest: -5, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Beautiful, safe homes are built. The budget takes a hit.", building: 'house' }
         ]
     },
     choice4A23: {
@@ -2652,8 +3003,8 @@ const gameData = {
         title: "Illegal Expansion",
         story: `<p>TigerTech has taken advantage of your inaction! They've been illegally expanding their operations onto protected land.</p>`,
         choices: [
-            { text: "Continue ignoring it", icon: "🙈", effects: { happiness: -30, cityFunds: 0, specialInterest: 20, personalProfit: 15 }, next: 'ending', consequence: "Your inaction becomes a scandal. Citizens have lost all faith." },
-            { text: "Fine the company", icon: "⚡", effects: { happiness: 20, cityFunds: 10, specialInterest: -20, personalProfit: 0 }, next: 'ending', consequence: "You finally take a stand. Citizens applaud!", building: 'park' }
+            { text: "Continue ignoring it", icon: "🙈", effects: { happiness: -30, cityFunds: 0, specialInterest: 20, personalProfit: 15 }, next: 'chapter1_ending', consequence: "Your inaction becomes a scandal. Citizens have lost all faith." },
+            { text: "Fine the company", icon: "⚡", effects: { happiness: 20, cityFunds: 10, specialInterest: -20, personalProfit: 0 }, next: 'chapter1_ending', consequence: "You finally take a stand. Citizens applaud!", building: 'park' }
         ]
     },
     choice4B11: {
@@ -2661,8 +3012,8 @@ const gameData = {
         title: "Privacy Concerns",
         story: `<p>Crime has dropped thanks to increased surveillance, but citizens are uneasy. People feel like they're always being watched.</p>`,
         choices: [
-            { text: "Scale back surveillance", icon: "🔙", effects: { happiness: 10, cityFunds: 5, specialInterest: -10, personalProfit: 0 }, next: 'ending', consequence: "Citizens breathe easier with less monitoring." },
-            { text: "Double down", icon: "🔒", effects: { happiness: -20, cityFunds: -10, specialInterest: 15, personalProfit: 0 }, next: 'ending', consequence: "Tiger Central becomes a surveillance state." }
+            { text: "Scale back surveillance", icon: "🔙", effects: { happiness: 10, cityFunds: 5, specialInterest: -10, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Citizens breathe easier with less monitoring." },
+            { text: "Double down", icon: "🔒", effects: { happiness: -20, cityFunds: -10, specialInterest: 15, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Tiger Central becomes a surveillance state." }
         ]
     },
     choice4B12: {
@@ -2670,8 +3021,8 @@ const gameData = {
         title: "Hiring Hesitation",
         story: `<p>The job-training programs are producing qualified workers, but local businesses are hesitant to hire trainees.</p>`,
         choices: [
-            { text: "Place hiring quotas", icon: "📋", effects: { happiness: 5, cityFunds: 0, specialInterest: -15, personalProfit: 0 }, next: 'ending', consequence: "Businesses must hire trainees. Some comply grudgingly." },
-            { text: "Offer tax breaks", icon: "💸", effects: { happiness: 10, cityFunds: -10, specialInterest: 10, personalProfit: 0 }, next: 'ending', consequence: "Tax incentives work! Employment rises.", building: 'shop' }
+            { text: "Place hiring quotas", icon: "📋", effects: { happiness: 5, cityFunds: 0, specialInterest: -15, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Businesses must hire trainees. Some comply grudgingly." },
+            { text: "Offer tax breaks", icon: "💸", effects: { happiness: 10, cityFunds: -10, specialInterest: 10, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Tax incentives work! Employment rises.", building: 'shop' }
         ]
     },
     choice4B21: {
@@ -2679,8 +3030,8 @@ const gameData = {
         title: "Slowing Progress",
         story: `<p>The new safety regulations are protecting workers, but productivity has dropped. Projects are behind schedule.</p>`,
         choices: [
-            { text: "Fire underperforming employees", icon: "❌", effects: { happiness: -15, cityFunds: 5, specialInterest: 10, personalProfit: 0 }, next: 'ending', consequence: "Projects speed up, but workers live in fear." },
-            { text: "Extend deadlines", icon: "⏱️", effects: { happiness: 10, cityFunds: -5, specialInterest: -10, personalProfit: 0 }, next: 'ending', consequence: "Quality and safety improve. Citizens appreciate patience." }
+            { text: "Fire underperforming employees", icon: "❌", effects: { happiness: -15, cityFunds: 5, specialInterest: 10, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Projects speed up, but workers live in fear." },
+            { text: "Extend deadlines", icon: "⏱️", effects: { happiness: 10, cityFunds: -5, specialInterest: -10, personalProfit: 0 }, next: 'chapter1_ending', consequence: "Quality and safety improve. Citizens appreciate patience." }
         ]
     },
     choice4B22: {
@@ -2688,13 +3039,316 @@ const gameData = {
         title: "Lawsuits Mounting",
         story: `<p>Injury reports are piling up, and now the lawsuits are coming. Injured workers are demanding compensation.</p>`,
         choices: [
-            { text: "Pay employees to keep quiet", icon: "💰", effects: { happiness: -20, cityFunds: -15, specialInterest: 10, personalProfit: -5 }, next: 'ending', consequence: "Hush money works temporarily, but rumors spread." },
-            { text: "Let them bring cases to court", icon: "⚖️", effects: { happiness: 5, cityFunds: -20, specialInterest: -15, personalProfit: 0 }, next: 'ending', consequence: "The truth comes out. You take responsibility and promise reform." }
+            { text: "Pay employees to keep quiet", icon: "💰", effects: { happiness: -20, cityFunds: -15, specialInterest: 10, personalProfit: -5 }, next: 'chapter1_ending', consequence: "Hush money works temporarily, but rumors spread." },
+            { text: "Let them bring cases to court", icon: "⚖️", effects: { happiness: 5, cityFunds: -20, specialInterest: -15, personalProfit: 0 }, next: 'chapter1_ending', consequence: "The truth comes out. You take responsibility and promise reform." }
         ]
     },
-    ending: { 
-        title: "Your Term Ends", 
-        story: `<p>Your first year as mayor of Tiger Central has come to an end. Let's see how you did...</p>` 
+    chapter1_ending: {
+        title: "Chapter 1 Complete",
+        story: `<p>Your first year as mayor of Tiger Central has come to an end. Let's see how you did...</p>`
+    },
+
+    // ==================== CHAPTER 2: THE GREAT STORM ====================
+    chapter2_intro: {
+        chapter: "Chapter 2: The Great Storm",
+        title: "Storm Warning",
+        story: `<p>🌪️ <strong>SIX MONTHS LATER...</strong></p>
+                <p>Your leadership during the first year has been tested, but Tiger Central has survived. Now you face a new crisis.</p>
+                <p>A massive storm is barreling toward the city. Meteorologists are divided—some warn it could be the worst storm in 100 years, while experienced forecasters argue it will weaken before landfall.</p>
+                <p>The storm is 24 hours away. Do you evacuate the entire city at massive cost, or trust the optimistic forecasts and stay put?</p>`,
+        choices: [
+            {
+                text: "Issue mandatory evacuation",
+                icon: "🚨",
+                effects: { happiness: 5, cityFunds: -15, specialInterest: 5, personalProfit: 0 },
+                next: 'ch2_evacuated_flood',
+                consequence: "Citizens evacuate to shelters. Emergency crews stand ready. You must now set up emergency shelters across the city.",
+                unlocks: ['shelter', 'hospital'],
+                building: 'shelter', // Mandatory: Place emergency shelter
+                timeBank: 5
+            },
+            {
+                text: "Downplay threat and stay",
+                icon: "🏠",
+                effects: { happiness: -10, cityFunds: 5, specialInterest: -5, personalProfit: 3 },
+                next: 'ch2_stayed_flood',
+                consequence: "Citizens remain in their homes. Business continues. You've saved evacuation costs, but taken a significant risk.",
+                unlocks: [],
+                timeBank: -5
+            }
+        ]
+    },
+
+    // EVACUATION PATH
+    ch2_evacuated_flood: {
+        chapter: "Chapter 2: The Morning After",
+        title: "False Alarm & Flood",
+        story: `<p>🌅 The storm curved around Tiger Central just in time! You breathe a sigh of relief.</p>
+                <p>But there's a new problem: Heavy rainfall north of the city caused the river to overflow. Riverside neighborhoods are flooding.</p>
+                <p>Some citizens are angry about the "false alarm" evacuation, while flood victims desperately need help. Where do you focus your energy?</p>`,
+        choices: [
+            {
+                text: "Focus on flood recovery",
+                icon: "🚤",
+                effects: { happiness: 10, cityFunds: -15, specialInterest: -5, personalProfit: 0 },
+                next: 'ch2_recovery_budget',
+                consequence: "Emergency crews help flood victims. You must deploy rescue operations and relocate displaced families to temporary housing.",
+                unlocks: ['police', 'hospital'],
+                building: 'house', // Mandatory: Build temporary housing for displaced families
+                placeFeature: 'flooded_area', // Flood zones appear on the map near river
+                timeBank: 5
+            },
+            {
+                text: "Calm angry citizens (PR)",
+                icon: "📢",
+                effects: { happiness: 5, cityFunds: -5, specialInterest: 10, personalProfit: 5 },
+                next: 'ch2_pr_victims_waiting',
+                consequence: "You launch a PR campaign. Town halls held. But flood zones are still visible on the map...",
+                unlocks: ['event_venue'], // Unlock event venue for PR events
+                building: 'event_venue', // Mandatory: Build venue for town halls
+                placeFeature: 'flooded_area', // Flood still happens
+                timeBank: -5
+            }
+        ]
+    },
+
+    // STAYED PUT PATH
+    ch2_stayed_flood: {
+        chapter: "Chapter 2: Lucky Dodge",
+        title: "Storm Misses, Flood Hits",
+        story: `<p>🍀 The storm curved away! You look lucky to those who doubted the forecasters.</p>
+                <p>However, heavy rainfall north of the city caused the river to overflow. Riverside flooding is happening now.</p>
+                <p>Do you deploy emergency crews immediately, or wait for the water to recede naturally to save money?</p>`,
+        choices: [
+            {
+                text: "Deploy emergency crews now",
+                icon: "🚒",
+                effects: { happiness: 10, cityFunds: -10, specialInterest: 5, personalProfit: 0 },
+                next: 'ch2_active_response',
+                consequence: "Fire trucks and rescue boats deploy! You must set up emergency response infrastructure.",
+                unlocks: ['police', 'hospital', 'shelter'],
+                building: 'police', // Mandatory: Place police station for emergency coordination
+                placeFeature: 'flooded_area', // Flood zones appear
+                timeBank: 10
+            },
+            {
+                text: "Wait for water to recede",
+                icon: "⏳",
+                effects: { happiness: -15, cityFunds: 5, specialInterest: 10, personalProfit: 8 },
+                next: 'ch2_neglect_worsens',
+                consequence: "Water continues rising. Flood zones spread across the city. Property damage worsens dramatically.",
+                unlocks: [],
+                placeFeature: 'flooded_area', // Even more flooding since you waited
+                replaceFeature: { oldFeature: 'river', newFeature: 'flooded_area' }, // River becomes flood zone
+                timeBank: -10
+            }
+        ]
+    },
+
+    // RECOVERY BUDGET PATH (evacuated → recovery)
+    ch2_recovery_budget: {
+        chapter: "Chapter 2: Budget Crisis",
+        title: "Running Out of Money",
+        story: `<p>💸 Recovery efforts are underway, but the budget is severely strained. You've spent heavily on evacuation AND recovery.</p>
+                <p>You need revenue fast. How do you raise funds?</p>`,
+        choices: [
+            {
+                text: "Emergency taxes on wealthy",
+                icon: "💰",
+                effects: { happiness: -10, cityFunds: 15, specialInterest: -10, personalProfit: 0 },
+                next: 'ch2_donor_pressure',
+                consequence: "Emergency tax passes. But wealthy donors demand something in return...",
+                unlocks: ['skyscraper'], // Wealthy demand luxury development
+                timeBank: 5
+            },
+            {
+                text: "Request federal aid",
+                icon: "🏛️",
+                effects: { happiness: 5, cityFunds: 10, specialInterest: 5, personalProfit: 3 },
+                next: 'ch2_federal_oversight',
+                consequence: "Federal aid arrives! You must demonstrate recovery progress with new infrastructure.",
+                unlocks: ['hospital', 'school'],
+                building: 'hospital', // Mandatory: Federal aid requires visible infrastructure
+                timeBank: 0
+            }
+        ]
+    },
+
+    // PR PATH (evacuated → PR instead of recovery)
+    ch2_pr_victims_waiting: {
+        chapter: "Chapter 2: Media Firestorm",
+        title: "Priorities Questioned",
+        story: `<p>📺 You focused on PR while flood victims waited. Now the media is covering their suffering.</p>
+                <p>Images of families wading through water dominate the news while you hold town halls about evacuation decisions. You're under intense pressure.</p>`,
+        choices: [
+            {
+                text: "Pivot to helping victims now",
+                icon: "🔄",
+                effects: { happiness: 10, cityFunds: -15, specialInterest: -5, personalProfit: 0 },
+                next: 'ch2_late_redemption',
+                consequence: "You admit you should have acted sooner. Recovery efforts begin. Families are helped. Trust begins to rebuild, but the budget is decimated.",
+                timeBank: 0
+            },
+            {
+                text: "Continue damage control (PR)",
+                icon: "🎭",
+                effects: { happiness: -20, cityFunds: 5, specialInterest: 15, personalProfit: 10 },
+                next: 'ch2_corruption_exposed',
+                consequence: "You double down on spin. Flood victims organize protests. Media runs 'Tale of Two Cities' stories. Your approval plummets among working-class voters.",
+                timeBank: -10
+            }
+        ]
+    },
+
+    // ACTIVE RESPONSE PATH (stayed → deployed crews)
+    ch2_active_response: {
+        chapter: "Chapter 2: Recovery Progress",
+        title: "Crisis Management",
+        story: `<p>🚤 Emergency response was fast and effective. Crews are working around the clock, but the costs are mounting.</p>
+                <p>Do you continue funding full recovery until completion, or cut efforts short due to budget concerns?</p>`,
+        choices: [
+            {
+                text: "Continue full recovery",
+                icon: "💪",
+                effects: { happiness: 10, cityFunds: -15, specialInterest: -10, personalProfit: 0 },
+                next: 'ch2_thorough_finish',
+                consequence: "Full recovery! You must rebuild affected areas and provide community support.",
+                unlocks: ['house', 'park', 'school'],
+                building: 'park', // Mandatory: Build park for community healing
+                placementConstraints: { nearFeature: 'flooded_area' }, // Must be near flood zone
+                timeBank: 10
+            },
+            {
+                text: "Cut recovery short",
+                icon: "✂️",
+                effects: { happiness: -10, cityFunds: 10, specialInterest: 5, personalProfit: 5 },
+                next: 'ch2_incomplete_recovery',
+                consequence: "Recovery ends early. Flood zones remain visible. Some families abandoned.",
+                unlocks: ['skyscraper'], // Developers buy cheap flooded land
+                timeBank: -5
+            }
+        ]
+    },
+
+    // NEGLECT PATH (stayed → waited for water)
+    ch2_neglect_worsens: {
+        chapter: "Chapter 2: Disaster Unfolds",
+        title: "Damage Worsening",
+        story: `<p>🌊 Days have passed. Water is receding VERY slowly. Damage has worsened dramatically. Waterborne illnesses are spreading.</p>
+                <p>Media coverage is brutal. Families are suffering. You must act now—or don't you?</p>`,
+        choices: [
+            {
+                text: "Deploy crews NOW (late)",
+                icon: "🆘",
+                effects: { happiness: 5, cityFunds: -10, specialInterest: -5, personalProfit: 0 },
+                next: 'ch2_too_little_late',
+                consequence: "Crews arrive to scenes of devastation. Recovery begins but damage is worse than it would have been. Families are bitter about the delay.",
+                timeBank: 0
+            },
+            {
+                text: "Continue waiting (total neglect)",
+                icon: "🙈",
+                effects: { happiness: -25, cityFunds: 5, specialInterest: 15, personalProfit: 15 },
+                next: 'ch2_recall_petition',
+                consequence: "Riverside neighborhoods are abandoned by government. Private companies buy flooded properties for pennies. A class divide deepens. Your name becomes synonymous with neglect.",
+                timeBank: -15
+            }
+        ]
+    },
+
+    // FINAL LAYER SCENES (shortened for space - each path gets one more decision before ending)
+    ch2_donor_pressure: {
+        chapter: "Chapter 2: Political Pressure",
+        title: "Donors Demand Cuts",
+        story: `<p>Wealthy donors are pressuring you to cut education and parks spending after the emergency taxes. What do you do?</p>`,
+        choices: [
+            {
+                text: "Protect education/parks",
+                icon: "🌳",
+                effects: { happiness: 15, cityFunds: -5, specialInterest: -15, personalProfit: 0 },
+                next: 'ending',
+                consequence: "You stand up to donors! You must invest in education and community spaces.",
+                building: 'school', // Mandatory: Build school to prove commitment
+                unlocks: ['school', 'park']
+            },
+            {
+                text: "Cut education/parks",
+                icon: "✂️",
+                effects: { happiness: -15, cityFunds: 10, specialInterest: 10, personalProfit: 5 },
+                next: 'ending',
+                consequence: "Donors get what they want. Luxury development begins...",
+                building: 'skyscraper', // Mandatory: Build luxury development for donors
+                unlocks: ['skyscraper']
+            }
+        ]
+    },
+    ch2_federal_oversight: {
+        chapter: "Chapter 2: Federal Contracts",
+        title: "Follow the Money",
+        story: `<p>Federal aid arrived. How do you handle the contracts for recovery work?</p>`,
+        choices: [
+            { text: "Transparent competitive bids", icon: "📋", effects: { happiness: 10, cityFunds: 5, specialInterest: -5, personalProfit: 0 }, next: 'ending', consequence: "Clean governance. Quality infrastructure. Citizens trust you!" },
+            { text: "Steer to political allies", icon: "🤝", effects: { happiness: -10, cityFunds: -10, specialInterest: 15, personalProfit: 10 }, next: 'ending', consequence: "Corruption rumors spread. Projects are low-quality. Kickbacks received." }
+        ]
+    },
+    ch2_late_redemption: {
+        chapter: "Chapter 2: Empty Budget",
+        title: "Need Revenue Now",
+        story: `<p>Recovery is complete but the budget is empty. You need revenue to keep the city running.</p>`,
+        choices: [
+            { text: "Progressive tax reform", icon: "📊", effects: { happiness: 10, cityFunds: 10, specialInterest: -15, personalProfit: 0 }, next: 'ending', consequence: "Fair taxation. Working class supports you. Sustainable revenue!" },
+            { text: "Regressive fees (parking, permits)", icon: "💵", effects: { happiness: -15, cityFunds: 10, specialInterest: 5, personalProfit: 5 }, next: 'ending', consequence: "Working class hit hardest. Resentment grows. Revenue flows." }
+        ]
+    },
+    ch2_corruption_exposed: {
+        chapter: "Chapter 2: Protests Erupt",
+        title: "Accountability Demanded",
+        story: `<p>Flood victims demand accountability. Protests fill the streets. Your approval is tanking. What now?</p>`,
+        choices: [
+            { text: "Meet protesters, commit to recovery", icon: "🤝", effects: { happiness: 15, cityFunds: -15, specialInterest: -10, personalProfit: -5 }, next: 'ending', consequence: "You finally listen. Trust rebuilds. Recovery begins (late but real)." },
+            { text: "Ignore and focus on donors", icon: "💼", effects: { happiness: -30, cityFunds: 5, specialInterest: 20, personalProfit: 15 }, next: 'ending', consequence: "Working class feels betrayed. Your mayorship defined by this scandal." }
+        ]
+    },
+    ch2_thorough_finish: {
+        chapter: "Chapter 2: Budget Management",
+        title: "Fiscal Discipline",
+        story: `<p>Recovery is complete and thorough. Citizens trust you, but the budget is tight. How do you manage?</p>`,
+        choices: [
+            { text: "Modest budget cuts", icon: "📉", effects: { happiness: 5, cityFunds: 5, specialInterest: -5, personalProfit: 0 }, next: 'ending', consequence: "Responsible budgeting. Citizens appreciate fiscal discipline!" },
+            { text: "Borrow for popular projects", icon: "💳", effects: { happiness: 10, cityFunds: -10, specialInterest: 10, personalProfit: 3 }, next: 'ending', consequence: "Popular projects! Debt increases. Some skimming occurs." }
+        ]
+    },
+    ch2_incomplete_recovery: {
+        chapter: "Chapter 2: Families Organize",
+        title: "Unfinished Business",
+        story: `<p>Families in half-repaired homes are organizing. Media is covering their stories. The pressure is immense.</p>`,
+        choices: [
+            { text: "Resume recovery (admit mistake)", icon: "🔄", effects: { happiness: 10, cityFunds: -15, specialInterest: -10, personalProfit: 0 }, next: 'ending', consequence: "Course correction appreciated. Recovery completed. Budget strained." },
+            { text: "Small relief checks instead", icon: "💵", effects: { happiness: -15, cityFunds: 5, specialInterest: 5, personalProfit: 8 }, next: 'ending', consequence: "Families insulted by token payments. Homes still damaged. Resentment festers." }
+        ]
+    },
+    ch2_too_little_late: {
+        chapter: "Chapter 2: Lawsuits Filed",
+        title: "Legal Consequences",
+        story: `<p>Recovery is underway but damage was worse due to delay. Lawsuits are threatened. How do you respond?</p>`,
+        choices: [
+            { text: "Settle fairly and take responsibility", icon: "⚖️", effects: { happiness: 10, cityFunds: -15, specialInterest: -10, personalProfit: 0 }, next: 'ending', consequence: "Accountability appreciated. Trust rebuilds. Settlements paid." },
+            { text: "Fight lawsuits, blame nature", icon: "🌊", effects: { happiness: -20, cityFunds: 5, specialInterest: 10, personalProfit: 5 }, next: 'ending', consequence: "Victims feel gaslit and betrayed. Legal battles drag on." }
+        ]
+    },
+    ch2_recall_petition: {
+        chapter: "Chapter 2: Recall Election",
+        title: "Democracy in Action",
+        story: `<p>A recall petition has gathered enough signatures. Your administration is synonymous with corruption and neglect. How do you respond?</p>`,
+        choices: [
+            { text: "Resign with dignity", icon: "✍️", effects: { happiness: 20, cityFunds: 0, specialInterest: -20, personalProfit: -10 }, next: 'ending', consequence: "Citizens celebrate your departure. New leadership gets a chance." },
+            { text: "Fight with donor money", icon: "💰", effects: { happiness: -35, cityFunds: -5, specialInterest: 20, personalProfit: 20 }, next: 'ending', consequence: "Democracy feels broken. Cynicism spreads. You cling to power through money." }
+        ]
+    },
+
+    ending: {
+        title: "Game Complete",
+        story: `<p>Your time as mayor of Tiger Central has ended. Thank you for playing!</p>`
     }
 };
 
@@ -2752,9 +3406,16 @@ function renderScene(sceneKey) {
             quizTitle.textContent = 'Welcome';
         } else if (sceneKey === 'ending') {
             quizTitle.textContent = 'Game Complete';
+        } else if (sceneKey === 'chapter1_ending') {
+            quizTitle.textContent = 'Chapter 1 Complete';
         } else {
             quizTitle.textContent = scene.chapter || 'Decision Time';
         }
+    }
+
+    if (sceneKey === 'chapter1_ending') {
+        renderChapter1Ending();
+        return;
     }
 
     if (sceneKey === 'ending') {
@@ -2830,8 +3491,10 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
     // Mark that a choice has been made
     gameState.choiceMade = true;
 
-    // Timer continues running - it will be stopped when the next scene loads
-    // This allows the timer to keep counting during consequence display and building placement
+    // Stop the timer immediately after choice is made
+    // User can take their time reading consequences and building
+    stopTimer();
+    console.log('⏸️ Timer stopped - user can take their time with consequences and building');
 
     // Play choice sound
     if (!isTimedOut && typeof audioManager !== 'undefined') {
@@ -2858,11 +3521,24 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
 
     // Track decision time for achievements
     const timeSpent = gameState.currentDecisionTime - gameState.timerSeconds;
-    gameState.decisions.push({ 
-        scene: sceneKey, 
+    gameState.decisions.push({
+        scene: sceneKey,
         choice: choice.text,
-        timeSpent: timeSpent 
+        timeSpent: timeSpent
     });
+
+    // Store the next action details for the Continue button
+    const buildingObj = choice.building ? buildingPalette.find(b => b.id === choice.building) : null;
+    if (choice.building && !buildingObj) {
+        console.error(`❌ Building ID "${choice.building}" not found in buildingPalette! Available buildings:`, buildingPalette.map(b => b.id).join(', '));
+    }
+    gameState.nextAction = {
+        nextScene: choice.next,
+        hasBuilding: !!choice.building,
+        building: buildingObj,
+        buildingId: choice.building || null, // Store ID for debugging
+        constraints: choice.placementConstraints || null
+    };
 
     // Handle building unlocks
     if (choice.unlocks && choice.unlocks.length > 0) {
@@ -2943,82 +3619,76 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
         }
         
         applyEffects(choice.effects);
-        
+
         if (choice.consequence) {
-            showConsequence(choice.effects, choice.consequence, earnedTimeBonus, timeBankAdjustment);
+            showConsequence(choice.effects, choice.consequence, earnedTimeBonus, timeBankAdjustment, timeSpent);
         }
     }
 
-    // Check if mandatory building placement is required
+    // Set up pending building placement if required
     if (choice.building) {
         const building = buildingPalette.find(b => b.id === choice.building);
         if (building) {
-            // Set up mandatory placement
             gameState.pendingBuildingPlacement = {
                 building: building,
                 nextScene: choice.next
             };
             gameState.awaitingPlacement = true;
-
-            // Show placement overlay after short delay (increased to ensure features are placed first)
-            setTimeout(() => {
-                // Check if choice has placement constraints
-                const constraints = choice.placementConstraints || null;
-                showMandatoryPlacementOverlay(building, constraints);
-            }, 3000);
-        } else {
-            // No building found, continue normally
-            setTimeout(() => {
-                renderScene(choice.next);
-            }, 2500);
         }
-    } else {
-        // No mandatory placement, continue normally
-        setTimeout(() => {
-            renderScene(choice.next);
-        }, 2500);
+    }
+
+    // If no consequence to show, continue immediately
+    if (!choice.consequence) {
+        continueAfterConsequence();
     }
 }
 
-function showConsequence(effects, message, earnedTimeBonus = 0, timeBankAdjustment = 0) {
+function showConsequence(effects, message, earnedTimeBonus = 0, timeBankAdjustment = 0, decisionTimeSeconds = 0) {
     const content = document.getElementById('game-content');
     const consequenceDiv = document.createElement('div');
     consequenceDiv.className = 'consequences';
-    
+
     let html = '<h3>⚡ Consequences</h3>';
     html += `<p>${message}</p>`;
-    
+
     if (effects.happiness) {
         html += `<div class="consequence-item ${effects.happiness > 0 ? 'positive' : 'negative'}">`;
         html += `😊 Happiness: ${effects.happiness > 0 ? '+' : ''}${effects.happiness}`;
         html += `</div>`;
     }
-    
+
     if (effects.cityFunds) {
         html += `<div class="consequence-item ${effects.cityFunds > 0 ? 'positive' : 'negative'}">`;
         html += `💰 City Funds: ${effects.cityFunds > 0 ? '+' : ''}${effects.cityFunds}M`;
         html += `</div>`;
     }
-    
+
     if (effects.specialInterest) {
         html += `<div class="consequence-item ${effects.specialInterest > 0 ? 'positive' : 'negative'}">`;
         html += `🏛️ Special Interest: ${effects.specialInterest > 0 ? '+' : ''}${effects.specialInterest}`;
         html += `</div>`;
     }
-    
+
     if (effects.personalProfit !== 0) {
         html += `<div class="consequence-item ${effects.personalProfit > 0 ? 'positive' : 'negative'}">`;
         html += `💵 Your Profit: ${effects.personalProfit > 0 ? '+' : ''}${effects.personalProfit}M`;
         html += `</div>`;
     }
-    
+
+    // Display decision time
+    if (decisionTimeSeconds > 0) {
+        html += `<div class="consequence-item" style="background:linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);border-left:4px solid #4caf50;">`;
+        html += `⏱️ Decision Time: ${decisionTimeSeconds}s`;
+        html += `</div>`;
+    }
+
     // Display time bonus earned
     if (earnedTimeBonus > 0) {
         html += `<div class="consequence-item positive" style="border-top: 2px dashed rgba(0,184,148,0.3); margin-top: 10px; padding-top: 10px;">`;
         html += `⚡ Time Bonus: +${earnedTimeBonus} points`;
         html += `</div>`;
     }
-    
+
     // Display time bank adjustment for next scene
     if (timeBankAdjustment !== 0) {
         html += `<div class="consequence-item ${timeBankAdjustment > 0 ? 'positive' : 'negative'}">`;
@@ -3026,9 +3696,183 @@ function showConsequence(effects, message, earnedTimeBonus = 0, timeBankAdjustme
         html += `</div>`;
     }
 
+    // Add Continue button (smaller circular button)
+    html += `<div style="text-align:center;margin-top:20px;">
+                <button class="continue-btn" onclick="continueAfterConsequence()" aria-label="Continue">
+                    ➡️
+                </button>
+             </div>`;
+
     consequenceDiv.innerHTML = html;
     content.appendChild(consequenceDiv);
     consequenceDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Continue after player clicks the Continue button on consequences
+function continueAfterConsequence() {
+    console.log('➡️ Player clicked Continue button');
+
+    // Check if there's a next action stored
+    if (!gameState.nextAction) {
+        console.error('❌ No next action stored!');
+        return;
+    }
+
+    const { nextScene, hasBuilding, building, buildingId, constraints } = gameState.nextAction;
+
+    // Check if mandatory building placement is required
+    if (hasBuilding) {
+        if (!building) {
+            // Building not found in palette - log error and skip to next scene
+            console.error(`❌ Building not found in buildingPalette! Building ID: "${buildingId}". Available buildings:`, buildingPalette.map(b => b.id).join(', '));
+            showToast('⚠️ Building not available, continuing story...', 'warning');
+            setTimeout(() => {
+                renderScene(nextScene);
+            }, 1000);
+        } else {
+            // Show placement overlay after a brief delay for visual smoothness
+            setTimeout(() => {
+                showMandatoryPlacementOverlay(building, constraints);
+            }, 500);
+        }
+    } else {
+        // No mandatory placement, continue to next scene
+        setTimeout(() => {
+            renderScene(nextScene);
+        }, 300);
+    }
+
+    // Clear the next action
+    gameState.nextAction = null;
+}
+
+// ==================== CHAPTER 1 ENDING & CHAPTER 2 QUALIFICATION ====================
+function renderChapter1Ending() {
+    const content = document.getElementById('game-content');
+
+    // Calculate score using same logic as final ending
+    const startingFunds = gameState.difficulty?.startingFunds || 60;
+    const fundsRatio = gameState.cityFunds / startingFunds;
+
+    let fundsScore;
+    if (fundsRatio >= 1.0) {
+        fundsScore = 100;
+    } else if (fundsRatio >= 0.5) {
+        fundsScore = 75 + ((fundsRatio - 0.5) * 50);
+    } else if (fundsRatio >= 0.2) {
+        fundsScore = 50 + ((fundsRatio - 0.2) * 83.33);
+    } else if (fundsRatio >= 0) {
+        fundsScore = 25 + (fundsRatio * 125);
+    } else {
+        fundsScore = Math.max(0, 25 + (fundsRatio * 125));
+    }
+
+    const baseScore = (gameState.happiness * 0.5) + (gameState.specialInterest * 0.3) + (fundsScore * 0.2);
+    const timeBonusScore = Math.min(20, gameState.timeBonus / 10);
+    const achievementBonus = gameState.achievements.length * 5;
+    const profitPenalty = gameState.personalProfit > 15 ? -15 : (gameState.personalProfit > 5 ? -5 : 0);
+    const efficiencyBonus = gameState.planningEfficiency > 85 ? 10 : (gameState.planningEfficiency > 70 ? 5 : 0);
+    const finalScore = (baseScore * 0.7) + (timeBonusScore * 0.15) + (achievementBonus * 0.1) + (efficiencyBonus * 0.05) + profitPenalty;
+    const minStat = Math.min(gameState.happiness, fundsScore, gameState.specialInterest);
+    const hasCriticalFailure = minStat < 20;
+
+    // CHAPTER 2 QUALIFICATION: Score >= 45 AND no critical failures
+    const qualifiesForChapter2 = finalScore >= 45 && !hasCriticalFailure;
+
+    console.log('📊 CHAPTER 1 COMPLETE - QUALIFICATION CHECK:');
+    console.log(`  Final Score: ${finalScore.toFixed(1)}/100`);
+    console.log(`  Critical Failure: ${hasCriticalFailure}`);
+    console.log(`  Qualifies for Chapter 2: ${qualifiesForChapter2}`);
+
+    let rating = '';
+    let message = '';
+
+    if (hasCriticalFailure) {
+        rating = '❌ Failed Mayor';
+        message = 'Critical failures in governance have severely damaged Tiger Central. The city cannot continue under your leadership.';
+    } else {
+        if (finalScore >= 70) {
+            rating = '👑 Outstanding Mayor!';
+            message = 'You balanced competing interests masterfully! Tiger Central is thriving.';
+        } else if (finalScore >= 60) {
+            rating = '🌟 Excellent Mayor';
+            message = 'Strong leadership! Most stakeholders are satisfied with your performance.';
+        } else if (finalScore >= 45) {
+            rating = '👍 Decent Mayor';
+            message = 'You kept the city functioning through tough choices. Some groups are happier than others, but that\'s politics!';
+        } else {
+            rating = '😬 Struggling Mayor';
+            message = 'Your term was rocky. Many citizens are unhappy, but you managed to avoid complete disaster.';
+        }
+    }
+
+    let profitMessage = '';
+    if (gameState.personalProfit > 15) {
+        profitMessage = '<p style="color:#d63031;font-size:1.2em;">⚠️ Your personal profit-taking has not gone unnoticed.</p>';
+    } else if (gameState.personalProfit > 5) {
+        profitMessage = '<p style="font-size:1.1em;">You made some personal profit along the way.</p>';
+    } else if (gameState.personalProfit <= 0) {
+        profitMessage = '<p style="color:#00b894;font-size:1.2em;">✨ You remained ethical! Citizens respect your integrity.</p>';
+    }
+
+    const html = `
+        <div class="game-over">
+            <div class="chapter-title">Chapter 1: Economic Opportunity - COMPLETE</div>
+            <h2>${rating}</h2>
+            <p style="font-size:1.3em;margin:20px 0;font-weight:600;">${message}</p>
+            ${profitMessage}
+
+            <div class="final-stats">
+                <h3>📊 Chapter 1 Statistics</h3>
+                <div class="final-stat-item"><strong>Population Happiness:</strong> ${gameState.happiness}/100 ${gameState.happiness >= 70 ? '🎉' : gameState.happiness >= 40 ? '😐' : '😞'}</div>
+                <div class="final-stat-item"><strong>City Funds:</strong> $${gameState.cityFunds}M ${gameState.cityFunds >= 70 ? '💰' : gameState.cityFunds >= 40 ? '💵' : '💸'}</div>
+                <div class="final-stat-item"><strong>Special Interest Support:</strong> ${gameState.specialInterest}/100 ${gameState.specialInterest >= 70 ? '🤝' : gameState.specialInterest >= 40 ? '👌' : '👎'}</div>
+                <div class="final-stat-item"><strong>Your Personal Profit:</strong> $${gameState.personalProfit}M ${gameState.personalProfit > 10 ? '⚠️' : gameState.personalProfit > 0 ? '💵' : '✨'}</div>
+                <div class="final-stat-item"><strong>Chapter 1 Score:</strong> ${finalScore.toFixed(1)}/100 ${finalScore >= 70 ? '🌟' : finalScore >= 60 ? '👍' : finalScore >= 45 ? '😐' : '😬'}</div>
+            </div>
+
+            ${qualifiesForChapter2 ? `
+                <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #e1f5fe 0%, #81d4fa 100%);border:3px solid #0288d1;">
+                    <h3>🎉 CHAPTER 2 UNLOCKED!</h3>
+                    <p style="font-size:1.2em;padding:15px;margin:0;line-height:1.6;">
+                        <strong>Congratulations!</strong> You've proven yourself as a decent mayor. Tiger Central needs you for another term.<br><br>
+                        A new crisis approaches... Are you ready to face <strong>The Great Storm</strong>?
+                    </p>
+                </div>
+                <button class="start-btn" onclick="renderScene('chapter2_intro')" style="margin-top:30px;background:linear-gradient(135deg, #0288d1 0%, #01579b 100%);animation: pulse 2s infinite;">
+                    <span class="start-btn-text">⚡ Continue to Chapter 2 ⚡</span>
+                </button>
+                <button class="start-btn" onclick="location.reload()" style="margin-top:15px;background:linear-gradient(135deg, #757575 0%, #424242 100%);">
+                    <span class="start-btn-text">🔄 Restart Game</span>
+                </button>
+            ` : `
+                <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);border:2px solid #c62828;">
+                    <h3>Chapter 2 Locked</h3>
+                    <p style="padding:15px;margin:0;line-height:1.6;">
+                        Your performance in Chapter 1 did not meet the requirements to continue. To unlock Chapter 2, you need:<br><br>
+                        ✓ Overall Score ≥ 45<br>
+                        ✓ No critical failures (all stats ≥ 20)<br><br>
+                        Try again and make better choices to see what happens next!
+                    </p>
+                </div>
+                <button class="start-btn" onclick="location.reload()" style="margin-top:30px;">
+                    <span class="start-btn-text">🔄 Try Again</span>
+                </button>
+            `}
+        </div>
+    `;
+
+    content.innerHTML = html;
+
+    // Add pulse animation for continue button
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 5px 15px rgba(2,136,209,0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(2,136,209,0.6); }
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 function renderEnding() {
@@ -3671,15 +4515,81 @@ function handleOrientationChange() {
         if (gameState.cityGrid.length !== newGridSize.total) {
             console.log(`📐 Grid size changed from ${gameState.cityGrid.length} to ${newGridSize.total} cells`);
 
-            // Create new grid
-            gameState.cityGrid = new Array(newGridSize.total).fill(null);
-
-            // Try to preserve buildings in new grid (within bounds)
-            currentGrid.forEach((building, index) => {
-                if (building && index < newGridSize.total) {
-                    gameState.cityGrid[index] = building;
+            // Detect which features are currently placed (before clearing grid)
+            const placedFeatures = new Set();
+            gameState.gridFeatures.forEach(item => {
+                if (!placedFeatures.has(item.featureId)) {
+                    placedFeatures.add(item.featureId);
                 }
             });
+
+            // Create new grid
+            gameState.cityGrid = new Array(newGridSize.total).fill(null);
+            gameState.gridFeatures = []; // Clear feature tracking
+
+            // Re-place all permanent features with new patterns for new grid size
+            placedFeatures.forEach(featureId => {
+                let pattern = [];
+
+                if (featureId === 'river') {
+                    pattern = generateRiverPattern();
+                } else if (featureId === 'city_hall') {
+                    const gridSize = getGridSize();
+                    if (gridSize.total === 60) {
+                        pattern = [25];
+                    } else if (gridSize.total === 32) {
+                        pattern = [13];
+                    } else {
+                        pattern = [9];
+                    }
+                } else if (featureId === 'existing_neighborhood') {
+                    const gridSize = getGridSize();
+                    if (gridSize.total === 60) {
+                        pattern = [14, 15, 24];
+                    } else if (gridSize.total === 32) {
+                        pattern = [12, 20];
+                    } else {
+                        pattern = [8, 14];
+                    }
+                } else if (featureId === 'mountain') {
+                    pattern = generateMountainPattern();
+                } else if (featureId === 'protected_forest') {
+                    pattern = generateForestPattern();
+                } else if (featureId === 'highway') {
+                    pattern = generateHighwayPattern();
+                } else if (featureId === 'polluted_river') {
+                    pattern = generateRiverPattern(); // Same pattern as river
+                } else if (featureId === 'flooded_area') {
+                    pattern = generateRiverPattern(); // Same pattern as river
+                }
+
+                if (pattern.length > 0) {
+                    const feature = gridFeatures[featureId];
+                    if (feature) {
+                        pattern.forEach(cellIndex => {
+                            if (cellIndex >= 0 && cellIndex < gameState.cityGrid.length) {
+                                gameState.cityGrid[cellIndex] = {
+                                    type: 'feature',
+                                    featureId: featureId,
+                                    icon: feature.icon,
+                                    name: feature.name,
+                                    buildable: feature.buildable,
+                                    isBuilding: feature.isBuilding || false
+                                };
+                                gameState.gridFeatures.push({
+                                    featureId: featureId,
+                                    cellIndex: cellIndex
+                                });
+                            }
+                        });
+                        console.log(`🗺️ Re-placed ${feature.name} for new grid size`);
+                    }
+                }
+            });
+
+            // Note: Player-placed buildings are NOT preserved across grid size changes
+            // This is intentional as grid dimensions change and building positions become invalid
+            console.log(`⚠️ Grid resize: Features re-placed, player buildings cleared`);
         }
 
         // Re-render grid with new layout
