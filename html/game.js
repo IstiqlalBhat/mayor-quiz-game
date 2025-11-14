@@ -504,24 +504,24 @@ const gridFeatures = {
 // Building Palette for drag-and-drop
 const buildingPalette = [
     // Chapter 1 Buildings
-    { id: 'house', name: 'House', icon: '🏠', cost: 10, effect: 'Happiness +5' },
-    { id: 'shop', name: 'Shop', icon: '🏪', cost: 15, effect: 'Funds +5, Happiness +3' },
-    { id: 'factory', name: 'Factory', icon: '🏭', cost: 20, effect: 'Funds +10, Happiness -5' },
-    { id: 'park', name: 'Park', icon: '🌳', cost: 12, effect: 'Happiness +8' },
-    { id: 'office', name: 'Office', icon: '🏢', cost: 18, effect: 'Interest +8, Funds +5' },
+    { id: 'house', name: 'House', icon: '🏠', cost: 10, effect: 'Happiness +5', chapter: 1, availableInChapter2: true }, // Needed for relocation
+    { id: 'shop', name: 'Shop', icon: '🏪', cost: 15, effect: 'Funds +5, Happiness +3', chapter: 1, availableInChapter2: false },
+    { id: 'factory', name: 'Factory', icon: '🏭', cost: 20, effect: 'Funds +10, Happiness -5', chapter: 1, availableInChapter2: false },
+    { id: 'park', name: 'Park', icon: '🌳', cost: 12, effect: 'Happiness +8', chapter: 1, availableInChapter2: true }, // Community healing
+    { id: 'office', name: 'Office', icon: '🏢', cost: 18, effect: 'Interest +8, Funds +5', chapter: 1, availableInChapter2: false },
 
     // Chapter 2 - Emergency Response Buildings
-    { id: 'shelter', name: 'Emergency Shelter', icon: '🏕️', cost: 12, effect: 'Happiness +8, Interest +5' },
-    { id: 'police', name: 'Police Station', icon: '🚓', cost: 15, effect: 'Happiness +5, Interest +10' },
-    { id: 'hospital', name: 'Hospital', icon: '🏥', cost: 22, effect: 'Happiness +15, Funds -10' },
+    { id: 'shelter', name: 'Emergency Shelter', icon: '🏕️', cost: 12, effect: 'Happiness +8, Interest +5', chapter: 2 },
+    { id: 'police', name: 'Police Station', icon: '🚓', cost: 15, effect: 'Happiness +5, Interest +10', chapter: 2 },
+    { id: 'hospital', name: 'Hospital', icon: '🏥', cost: 22, effect: 'Happiness +15, Funds -10', chapter: 2 },
 
     // Chapter 2 - Recovery & Infrastructure
-    { id: 'school', name: 'School', icon: '🏫', cost: 18, effect: 'Happiness +12, Funds -8' },
-    { id: 'event_venue', name: 'Event Venue', icon: '🎪', cost: 20, effect: 'Happiness +10, Funds +5' },
-    { id: 'water_pump', name: 'Water Pump', icon: '💧', cost: 14, effect: 'Happiness +5 (near floods)' },
+    { id: 'school', name: 'School', icon: '🏫', cost: 18, effect: 'Happiness +12, Funds -8', chapter: 2 },
+    { id: 'event_venue', name: 'Event Venue', icon: '🎪', cost: 20, effect: 'Happiness +10, Funds +5', chapter: 2 },
+    { id: 'water_pump', name: 'Water Pump', icon: '💧', cost: 14, effect: 'Happiness +5 (near floods)', chapter: 2 },
 
     // Chapter 2 - Corruption Path
-    { id: 'skyscraper', name: 'Skyscraper', icon: '🏙️', cost: 25, effect: 'Funds +15, Happiness -5' }
+    { id: 'skyscraper', name: 'Skyscraper', icon: '🏙️', cost: 25, effect: 'Funds +15, Happiness -5', chapter: 2 }
 ];
 
 // Adjacency Rules for strategic placement
@@ -792,6 +792,17 @@ function addBuilding(type) {
     // Building visualization removed - just track in state
 }
 
+// Helper function to detect current chapter
+function getCurrentChapter() {
+    const scene = gameState.currentScene || currentSceneKey || '';
+    // Check if we're in Chapter 2
+    if (scene.startsWith('chapter2') || scene.startsWith('ch2_')) {
+        return 2;
+    }
+    // Default to Chapter 1
+    return 1;
+}
+
 // Render building palette cards
 function renderBuildingPalette() {
     const container = document.getElementById('palette-buildings');
@@ -805,6 +816,24 @@ function renderBuildingPalette() {
         const mandatoryBuilding = gameState.pendingBuildingPlacement.building;
         buildingsToShow = buildingPalette.filter(b => b.id === mandatoryBuilding.id);
         console.log(`🔒 Mandatory placement mode: Only showing ${mandatoryBuilding.name}`);
+    } else {
+        // Filter buildings based on current chapter
+        const currentChapter = getCurrentChapter();
+        if (currentChapter === 2) {
+            // In Chapter 2, only show:
+            // - Chapter 2 buildings (when unlocked)
+            // - Chapter 1 buildings that are explicitly available in Chapter 2
+            buildingsToShow = buildingPalette.filter(b => {
+                if (b.chapter === 2) {
+                    return true; // Show all Chapter 2 buildings (they'll be locked if not unlocked)
+                } else if (b.chapter === 1) {
+                    return b.availableInChapter2 === true; // Only show if explicitly allowed
+                }
+                return false;
+            });
+            console.log(`📋 Chapter 2: Filtered to ${buildingsToShow.length} contextually relevant buildings`);
+        }
+        // In Chapter 1, show all Chapter 1 buildings (no filtering needed)
     }
 
     buildingsToShow.forEach(building => {
@@ -1048,10 +1077,28 @@ function renderCityGrid() {
                 cell.addEventListener('mouseenter', (e) => showBuildingTooltip(e, building, i));
                 cell.addEventListener('mouseleave', hideBuildingTooltip);
 
-                // Make occupied cells draggable for relocation
-                cell.setAttribute('draggable', 'true');
-                cell.addEventListener('dragstart', (e) => handleOccupiedDragStart(e, i));
-                cell.addEventListener('dragend', handleOccupiedDragEnd);
+                // Make buildings draggable for relocation (but NOT permanent features like City Hall)
+                // Check if this is a permanent feature that shouldn't be moved
+                // Features have type: 'feature' and featureId, buildings have type: building.id
+                const isPermanentFeature = building.type === 'feature' && building.featureId && 
+                    (building.featureId === 'city_hall' || 
+                     building.featureId === 'river' || 
+                     building.featureId === 'polluted_river' ||
+                     building.featureId === 'mountain' ||
+                     building.featureId === 'highway' ||
+                     building.featureId === 'protected_forest' ||
+                     building.featureId === 'flooded_area');
+                
+                if (!isPermanentFeature) {
+                    // Only make buildings draggable, not permanent features
+                    cell.setAttribute('draggable', 'true');
+                    cell.addEventListener('dragstart', (e) => handleOccupiedDragStart(e, i));
+                    cell.addEventListener('dragend', handleOccupiedDragEnd);
+                } else {
+                    // Permanent features are not draggable
+                    cell.setAttribute('draggable', 'false');
+                    cell.style.cursor = 'default';
+                }
             }
 
         } else {
@@ -2165,8 +2212,19 @@ function completeMandatoryPlacement() {
 let draggedBuildingIndex = null;
 
 function handleOccupiedDragStart(e, cellIndex) {
-    draggedBuildingIndex = cellIndex;
     const building = gameState.cityGrid[cellIndex];
+    
+    // Prevent dragging permanent features (City Hall, River, etc.)
+    if (building && building.type === 'feature') {
+        const permanentFeatures = ['city_hall', 'river', 'polluted_river', 'mountain', 'highway', 'protected_forest', 'flooded_area'];
+        if (permanentFeatures.includes(building.featureId)) {
+            e.preventDefault();
+            showToast('🏛️ Permanent features cannot be moved!', 'info');
+            return;
+        }
+    }
+    
+    draggedBuildingIndex = cellIndex;
     
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('moveBuilding', 'true');
