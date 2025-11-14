@@ -3696,10 +3696,11 @@ function showConsequence(effects, message, earnedTimeBonus = 0, timeBankAdjustme
         html += `</div>`;
     }
 
-    // Add Continue button (smaller circular button)
-    html += `<div style="text-align:center;margin-top:20px;">
+    // Add Continue button (beautiful modern design)
+    html += `<div class="continue-btn-container">
                 <button class="continue-btn" onclick="continueAfterConsequence()" aria-label="Continue">
-                    ➡️
+                    <span class="continue-btn-text">Continue</span>
+                    <span class="continue-btn-arrow">→</span>
                 </button>
              </div>`;
 
