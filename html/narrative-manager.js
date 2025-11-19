@@ -1,5 +1,6 @@
-// ==================== NARRATIVE MANAGER ====================
+// ==================== ENHANCED NARRATIVE MANAGER ====================
 // Handles all advisor dialogues, typewriter effects, and character reactions
+// Features: Multi-advisor reactions, stat warnings, contextual awareness
 
 class NarrativeManager {
     constructor() {
@@ -25,7 +26,7 @@ class NarrativeManager {
                     ],
                     negative: [
                         "This will hurt our bottom line... significantly.",
-                        "The investors won't be pleased... I can hear them selling already.",
+                        "The investors won't be pleased...",
                         "Think of the economy, Mayor! We're not a charity.",
                         "We're hemorrhaging funds here! Plug the leak!",
                         "My spreadsheets are bleeding red ink!",
@@ -35,7 +36,7 @@ class NarrativeManager {
                     neutral: [
                         "The financial impact is acceptable. Barely.",
                         "Neither gain nor loss. Proceed carefully.",
-                        "The numbers are balanced, for now. But I'm watching.",
+                        "The numbers are balanced, for now.",
                         "A break-even proposition. Not exciting, but safe.",
                         "Market stability is maintained. Carry on."
                     ]
@@ -67,20 +68,79 @@ class NarrativeManager {
                         "Sky-high buildings for sky-high profits!"
                     ]
                 },
-                zoneDialogues: [
-                    "A commercial district forms! Property values are soaring!",
-                    "This zone will attract major investors to our city.",
-                    "Excellent clustering! Economic synergy at its finest.",
-                    "Look at that density! Maximum revenue per square foot.",
-                    "A financial hub in the making. I'm impressed."
-                ],
+                zoneDialogues: {
+                    'Commercial District': [
+                        "A commercial district forms! Property values are soaring!",
+                        "This zone will attract major investors to our city.",
+                        "Retail paradise! The money will flow like water."
+                    ],
+                    'Industrial Zone': [
+                        "Industrial might! Exports will skyrocket.",
+                        "Manufacturing hub established. GDP is climbing!",
+                        "The factories sing the song of prosperity!"
+                    ],
+                    'Residential Area': [
+                        "More residents means more taxpayers. Acceptable.",
+                        "Property taxes will fill our coffers nicely.",
+                        "A stable tax base is forming. Good."
+                    ],
+                    'Business Park': [
+                        "Corporate synergy! This will attract Fortune 500 companies.",
+                        "A business hub of this caliber will put us on the map!",
+                        "High-value real estate clustering. Magnificent!"
+                    ],
+                    'Green Belt': [
+                        "Green space doesn't pay dividends, but I suppose it has... charm.",
+                        "Property values nearby will increase. That's something.",
+                        "Fine, fine. Happy citizens do spend more money."
+                    ],
+                    'default': [
+                        "Excellent clustering! Economic synergy at its finest.",
+                        "Look at that density! Maximum revenue per square foot.",
+                        "A financial hub in the making. I'm impressed."
+                    ]
+                },
                 achievementDialogues: [
                     "Achievement unlocked! This will look great in the annual report.",
                     "Impressive milestone! The shareholders will be pleased.",
                     "Success breeds success, Mayor. Keep the profits rolling!",
                     "A bonus-worthy performance! If we had bonuses...",
                     "You're making history, and money! Mostly money."
-                ]
+                ],
+                statWarnings: {
+                    fundsLow: [
+                        "Mayor, our funds are critically low! We need revenue NOW!",
+                        "The treasury is nearly empty! Cut costs or raise taxes!",
+                        "Financial emergency! We're approaching bankruptcy!"
+                    ],
+                    fundsCritical: [
+                        "MAYOR! We're broke! The city will collapse without funds!",
+                        "This is a fiscal apocalypse! Do something immediately!"
+                    ],
+                    fundsHigh: [
+                        "Our coffers overflow! Time to invest in growth.",
+                        "Excellent reserves! We can afford expansion."
+                    ]
+                },
+                // Reactions to other advisors
+                advisorReactions: {
+                    ivy: [
+                        "Yes, yes, the environment... but what about the budget?",
+                        "Ivy makes a fair point, but consider the revenue...",
+                        "Trees are nice, but money doesn't grow on them!"
+                    ],
+                    engineer: [
+                        "The Chief's zoning plan looks profitable. I approve.",
+                        "Good infrastructure means good business. Proceed.",
+                        "If it's efficient, it's profitable. I'm listening."
+                    ]
+                },
+                efficiencyDialogues: {
+                    milestone25: "25% efficiency. A modest start. We can do better.",
+                    milestone50: "50% efficiency! The city is becoming profitable.",
+                    milestone75: "75% efficiency! Investors are taking notice!",
+                    milestone90: "90%+ efficiency! This is a masterclass in urban economics!"
+                }
             },
             ivy: {
                 id: 'ivy',
@@ -93,28 +153,28 @@ class NarrativeManager {
                 catchphrases: {
                     positive: [
                         "The people will thrive! Nature approves!",
-                        "A green choice for a brighter future! The birds are singing!",
-                        "The community thanks you, Mayor! You have a big heart.",
-                        "This brings joy to our citizens! Smiles everywhere!",
-                        "Harmony with nature is the true path to success.",
+                        "A green choice for a brighter future!",
+                        "The community thanks you, Mayor!",
+                        "This brings joy to our citizens!",
+                        "Harmony with nature is the true path.",
                         "I can feel the city breathing easier already.",
-                        "Wonderful! A sustainable choice for generations to come."
+                        "Wonderful! A sustainable choice for generations."
                     ],
                     negative: [
-                        "The people deserve better than this! It's heartbreaking.",
-                        "Think of the children, Mayor! What world are we leaving them?",
-                        "Our green spaces weep today... and so do I.",
-                        "Happiness cannot be sacrificed for profit! It's just wrong.",
-                        "This is a disaster for the local ecosystem!",
-                        "The citizens are choking on this decision!",
+                        "The people deserve better than this!",
+                        "Think of the children, Mayor!",
+                        "Our green spaces weep today...",
+                        "Happiness cannot be sacrificed for profit!",
+                        "This is a disaster for the ecosystem!",
+                        "The citizens are suffering from this decision!",
                         "Nature will not forgive this transgression."
                     ],
                     neutral: [
-                        "The citizens are watching... waiting for a sign.",
+                        "The citizens are watching... waiting.",
                         "A cautious step. The people wait.",
-                        "Neither celebration nor protest today. Just silence.",
-                        "It's okay, but we could do better for the planet.",
-                        "Balance is key. Don't tip the scales too far."
+                        "Neither celebration nor protest today.",
+                        "It's okay, but we could do better.",
+                        "Balance is key. Don't tip the scales."
                     ]
                 },
                 buildingDialogues: {
@@ -141,23 +201,81 @@ class NarrativeManager {
                     office: [
                         "More jobs, but let's not forget work-life balance.",
                         "Glass towers... I hope they're bird-safe.",
-                        "Employment is good, but stress is bad. Watch out."
+                        "Employment is good, but stress is bad."
                     ]
                 },
-                zoneDialogues: [
-                    "A thriving neighborhood emerges! Community spirit is high!",
-                    "People are coming together. This is what cities are about!",
-                    "The citizens will love this development! It feels like home.",
-                    "A vibrant community! You can feel the energy.",
-                    "Green living at its best. Well planned, Mayor!"
-                ],
+                zoneDialogues: {
+                    'Residential Area': [
+                        "A thriving neighborhood emerges! Community spirit soars!",
+                        "People coming together. This is what cities are about!",
+                        "The citizens will love this! It feels like home."
+                    ],
+                    'Green Belt': [
+                        "A green sanctuary! The birds are already singing!",
+                        "Nature reclaims its place. This is beautiful!",
+                        "Clean air, happy citizens. Perfect harmony!"
+                    ],
+                    'Commercial District': [
+                        "I hope these businesses are eco-friendly...",
+                        "Commerce is fine, but where are the trees?",
+                        "At least people have places to shop locally."
+                    ],
+                    'Industrial Zone': [
+                        "So many factories... the air quality concerns me.",
+                        "I pray the workers have good conditions.",
+                        "Progress shouldn't come at nature's expense."
+                    ],
+                    'Business Park': [
+                        "Office workers need green spaces too, Mayor.",
+                        "I hope there's good public transit to reduce emissions.",
+                        "Corporate... but necessary for employment, I suppose."
+                    ],
+                    'default': [
+                        "A vibrant community! You can feel the energy.",
+                        "People are connecting. This brings me joy!",
+                        "The neighborhood is coming alive!"
+                    ]
+                },
                 achievementDialogues: [
                     "The people celebrate! You've made them proud, Mayor.",
                     "This achievement shows you care about our community!",
                     "Wonderful progress! The citizens are grateful.",
                     "A victory for the people and the planet!",
                     "Your heart is in the right place, and it shows."
-                ]
+                ],
+                statWarnings: {
+                    happinessLow: [
+                        "Mayor, the citizens are unhappy! We need parks and homes!",
+                        "Morale is plummeting! The people need your attention!",
+                        "Unhappiness breeds unrest. Please help them!"
+                    ],
+                    happinessCritical: [
+                        "CRISIS! The citizens are miserable! Act NOW!",
+                        "The people are on the verge of revolt! Help them!"
+                    ],
+                    happinessHigh: [
+                        "The citizens are joyful! What a wonderful city!",
+                        "Happiness abounds! You're a beloved Mayor!"
+                    ]
+                },
+                advisorReactions: {
+                    banks: [
+                        "Money isn't everything, Mr. Banks!",
+                        "There's more to life than profit margins.",
+                        "The people matter more than the bottom line!"
+                    ],
+                    engineer: [
+                        "Chief, remember to include green spaces in your plans!",
+                        "Efficiency is good, but don't forget the parks!",
+                        "I like your zoning, but where will children play?"
+                    ]
+                },
+                efficiencyDialogues: {
+                    milestone25: "25% efficiency. Let's make it greener!",
+                    milestone50: "50%! The city is growing harmoniously.",
+                    milestone75: "75%! The citizens are thriving!",
+                    milestone90: "90%+! A model sustainable city! I'm so proud!"
+                }
             },
             engineer: {
                 id: 'engineer',
@@ -169,41 +287,41 @@ class NarrativeManager {
                 personality: 'engineer',
                 catchphrases: {
                     positive: [
-                        "Structurally sound decision, Mayor! Solid as a rock.",
-                        "The infrastructure will support this! Good load-bearing.",
-                        "Excellent zoning potential here! The grid likes it.",
+                        "Structurally sound decision, Mayor!",
+                        "The infrastructure will support this!",
+                        "Excellent zoning potential here!",
                         "The city grid approves! Efficiency is up.",
                         "Optimized! That's what I like to see.",
                         "According to my calculations, this is perfect.",
                         "A masterpiece of urban engineering!"
                     ],
                     negative: [
-                        "The zoning implications concern me... It's a mess.",
-                        "This disrupts our urban planning! The grid is crying.",
-                        "The infrastructure cannot sustain this! It will crumble.",
-                        "Special interests are not aligned... and neither are these walls.",
-                        "This violates several building codes and laws of physics!",
+                        "The zoning implications concern me...",
+                        "This disrupts our urban planning!",
+                        "The infrastructure cannot sustain this!",
+                        "Special interests are not aligned...",
+                        "This violates several building codes!",
                         "Inefficient! We're wasting potential here.",
-                        "My blueprints don't account for this chaos!"
+                        "My blueprints don't account for this!"
                     ],
                     neutral: [
                         "The blueprints are unchanged. Proceeding.",
-                        "A standard procedure. Nothing more. Nothing less.",
-                        "Engineering sees no immediate impact. Stable.",
-                        "Within acceptable tolerances. Barely.",
-                        "Functionally adequate. Not pretty, but it works."
+                        "A standard procedure. Nothing more.",
+                        "Engineering sees no immediate impact.",
+                        "Within acceptable tolerances.",
+                        "Functionally adequate. It works."
                     ]
                 },
                 buildingDialogues: {
                     house: [
-                        "Residential zone expanded. Utility connections established.",
+                        "Residential zone expanded. Utilities connected.",
                         "Standard housing unit. Efficient use of space.",
-                        "Population density increasing. Infrastructure holding."
+                        "Population density increasing. Infrastructure holds."
                     ],
                     shop: [
-                        "Commercial structure in place. Good traffic flow here.",
+                        "Commercial structure in place. Good traffic flow.",
                         "Retail zoning confirmed. Loading zones accessible.",
-                        "Service sector expansion. Logistics look good."
+                        "Service sector expansion. Logistics optimized."
                     ],
                     factory: [
                         "Heavy industry requires solid foundations. Well built!",
@@ -212,29 +330,94 @@ class NarrativeManager {
                     ],
                     park: [
                         "Green infrastructure improves drainage and air quality.",
-                        "Recreational zoning. Good for spacing out density.",
-                        "Landscaping complete. Soil stability is excellent."
+                        "Recreational zoning. Good for spacing density.",
+                        "Landscaping complete. Soil stability excellent."
                     ],
                     office: [
-                        "High-rise potential in this location. Smart placement.",
+                        "High-rise potential in this location. Smart.",
                         "Vertical expansion is efficient. Elevators operational.",
-                        "Commercial density maximized. Good skyline profile."
+                        "Commercial density maximized. Good skyline."
                     ]
                 },
-                zoneDialogues: [
-                    "Zone synergy detected! Efficiency rating climbing!",
-                    "Urban planning at its finest! The grid is optimized.",
-                    "Infrastructure networks are strengthening!",
-                    "Perfect zoning alignment! It's beautiful.",
-                    "This district is operating at peak capacity."
-                ],
+                zoneDialogues: {
+                    'Industrial Zone': [
+                        "Zone synergy detected! Industrial efficiency at 100%!",
+                        "Manufacturing cluster formed! Logistics optimized!",
+                        "Heavy industry zone established. Power grid stable."
+                    ],
+                    'Business Park': [
+                        "Corporate district synergy! Infrastructure networks aligned!",
+                        "Business clustering maximizes shared utilities!",
+                        "Office zone efficiency is off the charts!"
+                    ],
+                    'Residential Area': [
+                        "Residential cluster formed. Utility networks shared.",
+                        "Neighborhood zoning complete. Good density ratio.",
+                        "Housing district established. Schools can be added."
+                    ],
+                    'Commercial District': [
+                        "Commercial zone synergy! Traffic patterns optimized.",
+                        "Retail district formed. Delivery logistics streamlined.",
+                        "Shopping district complete. Parking adequate."
+                    ],
+                    'Green Belt': [
+                        "Green zone established. Drainage improved citywide.",
+                        "Park network formed. Air quality readings up.",
+                        "Recreational zone complete. Pedestrian paths connected."
+                    ],
+                    'default': [
+                        "Zone synergy detected! Efficiency rating climbing!",
+                        "Urban planning at its finest! Grid optimized.",
+                        "Perfect zoning alignment! It's beautiful."
+                    ]
+                },
                 achievementDialogues: [
                     "Engineering milestone achieved! The blueprints don't lie.",
-                    "Structural excellence recognized! Well planned, Mayor.",
-                    "Achievement logged! City efficiency is improving.",
+                    "Structural excellence recognized! Well planned.",
+                    "Achievement logged! City efficiency improving.",
                     "Calculated success! The numbers don't lie.",
                     "A monumental feat of engineering!"
-                ]
+                ],
+                statWarnings: {
+                    interestLow: [
+                        "Special interests are displeased! We need offices and factories!",
+                        "The stakeholders are losing confidence in us!",
+                        "Infrastructure support is waning. Build more!"
+                    ],
+                    interestCritical: [
+                        "ALERT! Special interests will pull funding!",
+                        "We're losing all stakeholder support! Emergency!"
+                    ],
+                    interestHigh: [
+                        "Stakeholders are fully invested! Excellent support.",
+                        "Special interests are aligned. Maximum backing!"
+                    ]
+                },
+                advisorReactions: {
+                    banks: [
+                        "Mr. Banks, profitable buildings need good foundations!",
+                        "Money is good, but the grid must be stable first.",
+                        "I can make your investments structurally sound."
+                    ],
+                    ivy: [
+                        "Ivy, green spaces improve overall city efficiency!",
+                        "Parks aid drainage. I support your proposal.",
+                        "Environmental zones have engineering benefits too."
+                    ]
+                },
+                efficiencyDialogues: {
+                    milestone25: "25% efficiency. The grid needs optimization.",
+                    milestone50: "50%! Infrastructure is stabilizing nicely.",
+                    milestone75: "75%! Near-optimal urban planning achieved!",
+                    milestone90: "90%+! This is textbook perfect city engineering!"
+                },
+                // Special building context reactions
+                adjacencyWarnings: {
+                    factoryNearHouse: "Warning: Factory near residential. Noise complaints expected.",
+                    factoryNearPark: "Alert: Industrial pollution will affect the park.",
+                    goodPlacement: "Excellent placement! Adjacency bonuses maximized.",
+                    zonePotential: "Place one more and you'll form a zone!"
+                }
             }
         };
 
@@ -247,6 +430,16 @@ class NarrativeManager {
         // Dialogue queue system
         this.dialogueQueue = [];
         this.isProcessingQueue = false;
+
+        // Track last efficiency milestone to avoid repeats
+        this.lastEfficiencyMilestone = 0;
+
+        // Track stat warning cooldowns
+        this.warningCooldowns = {
+            funds: 0,
+            happiness: 0,
+            interest: 0
+        };
 
         // Floating text queue
         this.floatingTextQueue = [];
@@ -299,61 +492,14 @@ class NarrativeManager {
         return reactions[0];
     }
 
-    // Create advisor portrait HTML
-    createAdvisorPortrait(advisor, sentiment = 'neutral', size = 'medium') {
-        const sizes = {
-            small: 40,
-            medium: 60,
-            large: 80
-        };
-        const px = sizes[size] || sizes.medium;
-
-        const sentimentClass = sentiment !== 'neutral' ? `advisor-${sentiment}` : '';
-
-        return `
-            <div class="advisor-portrait ${sentimentClass}" style="width: ${px}px; height: ${px}px;">
-                <img src="${advisor.portrait}" alt="${advisor.name}"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="advisor-fallback" style="display: none; background: ${advisor.color};">
-                    ${advisor.name.charAt(0)}
-                </div>
-                <div class="advisor-indicator" style="background: ${sentiment === 'positive' ? '#4caf50' :
-                sentiment === 'negative' ? '#f44336' :
-                    '#9e9e9e'
-            };"></div>
-            </div>
-        `;
-    }
-
-    // Create speech bubble with advisor
-    createAdvisorSpeech(advisorId, text, sentiment = 'neutral') {
-        const advisor = this.advisors[advisorId];
-        if (!advisor) return '';
-
-        return `
-            <div class="advisor-speech-container">
-                ${this.createAdvisorPortrait(advisor, sentiment, 'large')}
-                <div class="advisor-speech-bubble">
-                    <div class="advisor-name" style="color: ${advisor.color};">${advisor.name}</div>
-                    <div class="advisor-title">${advisor.title}</div>
-                    <div class="advisor-dialogue" id="advisor-dialogue-${advisorId}">
-                        ${text}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
     // Typewriter effect for text
     typewriterEffect(element, text, speed = 30, callback = null) {
-        // Clear any existing typewriter
         this.stopTypewriter();
 
         this.isTyping = true;
         this.currentText = text;
         this.currentIndex = 0;
 
-        // Strip HTML tags for typing, we'll add them back
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = text;
         const plainText = tempDiv.textContent || tempDiv.innerText;
@@ -367,7 +513,6 @@ class NarrativeManager {
                 this.typewriterTimeout = setTimeout(type, speed);
             } else {
                 this.isTyping = false;
-                // Restore original HTML after typing
                 element.innerHTML = text;
                 if (callback) callback();
             }
@@ -383,12 +528,6 @@ class NarrativeManager {
             this.typewriterTimeout = null;
         }
         this.isTyping = false;
-    }
-
-    // Skip to end of typewriter
-    skipTypewriter(element, text) {
-        this.stopTypewriter();
-        element.innerHTML = text;
     }
 
     // Create floating text effect
@@ -433,16 +572,6 @@ class NarrativeManager {
         this.createFloatingText(text, x, y, color);
     }
 
-    // Generate choice card (without advisor reactions - they appear in the panel)
-    generateChoiceCardWithAdvisors(choice, index, sceneKey) {
-        return `
-            <div class="choice-card" onclick="makeChoice('${sceneKey}', ${index})">
-                <span class="choice-icon">${choice.icon}</span>
-                <div class="choice-text">${choice.text}</div>
-            </div>
-        `;
-    }
-
     // Show advisor in the dedicated panel with typewriter dialogue
     showAdvisorInPanel(advisorId, dialogue, sentiment = 'neutral') {
         const advisor = this.advisors[advisorId];
@@ -451,9 +580,26 @@ class NarrativeManager {
         // Add to queue instead of showing immediately
         this.dialogueQueue.push({ advisorId, dialogue, sentiment });
 
+        // Update queue indicator
+        this.updateQueueIndicator();
+
         // Process queue if not already processing
         if (!this.isProcessingQueue) {
             this.processDialogueQueue();
+        }
+    }
+
+    // Update queue indicator
+    updateQueueIndicator() {
+        const indicator = document.getElementById('dialogue-queue-indicator');
+        if (indicator) {
+            const count = this.dialogueQueue.length;
+            if (count > 0) {
+                indicator.textContent = count;
+                indicator.style.display = 'flex';
+            } else {
+                indicator.style.display = 'none';
+            }
         }
     }
 
@@ -461,6 +607,8 @@ class NarrativeManager {
     processDialogueQueue() {
         if (this.dialogueQueue.length === 0) {
             this.isProcessingQueue = false;
+            this.updateQueueIndicator();
+
             // Hide the advisor container when queue is empty
             const advisorContainer = document.getElementById('advisor-bar');
             if (advisorContainer) {
@@ -473,6 +621,8 @@ class NarrativeManager {
         const { advisorId, dialogue, sentiment } = this.dialogueQueue.shift();
         const advisor = this.advisors[advisorId];
 
+        this.updateQueueIndicator();
+
         // Get advisor container elements
         const advisorContainer = document.getElementById('advisor-bar');
         const advisorImage = document.getElementById('advisor-bar-image');
@@ -480,7 +630,6 @@ class NarrativeManager {
         const advisorText = document.getElementById('advisor-bar-text');
 
         if (!advisorContainer || !advisorImage || !advisorName || !advisorText) {
-            // Skip and process next
             this.processDialogueQueue();
             return;
         }
@@ -496,30 +645,29 @@ class NarrativeManager {
         advisorText.classList.add('typing');
         advisorContainer.classList.add('visible');
 
-        // Typewriter effect for dialogue - slower speed (40ms per character)
+        // Typewriter effect - 40ms per character
         this.typewriterToElement(advisorText, dialogue, 40, () => {
             advisorText.classList.remove('typing');
 
             // Wait before processing next dialogue
             setTimeout(() => {
                 this.processDialogueQueue();
-            }, 2500); // 2.5 second pause between dialogues
+            }, 2500);
         });
     }
 
-    // Clear dialogue queue (use when scene changes)
+    // Clear dialogue queue
     clearDialogueQueue() {
         this.dialogueQueue = [];
         this.isProcessingQueue = false;
         this.stopTypewriter();
+        this.updateQueueIndicator();
 
-        // Hide advisor container
         const advisorContainer = document.getElementById('advisor-bar');
         if (advisorContainer) {
             advisorContainer.classList.remove('visible');
         }
 
-        // Clear text
         const advisorText = document.getElementById('advisor-bar-text');
         if (advisorText) {
             advisorText.textContent = '';
@@ -549,60 +697,46 @@ class NarrativeManager {
         type();
     }
 
-    // Show advisor reaction based on scene/choice effects
-    reactToScene(sceneKey, scene) {
-        // Determine which advisor should speak based on the scene content
-        let advisorId = 'banks';
-        let dialogue = '';
+    // ==================== EVENT REACTIONS ====================
 
+    // React to scene based on content analysis
+    reactToScene(sceneKey, scene) {
         const storyLower = scene.story ? scene.story.toLowerCase() : '';
 
-        // Score each advisor based on keyword matches
-        const scores = {
-            banks: 0,
-            ivy: 0,
-            engineer: 0
+        // Score each advisor
+        const scores = { banks: 0, ivy: 0, engineer: 0 };
+
+        const keywords = {
+            banks: ['factory', 'fund', 'invest', 'money', 'profit', 'business', 'economic', 'tax', 'budget', 'cost', 'revenue', 'income', 'deal', 'contract', 'corporation', 'company'],
+            ivy: ['park', 'environment', 'happiness', 'citizen', 'people', 'community', 'green', 'nature', 'pollution', 'health', 'family', 'home', 'house', 'resident', 'neighborhood', 'children', 'welfare'],
+            engineer: ['zone', 'build', 'grid', 'construct', 'infrastructure', 'road', 'bridge', 'plan', 'design', 'structure', 'location', 'place', 'adjacent', 'area', 'district', 'layout']
         };
 
-        // Banks keywords (money, business, profit)
-        const banksKeywords = ['factory', 'fund', 'invest', 'money', 'profit', 'business', 'economic', 'tax', 'budget', 'cost', 'revenue', 'income', 'deal', 'contract'];
-        banksKeywords.forEach(keyword => {
-            if (storyLower.includes(keyword)) scores.banks += 2;
-        });
-
-        // Ivy keywords (environment, people, happiness)
-        const ivyKeywords = ['park', 'environment', 'happiness', 'citizen', 'people', 'community', 'green', 'nature', 'pollution', 'health', 'family', 'home', 'house', 'resident', 'neighborhood'];
-        ivyKeywords.forEach(keyword => {
-            if (storyLower.includes(keyword)) scores.ivy += 2;
-        });
-
-        // Engineer keywords (building, infrastructure, zoning)
-        const engineerKeywords = ['zone', 'build', 'grid', 'construct', 'infrastructure', 'road', 'bridge', 'plan', 'design', 'structure', 'location', 'place', 'adjacent', 'area'];
-        engineerKeywords.forEach(keyword => {
-            if (storyLower.includes(keyword)) scores.engineer += 2;
-        });
+        for (const [advisorId, words] of Object.entries(keywords)) {
+            words.forEach(keyword => {
+                if (storyLower.includes(keyword)) scores[advisorId] += 2;
+            });
+        }
 
         // Find highest scoring advisor
         const maxScore = Math.max(scores.banks, scores.ivy, scores.engineer);
+        let advisorId = 'banks';
 
         if (maxScore === 0) {
-            // No keywords matched - rotate based on scene key
             const advisorIds = ['banks', 'ivy', 'engineer'];
             const sceneNum = parseInt(sceneKey.replace(/\D/g, '')) || 0;
             advisorId = advisorIds[sceneNum % 3];
-        } else if (scores.banks === maxScore) {
-            advisorId = 'banks';
         } else if (scores.ivy === maxScore) {
             advisorId = 'ivy';
-        } else {
+        } else if (scores.engineer === maxScore) {
             advisorId = 'engineer';
         }
 
-        dialogue = this.getRandomPhrase(advisorId, 'neutral');
+        const dialogue = this.getRandomPhrase(advisorId, 'neutral');
         this.showAdvisorInPanel(advisorId, dialogue);
     }
 
-    // Get a random phrase from an advisor
+    // Get a random phrase
     getRandomPhrase(advisorId, sentiment) {
         const advisor = this.advisors[advisorId];
         if (!advisor) return '';
@@ -610,16 +744,35 @@ class NarrativeManager {
         return phrases[Math.floor(Math.random() * phrases.length)];
     }
 
-    // React to a choice being made
+    // React to a choice being made - can trigger multiple advisors
     reactToChoice(effects) {
         const reaction = this.getMostRelevantAdvisor(effects);
         this.showAdvisorInPanel(reaction.advisor.id, reaction.phrase, reaction.sentiment);
+
+        // If the effect is significant, a second advisor might comment
+        const totalImpact = Math.abs(effects.happiness || 0) + Math.abs(effects.cityFunds || 0) + Math.abs(effects.specialInterest || 0);
+
+        if (totalImpact >= 15 && Math.random() > 0.5) {
+            // Get a different advisor to comment
+            const otherAdvisors = Object.keys(this.advisors).filter(id => id !== reaction.advisor.id);
+            const secondAdvisorId = otherAdvisors[Math.floor(Math.random() * otherAdvisors.length)];
+            const secondReaction = this.getAdvisorReaction(this.advisors[secondAdvisorId], effects);
+
+            // Use a shorter follow-up comment
+            if (secondReaction.relevance > 3) {
+                const followUp = this.advisors[secondAdvisorId].advisorReactions[reaction.advisor.id];
+                if (followUp) {
+                    const comment = followUp[Math.floor(Math.random() * followUp.length)];
+                    this.showAdvisorInPanel(secondAdvisorId, comment, secondReaction.sentiment);
+                }
+            }
+        }
     }
 
-    // React to a building being placed
-    reactToBuilding(buildingType) {
-        // Rotate advisor based on building type
-        let advisorId = 'engineer'; // Default for buildings
+    // React to building placement with context awareness
+    reactToBuilding(buildingType, cellIndex = null, gameState = null) {
+        // Determine primary advisor based on building type
+        let advisorId = 'engineer';
 
         if (buildingType === 'factory' || buildingType === 'shop' || buildingType === 'office') {
             advisorId = 'banks';
@@ -628,53 +781,200 @@ class NarrativeManager {
         }
 
         const advisor = this.advisors[advisorId];
-        let dialogue = advisor.buildingDialogues[buildingType] || "Interesting placement, Mayor.";
-
-        // If dialogue is an array, pick a random one
-        if (Array.isArray(dialogue)) {
-            dialogue = dialogue[Math.floor(Math.random() * dialogue.length)];
-        }
+        let dialogues = advisor.buildingDialogues[buildingType];
+        let dialogue = Array.isArray(dialogues) ? dialogues[Math.floor(Math.random() * dialogues.length)] : dialogues || "Interesting placement, Mayor.";
 
         this.showAdvisorInPanel(advisorId, dialogue);
+
+        // Context-aware follow-up from Engineer
+        if (gameState && cellIndex !== null && advisorId !== 'engineer') {
+            const contextComment = this.getPlacementContext(buildingType, cellIndex, gameState);
+            if (contextComment) {
+                this.showAdvisorInPanel('engineer', contextComment);
+            }
+        }
     }
 
-    // React to zone formation
-    reactToZone(zoneType) {
-        // Pick advisor based on zone type
-        let advisorId = 'engineer';
+    // Get contextual comment about building placement
+    getPlacementContext(buildingType, cellIndex, gameState) {
+        if (!gameState || !gameState.cityGrid) return null;
 
-        if (zoneType.includes('Commercial') || zoneType.includes('Industrial')) {
-            advisorId = 'banks';
-        } else if (zoneType.includes('Residential') || zoneType.includes('Park')) {
-            advisorId = 'ivy';
+        const gridSize = getGridSize();
+        const cols = gridSize.cols;
+        const row = Math.floor(cellIndex / cols);
+        const col = cellIndex % cols;
+
+        // Check adjacent cells
+        const adjacentIndices = [
+            cellIndex - cols,     // top
+            cellIndex + cols,     // bottom
+            cellIndex - 1,        // left
+            cellIndex + 1         // right
+        ].filter((idx, i) => {
+            if (idx < 0 || idx >= gameState.cityGrid.length) return false;
+            // Check left/right bounds
+            if (i === 2 && col === 0) return false;
+            if (i === 3 && col === cols - 1) return false;
+            return true;
+        });
+
+        let sameTypeCount = 0;
+        let hasHouseNearby = false;
+        let hasParkNearby = false;
+        let hasFactoryNearby = false;
+
+        adjacentIndices.forEach(idx => {
+            const adjacent = gameState.cityGrid[idx];
+            if (adjacent) {
+                if (adjacent.type === buildingType) sameTypeCount++;
+                if (adjacent.type === 'house') hasHouseNearby = true;
+                if (adjacent.type === 'park') hasParkNearby = true;
+                if (adjacent.type === 'factory') hasFactoryNearby = true;
+            }
+        });
+
+        // Generate contextual comment
+        if (buildingType === 'factory' && hasHouseNearby) {
+            return this.advisors.engineer.adjacencyWarnings.factoryNearHouse;
+        }
+        if (buildingType === 'factory' && hasParkNearby) {
+            return this.advisors.engineer.adjacencyWarnings.factoryNearPark;
+        }
+        if (sameTypeCount === 2) {
+            return this.advisors.engineer.adjacencyWarnings.zonePotential;
+        }
+        if (sameTypeCount >= 1 && (hasHouseNearby && buildingType === 'park') || (hasParkNearby && buildingType === 'house')) {
+            return this.advisors.engineer.adjacencyWarnings.goodPlacement;
         }
 
-        const advisor = this.advisors[advisorId];
-        const dialogues = advisor.zoneDialogues;
-        const dialogue = dialogues[Math.floor(Math.random() * dialogues.length)];
+        return null;
+    }
 
-        this.showAdvisorInPanel(advisorId, dialogue);
+    // React to zone formation - multiple advisors comment
+    reactToZone(zoneType, zoneSize = 3) {
+        // Primary advisor based on zone type
+        let primaryAdvisor = 'engineer';
+        let secondaryAdvisor = null;
+
+        if (zoneType.includes('Commercial') || zoneType.includes('Industrial') || zoneType.includes('Business')) {
+            primaryAdvisor = 'banks';
+            secondaryAdvisor = 'engineer';
+        } else if (zoneType.includes('Residential') || zoneType.includes('Green')) {
+            primaryAdvisor = 'ivy';
+            secondaryAdvisor = 'engineer';
+        } else {
+            primaryAdvisor = 'engineer';
+            secondaryAdvisor = zoneType.includes('Office') ? 'banks' : 'ivy';
+        }
+
+        // Primary advisor speaks
+        const advisor = this.advisors[primaryAdvisor];
+        const zoneDialogues = advisor.zoneDialogues[zoneType] || advisor.zoneDialogues['default'];
+        const dialogue = zoneDialogues[Math.floor(Math.random() * zoneDialogues.length)];
+        this.showAdvisorInPanel(primaryAdvisor, dialogue);
+
+        // For larger zones, secondary advisor comments too
+        if (zoneSize >= 4 && secondaryAdvisor) {
+            const secondary = this.advisors[secondaryAdvisor];
+            const secondaryDialogues = secondary.zoneDialogues[zoneType] || secondary.zoneDialogues['default'];
+            const secondaryDialogue = secondaryDialogues[Math.floor(Math.random() * secondaryDialogues.length)];
+            this.showAdvisorInPanel(secondaryAdvisor, secondaryDialogue);
+        }
     }
 
     // React to achievement unlock
     reactToAchievement(achievementName) {
-        // Rotate through advisors for achievements
+        // Rotate through advisors
         const advisorIds = ['banks', 'ivy', 'engineer'];
         const advisorId = advisorIds[Math.floor(Math.random() * advisorIds.length)];
 
         const advisor = this.advisors[advisorId];
-        const dialogues = advisor.achievementDialogues;
-        const dialogue = dialogues[Math.floor(Math.random() * dialogues.length)];
+        const dialogue = advisor.achievementDialogues[Math.floor(Math.random() * advisor.achievementDialogues.length)];
 
         this.showAdvisorInPanel(advisorId, dialogue);
     }
 
-    // Show consequence text (advisor speaks in the panel separately)
+    // Check and warn about stat thresholds
+    checkStatThresholds(gameState) {
+        const now = Date.now();
+
+        // Check funds
+        if (gameState.cityFunds <= 10 && now - this.warningCooldowns.funds > 30000) {
+            this.warningCooldowns.funds = now;
+            const warnings = gameState.cityFunds <= 5
+                ? this.advisors.banks.statWarnings.fundsCritical
+                : this.advisors.banks.statWarnings.fundsLow;
+            this.showAdvisorInPanel('banks', warnings[Math.floor(Math.random() * warnings.length)]);
+        }
+
+        // Check happiness
+        if (gameState.happiness <= 20 && now - this.warningCooldowns.happiness > 30000) {
+            this.warningCooldowns.happiness = now;
+            const warnings = gameState.happiness <= 10
+                ? this.advisors.ivy.statWarnings.happinessCritical
+                : this.advisors.ivy.statWarnings.happinessLow;
+            this.showAdvisorInPanel('ivy', warnings[Math.floor(Math.random() * warnings.length)]);
+        }
+
+        // Check special interest
+        if (gameState.specialInterest <= 15 && now - this.warningCooldowns.interest > 30000) {
+            this.warningCooldowns.interest = now;
+            const warnings = gameState.specialInterest <= 8
+                ? this.advisors.engineer.statWarnings.interestCritical
+                : this.advisors.engineer.statWarnings.interestLow;
+            this.showAdvisorInPanel('engineer', warnings[Math.floor(Math.random() * warnings.length)]);
+        }
+    }
+
+    // React to efficiency milestones
+    reactToEfficiency(efficiency) {
+        let milestone = 0;
+        if (efficiency >= 90) milestone = 90;
+        else if (efficiency >= 75) milestone = 75;
+        else if (efficiency >= 50) milestone = 50;
+        else if (efficiency >= 25) milestone = 25;
+
+        if (milestone > this.lastEfficiencyMilestone) {
+            this.lastEfficiencyMilestone = milestone;
+
+            // Rotate which advisor celebrates
+            const advisorIds = ['engineer', 'banks', 'ivy'];
+            const advisorId = advisorIds[Math.floor(milestone / 25) % 3];
+
+            const milestoneKey = `milestone${milestone}`;
+            const dialogue = this.advisors[advisorId].efficiencyDialogues[milestoneKey];
+
+            if (dialogue) {
+                this.showAdvisorInPanel(advisorId, dialogue);
+            }
+        }
+    }
+
+    // React to timer warning
+    reactToTimerWarning(secondsLeft) {
+        if (secondsLeft === 10) {
+            this.showAdvisorInPanel('engineer', "10 seconds remaining! Decide quickly, Mayor!");
+        } else if (secondsLeft === 5) {
+            this.showAdvisorInPanel('ivy', "Hurry! The citizens await your decision!");
+        }
+    }
+
+    // Show consequence text
     showConsequenceWithAdvisor(consequence, effects) {
         return `<p>${consequence}</p>`;
     }
 
-    // Render scene narration with typewriter effect
+    // Generate choice card
+    generateChoiceCardWithAdvisors(choice, index, sceneKey) {
+        return `
+            <div class="choice-card" onclick="makeChoice('${sceneKey}', ${index})">
+                <span class="choice-icon">${choice.icon}</span>
+                <div class="choice-text">${choice.text}</div>
+            </div>
+        `;
+    }
+
+    // Render scene narration with typewriter
     renderNarration(containerElement, text, callback = null) {
         const narratorBox = document.createElement('div');
         narratorBox.className = 'narrator-box';
@@ -695,7 +995,8 @@ class NarrativeManager {
     skipCurrentNarration() {
         const textElement = document.getElementById('narrator-text');
         if (textElement && this.isTyping) {
-            this.skipTypewriter(textElement, this.currentText);
+            this.stopTypewriter();
+            textElement.innerHTML = this.currentText;
         }
     }
 }

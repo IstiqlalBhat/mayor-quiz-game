@@ -841,6 +841,25 @@ body {
     margin-left: 2px;
 }
 
+/* Queue indicator - shows pending dialogues */
+.dialogue-queue-indicator {
+    display: none;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    background: #e74c3c;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 0.7em;
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
     .advisor-container {
