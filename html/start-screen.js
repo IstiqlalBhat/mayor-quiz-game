@@ -310,15 +310,18 @@ function hideLeaderboard() {
 
 async function loadLeaderboard(difficulty = null) {
     leaderboardList.innerHTML = '<div class="loading">Loading leaderboard...</div>';
-    
+
     try {
         const leaderboard = await gameAPI.getLeaderboard(difficulty, 20);
-        
+
         if (!leaderboard || leaderboard.length === 0) {
             leaderboardList.innerHTML = '<div class="loading">No scores yet. Be the first!</div>';
             return;
         }
-        
+
+        // Store leaderboard data globally for modal access
+        window.leaderboardData = leaderboard;
+
         // Display leaderboard entries
         leaderboardList.innerHTML = leaderboard.map((entry, index) => {
             const rank = index + 1;
@@ -326,31 +329,32 @@ async function loadLeaderboard(difficulty = null) {
             if (rank === 1) rankClass = 'gold';
             else if (rank === 2) rankClass = 'silver';
             else if (rank === 3) rankClass = 'bronze';
-            
+
             const date = new Date(entry.completed_at).toLocaleDateString();
             const diffIcon = {
                 'easy': '🌱',
                 'normal': '⚖️',
                 'hard': '🔥',
-                'expert': '⚡'
+                'mayor': '👔'
             }[entry.difficulty] || '🎮';
-            
+
             return `
                 <div class="leaderboard-entry">
                     <div class="leaderboard-rank ${rankClass}">#${rank}</div>
                     <div class="leaderboard-info">
                         <div class="leaderboard-name">${escapeHtml(entry.player_name)} ${diffIcon}</div>
                         <div class="leaderboard-stats">
-                            😊 ${entry.happiness || 0} | 💰 ${entry.city_funds || 0} | 
-                            🏦 ${entry.special_interest || 0} | 
+                            😊 ${entry.happiness || 0} | 💰 ${entry.city_funds || 0} |
+                            🏛️ ${entry.special_interest || 0} |
                             🎯 ${entry.decisions_made || 0} decisions | ${date}
                         </div>
                     </div>
                     <div class="leaderboard-score">${entry.final_score}</div>
+                    <button class="more-btn" onclick="showPlayerDetails(${index})">More</button>
                 </div>
             `;
         }).join('');
-        
+
     } catch (error) {
         console.error('❌ Error loading leaderboard:', error);
         leaderboardList.innerHTML = '<div class="loading">Failed to load leaderboard</div>';

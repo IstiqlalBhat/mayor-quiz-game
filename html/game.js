@@ -2462,6 +2462,7 @@ const achievementDefinitions = {
         name: 'Riverside Industrial',
         description: 'Built factory adjacent to the river',
         icon: '🏭',
+        image: 'assets/pngs/RiversideIndustrial.PNG',
         category: 'story'
     },
     green_guardian: {
@@ -2469,6 +2470,7 @@ const achievementDefinitions = {
         name: 'Green Guardian',
         description: 'Rejected factory and built 4+ parks',
         icon: '🌳',
+        image: 'assets/pngs/GreenGuardian.PNG',
         category: 'story'
     },
 
@@ -2478,6 +2480,7 @@ const achievementDefinitions = {
         name: 'Balanced Leader',
         description: 'All stats within 15 points at game end',
         icon: '⚖️',
+        image: 'assets/pngs/BalancedLeader.PNG',
         category: 'balance'
     },
     peoples_champion: {
@@ -2485,6 +2488,7 @@ const achievementDefinitions = {
         name: "People's Champion",
         description: 'Happiness > 80 at game end',
         icon: '😊',
+        image: 'assets/pngs/PeoplesChampion.PNG',
         category: 'balance'
     },
     economic_powerhouse: {
@@ -2492,6 +2496,7 @@ const achievementDefinitions = {
         name: 'Economic Powerhouse',
         description: 'City funds > 80 at game end',
         icon: '💰',
+        image: 'assets/pngs/EconomicPowerhouse.PNG',
         category: 'balance'
     },
     master_diplomat: {
@@ -2499,6 +2504,7 @@ const achievementDefinitions = {
         name: 'Master Diplomat',
         description: 'Special interest > 80 at game end',
         icon: '🤝',
+        image: 'assets/pngs/MasterDiplomat.PNG',
         category: 'balance'
     },
 
@@ -2508,6 +2514,7 @@ const achievementDefinitions = {
         name: 'Master Planner',
         description: 'City planning efficiency > 85%',
         icon: '📐',
+        image: 'assets/pngs/MasterPlanner.PNG',
         category: 'planning'
     },
     swift_decisor: {
@@ -2515,6 +2522,7 @@ const achievementDefinitions = {
         name: 'Swift Decisor',
         description: 'Never let the timer expire',
         icon: '⚡',
+        image: 'assets/pngs/SwiftDecisor.PNG',
         category: 'planning'
     },
     no_regrets: {
@@ -2522,6 +2530,7 @@ const achievementDefinitions = {
         name: 'No Regrets',
         description: 'Complete without undo or relocation',
         icon: '🎯',
+        image: 'assets/pngs/NoRegrets.PNG',
         category: 'planning'
     },
 
@@ -2531,15 +2540,19 @@ const achievementDefinitions = {
         name: 'Perfect Mayor',
         description: 'All stats > 75, efficiency > 80, no timeouts',
         icon: '👑',
+        image: 'assets/pngs/PerfectMayor.PNG',
         category: 'perfect'
     }
 };
 
 // Check and award achievements (story-connected version)
-function checkAchievements() {
+// isGameEnd: true when called at game completion, false during gameplay
+function checkAchievements(isGameEnd = false) {
     const newAchievements = [];
 
-    // STORY-BASED ACHIEVEMENTS
+    // ==================== IMMEDIATE ACHIEVEMENTS ====================
+    // These can be earned during gameplay based on specific actions
+
     // Riverside Industrial: Built factory near river (tracked in adjacency calculation)
     if (gameState.achievementTracking.builtNearRiver &&
         !gameState.achievements.includes('riverside_industrial')) {
@@ -2553,63 +2566,63 @@ function checkAchievements() {
         newAchievements.push(achievementDefinitions.green_guardian);
     }
 
-    // STAT ACHIEVEMENTS (checked at game end or during gameplay)
-    // Balanced Leader: All stats within 15 points
-    const stats = [gameState.happiness, gameState.cityFunds, gameState.specialInterest];
-    const maxStat = Math.max(...stats);
-    const minStat = Math.min(...stats);
-    if ((maxStat - minStat) <= 15 &&
-        gameState.decisions.length >= 3 &&
-        !gameState.achievements.includes('balanced_leader')) {
-        newAchievements.push(achievementDefinitions.balanced_leader);
-    }
+    // ==================== END-GAME ONLY ACHIEVEMENTS ====================
+    // These should only be checked at game completion
+    if (isGameEnd) {
+        // STAT ACHIEVEMENTS - Only valid at game end since stats can change
+        // Balanced Leader: All stats within 15 points
+        const stats = [gameState.happiness, gameState.cityFunds, gameState.specialInterest];
+        const maxStat = Math.max(...stats);
+        const minStat = Math.min(...stats);
+        if ((maxStat - minStat) <= 15 &&
+            !gameState.achievements.includes('balanced_leader')) {
+            newAchievements.push(achievementDefinitions.balanced_leader);
+        }
 
-    // People's Champion: Happiness > 80
-    if (gameState.happiness > 80 && !gameState.achievements.includes('peoples_champion')) {
-        newAchievements.push(achievementDefinitions.peoples_champion);
-    }
+        // People's Champion: Happiness > 80
+        if (gameState.happiness > 80 && !gameState.achievements.includes('peoples_champion')) {
+            newAchievements.push(achievementDefinitions.peoples_champion);
+        }
 
-    // Economic Powerhouse: Funds > 80
-    if (gameState.cityFunds > 80 && !gameState.achievements.includes('economic_powerhouse')) {
-        newAchievements.push(achievementDefinitions.economic_powerhouse);
-    }
+        // Economic Powerhouse: Funds > 80
+        if (gameState.cityFunds > 80 && !gameState.achievements.includes('economic_powerhouse')) {
+            newAchievements.push(achievementDefinitions.economic_powerhouse);
+        }
 
-    // Master Diplomat: Interest > 80
-    if (gameState.specialInterest > 80 && !gameState.achievements.includes('master_diplomat')) {
-        newAchievements.push(achievementDefinitions.master_diplomat);
-    }
+        // Master Diplomat: Interest > 80
+        if (gameState.specialInterest > 80 && !gameState.achievements.includes('master_diplomat')) {
+            newAchievements.push(achievementDefinitions.master_diplomat);
+        }
 
-    // GAMEPLAY ACHIEVEMENTS
-    // Master Planner: Efficiency > 85%
-    if (gameState.planningEfficiency > 85 && !gameState.achievements.includes('master_planner')) {
-        newAchievements.push(achievementDefinitions.master_planner);
-    }
+        // GAMEPLAY ACHIEVEMENTS - Only valid at game end
+        // Master Planner: Efficiency > 85%
+        if (gameState.planningEfficiency > 85 && !gameState.achievements.includes('master_planner')) {
+            newAchievements.push(achievementDefinitions.master_planner);
+        }
 
-    // Swift Decisor: Never let timer expire
-    if (gameState.achievementTracking.neverTimedOut &&
-        gameState.decisions.length >= 3 &&
-        !gameState.achievements.includes('swift_decisor')) {
-        newAchievements.push(achievementDefinitions.swift_decisor);
-    }
+        // Swift Decisor: Never let timer expire (must complete entire game without timeout)
+        if (gameState.achievementTracking.neverTimedOut &&
+            !gameState.achievements.includes('swift_decisor')) {
+            newAchievements.push(achievementDefinitions.swift_decisor);
+        }
 
-    // No Regrets: No undo or relocation used
-    if (gameState.achievementTracking.usedNoUndos &&
-        gameState.achievementTracking.usedNoRelocations &&
-        gameState.decisions.length >= 3 &&
-        !gameState.achievements.includes('no_regrets')) {
-        newAchievements.push(achievementDefinitions.no_regrets);
-    }
+        // No Regrets: No undo or relocation used (must complete entire game)
+        if (gameState.achievementTracking.usedNoUndos &&
+            gameState.achievementTracking.usedNoRelocations &&
+            !gameState.achievements.includes('no_regrets')) {
+            newAchievements.push(achievementDefinitions.no_regrets);
+        }
 
-    // ULTIMATE ACHIEVEMENT
-    // Perfect Mayor: All stats > 75, efficiency > 80, never timed out
-    if (gameState.happiness > 75 &&
-        gameState.cityFunds > 75 &&
-        gameState.specialInterest > 75 &&
-        gameState.planningEfficiency > 80 &&
-        gameState.achievementTracking.neverTimedOut &&
-        gameState.decisions.length >= 5 &&
-        !gameState.achievements.includes('perfect_mayor')) {
-        newAchievements.push(achievementDefinitions.perfect_mayor);
+        // ULTIMATE ACHIEVEMENT
+        // Perfect Mayor: All stats > 75, efficiency > 80, never timed out
+        if (gameState.happiness > 75 &&
+            gameState.cityFunds > 75 &&
+            gameState.specialInterest > 75 &&
+            gameState.planningEfficiency > 80 &&
+            gameState.achievementTracking.neverTimedOut &&
+            !gameState.achievements.includes('perfect_mayor')) {
+            newAchievements.push(achievementDefinitions.perfect_mayor);
+        }
     }
 
     // Award new achievements
@@ -3997,8 +4010,8 @@ function renderEnding() {
         }
     }
 
-    // Final achievement check
-    checkAchievements();
+    // Final achievement check (pass true for end-game achievements)
+    checkAchievements(true);
 
     let rating = '';
     let message = '';
@@ -4082,6 +4095,13 @@ function renderEnding() {
     // Calculate play time in seconds
     const playTimeSeconds = gameState.gameStartTime ? Math.floor((gameState.gameEndTime - gameState.gameStartTime) / 1000) : 0;
 
+    // Calculate average decision time
+    const totalDecisionTime = gameState.decisions.reduce((sum, d) => sum + (d.timeSpent || 0), 0);
+    const avgDecisionTime = gameState.decisions.length > 0 ? totalDecisionTime / gameState.decisions.length : 0;
+
+    // Count buildings placed (excluding features)
+    const buildingsPlaced = gameState.cityGrid.filter(c => c !== null && c.type !== 'feature').length;
+
     // Submit final score to backend
     if (typeof gameAPI !== 'undefined') {
         gameAPI.completeGame({
@@ -4091,7 +4111,14 @@ function renderEnding() {
             specialInterest: gameState.specialInterest,
             personalProfit: gameState.personalProfit,
             decisions: gameState.decisions.length,
-            playTime: playTimeSeconds
+            playTime: playTimeSeconds,
+            // New detailed stats
+            achievements: gameState.achievements,
+            buildingsPlaced: buildingsPlaced,
+            avgDecisionTime: Math.round(avgDecisionTime * 10) / 10,
+            planningEfficiency: gameState.planningEfficiency,
+            timeBonus: gameState.timeBonus,
+            zonesFormed: gameState.detectedZones.map(z => z.name)
         }).then(result => {
             if (result.success) {
                 console.log('🏆 Game score submitted successfully!');
@@ -4110,9 +4137,11 @@ function renderEnding() {
 
     // Get all earned achievements with details
     const earnedAchievements = gameState.achievements.map(id => {
-        const def = achievementDefinitions[id];
-        return def ? `${def.icon} ${def.name} - ${def.description}` : null;
+        return achievementDefinitions[id] || null;
     }).filter(a => a !== null);
+
+    // Get all achievements for display (earned and unearned)
+    const allAchievements = Object.values(achievementDefinitions);
 
     // ==================== RATING SYSTEM (Improved Logic) ====================
     // Critical failure check - if any stat is below 20, you can't be excellent
@@ -4161,67 +4190,94 @@ function renderEnding() {
             <h2>${rating}</h2>
             <p style="font-size:1.3em;margin:20px 0;font-weight:600;">${message}</p>
             ${profitMessage}
-            
-            <div class="final-stats">
-                <h3>📊 Final Statistics</h3>
-                <div class="final-stat-item"><strong>Population Happiness:</strong> ${gameState.happiness}/100 ${gameState.happiness >= 70 ? '🎉' : gameState.happiness >= 40 ? '😐' : '😞'}</div>
-                <div class="final-stat-item"><strong>City Funds:</strong> $${gameState.cityFunds}M ${gameState.cityFunds >= 70 ? '💰' : gameState.cityFunds >= 40 ? '💵' : '💸'}</div>
-                <div class="final-stat-item"><strong>Special Interest Support:</strong> ${gameState.specialInterest}/100 ${gameState.specialInterest >= 70 ? '🤝' : gameState.specialInterest >= 40 ? '👌' : '👎'}</div>
-                <div class="final-stat-item"><strong>Your Personal Profit:</strong> $${gameState.personalProfit}M ${gameState.personalProfit > 10 ? '⚠️' : gameState.personalProfit > 0 ? '💵' : '✨'}</div>
-                <div class="final-stat-item"><strong>Decisions Made:</strong> ${gameState.decisions.length} choices 🎯</div>
-            </div>
-            
-            <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);">
-                <h3>📊 Score Breakdown</h3>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Base Score (70% weight):</strong> ${baseScore.toFixed(1)}/100 ${baseScore >= 60 ? '✅' : baseScore >= 40 ? '⚠️' : '❌'}</div>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);"><strong>Time Bonus (15% weight):</strong> +${timeBonusScore.toFixed(1)} points ⚡</div>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #fffbea 0%, #fff4d6 100%);"><strong>Achievement Bonus (10%):</strong> +${achievementBonus.toFixed(1)} points 🏆</div>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f5e9 0%, #d1f2eb 100%);"><strong>Efficiency Bonus (5%):</strong> +${efficiencyBonus.toFixed(1)} points 📐</div>
-                ${profitPenalty < 0 ? `<div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);"><strong>Corruption Penalty:</strong> ${profitPenalty} points ⚠️</div>` : ''}
-                ${hasCriticalFailure ? `<div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);color:#c62828;"><strong>⚠️ Critical Failure:</strong> One or more stats below 20</div>` : ''}
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);font-size:1.4em;font-weight:bold;border:3px solid #0288d1;"><strong>FINAL SCORE:</strong> ${finalScore.toFixed(1)}/100 ${finalScore >= 70 ? '🌟' : finalScore >= 60 ? '👍' : finalScore >= 45 ? '😐' : '😬'}</div>
+
+            <!-- Tab Navigation -->
+            <div class="results-tabs">
+                <button class="tab-btn active" onclick="switchResultsTab('achievements')">🏆 Awards</button>
+                <button class="tab-btn" onclick="switchResultsTab('stats')">📊 Stats</button>
+                <button class="tab-btn" onclick="switchResultsTab('score')">🎯 Score</button>
+                <button class="tab-btn" onclick="switchResultsTab('city')">🏙️ City</button>
+                <button class="tab-btn" onclick="switchResultsTab('learn')">🎓 Learn</button>
+                <button class="tab-btn" onclick="switchResultsTab('leaderboard')">👑 Top</button>
             </div>
 
-            <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
-                <h3>🏙️ City Planning</h3>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);"><strong>Planning Efficiency:</strong> ${gameState.planningEfficiency}% 📐</div>
-                <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Buildings Placed:</strong> ${gameState.cityGrid.filter(c => c !== null && c.type !== 'feature').length} buildings 🏗️</div>
-                ${gameState.detectedZones.length > 0 ? `
-                    <div class="final-stat-item" style="background:white;"><strong>Zones Formed:</strong> ${gameState.detectedZones.map(z => `${z.icon} ${z.name}`).join(', ')}</div>
-                ` : '<div class="final-stat-item" style="background:white;opacity:0.7;">No zones formed</div>'}
-            </div>
-
-            ${earnedAchievements.length > 0 ? `
-                <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #fff5e5 0%, #ffe5cc 100%);">
-                    <h3>🏆 Achievements Unlocked (${earnedAchievements.length}/${Object.keys(achievementDefinitions).length})</h3>
+            <!-- Tab Contents -->
+            <div class="tab-content active" id="tab-achievements">
+                <div class="final-stats" style="background:linear-gradient(135deg, #fff5e5 0%, #ffe5cc 100%);">
+                    <h3>🏆 Achievements (${earnedAchievements.length}/${allAchievements.length})</h3>
                     <div class="final-stat-item" style="background:linear-gradient(135deg, #fffbea 0%, #fff4d6 100%);font-size:1.1em;">
                         <strong>Achievement Bonus:</strong> +${achievementBonus.toFixed(1)} points (${earnedAchievements.length} × 5)
                     </div>
-                    ${earnedAchievements.map(a => `<div class="final-stat-item" style="background:white;border-left:4px solid #f39c12;">${a}</div>`).join('')}
+                    <div class="achievement-grid">
+                        ${allAchievements.map(achievement => {
+                            const isEarned = gameState.achievements.includes(achievement.id);
+                            return `
+                                <div class="achievement-item ${isEarned ? 'earned' : 'locked'}">
+                                    <img src="${achievement.image}" alt="${achievement.name}" class="achievement-image">
+                                    <div class="achievement-name">${achievement.name}</div>
+                                    <div class="achievement-desc">${achievement.description}</div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
-            ` : `
-                <div class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);opacity:0.7;">
-                    <h3>🏆 No Achievements Unlocked</h3>
-                    <p style="padding:15px;margin:0;">Try building more strategically or making faster decisions to unlock achievements!</p>
-                </div>
-            `}
-
-            <div class="story-section" style="margin-top:20px;text-align:left;">
-                <h3>🎓 What You Learned</h3>
-                <p>Politics isn't black and white. Every decision has trade-offs:</p>
-                <ul style="margin-left:20px;margin-top:10px;line-height:1.8;">
-                    <li>Economic growth can come at an environmental cost</li>
-                    <li>Helping one group might upset another</li>
-                    <li>Sometimes there are no perfect solutions</li>
-                    <li>Leadership requires balancing many competing interests</li>
-                    <li>Corruption and personal profit-taking erode public trust</li>
-                </ul>
-                <p style="margin-top:15px;">Real mayors face these kinds of complex decisions every day. Understanding that politics involves difficult choices and trade-offs helps us be better informed citizens!</p>
             </div>
 
-            <div id="ending-leaderboard" class="final-stats" style="margin-top:20px;background:linear-gradient(135deg, #fff9e6 0%, #ffe5cc 100%);">
-                <h3>🏆 Top Mayors Leaderboard</h3>
-                <div style="padding:20px;text-align:center;">Loading leaderboard...</div>
+            <div class="tab-content" id="tab-stats">
+                <div class="final-stats">
+                    <h3>📊 Final Statistics</h3>
+                    <div class="final-stat-item"><strong>Population Happiness:</strong> ${gameState.happiness}/100 ${gameState.happiness >= 70 ? '🎉' : gameState.happiness >= 40 ? '😐' : '😞'}</div>
+                    <div class="final-stat-item"><strong>City Funds:</strong> $${gameState.cityFunds}M ${gameState.cityFunds >= 70 ? '💰' : gameState.cityFunds >= 40 ? '💵' : '💸'}</div>
+                    <div class="final-stat-item"><strong>Special Interest Support:</strong> ${gameState.specialInterest}/100 ${gameState.specialInterest >= 70 ? '🤝' : gameState.specialInterest >= 40 ? '👌' : '👎'}</div>
+                    <div class="final-stat-item"><strong>Your Personal Profit:</strong> $${gameState.personalProfit}M ${gameState.personalProfit > 10 ? '⚠️' : gameState.personalProfit > 0 ? '💵' : '✨'}</div>
+                    <div class="final-stat-item"><strong>Decisions Made:</strong> ${gameState.decisions.length} choices 🎯</div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-score">
+                <div class="final-stats" style="background:linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);">
+                    <h3>📊 Score Breakdown</h3>
+                    <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Base Score (70% weight):</strong> ${baseScore.toFixed(1)}/100 ${baseScore >= 60 ? '✅' : baseScore >= 40 ? '⚠️' : '❌'}</div>
+                    <div class="final-stat-item" style="background:linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);"><strong>Time Bonus (15% weight):</strong> +${timeBonusScore.toFixed(1)} points ⚡</div>
+                    <div class="final-stat-item" style="background:linear-gradient(135deg, #fffbea 0%, #fff4d6 100%);"><strong>Achievement Bonus (10%):</strong> +${achievementBonus.toFixed(1)} points 🏆</div>
+                    <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f5e9 0%, #d1f2eb 100%);"><strong>Efficiency Bonus (5%):</strong> +${efficiencyBonus.toFixed(1)} points 📐</div>
+                    ${profitPenalty < 0 ? `<div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);"><strong>Corruption Penalty:</strong> ${profitPenalty} points ⚠️</div>` : ''}
+                    ${hasCriticalFailure ? `<div class="final-stat-item" style="background:linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);color:#c62828;"><strong>⚠️ Critical Failure:</strong> One or more stats below 20</div>` : ''}
+                    <div class="final-stat-item" style="background:linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);font-size:1.4em;font-weight:bold;border:3px solid #0288d1;"><strong>FINAL SCORE:</strong> ${finalScore.toFixed(1)}/100 ${finalScore >= 70 ? '🌟' : finalScore >= 60 ? '👍' : finalScore >= 45 ? '😐' : '😬'}</div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-city">
+                <div class="final-stats" style="background:linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);">
+                    <h3>🏙️ City Planning</h3>
+                    <div class="final-stat-item" style="background:linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);"><strong>Planning Efficiency:</strong> ${gameState.planningEfficiency}% 📐</div>
+                    <div class="final-stat-item" style="background:linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%);"><strong>Buildings Placed:</strong> ${gameState.cityGrid.filter(c => c !== null && c.type !== 'feature').length} buildings 🏗️</div>
+                    ${gameState.detectedZones.length > 0 ? `
+                        <div class="final-stat-item" style="background:white;"><strong>Zones Formed:</strong> ${gameState.detectedZones.map(z => `${z.icon} ${z.name}`).join(', ')}</div>
+                    ` : '<div class="final-stat-item" style="background:white;opacity:0.7;">No zones formed</div>'}
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-learn">
+                <div class="final-stats story-section" style="text-align:left;background:linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                    <h3>🎓 What You Learned</h3>
+                    <p>Politics isn't black and white. Every decision has trade-offs:</p>
+                    <ul style="margin-left:20px;margin-top:10px;line-height:1.8;">
+                        <li>Economic growth can come at an environmental cost</li>
+                        <li>Helping one group might upset another</li>
+                        <li>Sometimes there are no perfect solutions</li>
+                        <li>Leadership requires balancing many competing interests</li>
+                        <li>Corruption and personal profit-taking erode public trust</li>
+                    </ul>
+                    <p style="margin-top:15px;">Real mayors face these kinds of complex decisions every day. Understanding that politics involves difficult choices and trade-offs helps us be better informed citizens!</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="tab-leaderboard">
+                <div id="ending-leaderboard" class="final-stats" style="background:linear-gradient(135deg, #fff9e6 0%, #ffe5cc 100%);">
+                    <h3>👑 Top Mayors Leaderboard</h3>
+                    <div style="padding:20px;text-align:center;">Loading leaderboard...</div>
+                </div>
             </div>
 
             <button class="start-btn" onclick="location.reload()" style="margin-top:30px;"><span class="start-btn-text">🔄 Play Again</span></button>
@@ -4236,6 +4292,9 @@ function renderEnding() {
         gameAPI.getLeaderboard(difficultyId, 10).then(leaderboard => {
             const leaderboardDiv = document.getElementById('ending-leaderboard');
             if (leaderboard && leaderboard.length > 0) {
+                // Store leaderboard data globally for modal access
+                window.leaderboardData = leaderboard;
+
                 const leaderboardHTML = leaderboard.map((entry, index) => {
                     const rank = index + 1;
                     let rankBadge = '';
@@ -4244,28 +4303,47 @@ function renderEnding() {
                     else if (rank === 3) rankBadge = '🥉';
                     else rankBadge = `#${rank}`;
 
+                    // Get achievement icons
+                    const achievementIcons = (entry.achievements || []).map(id => {
+                        const def = achievementDefinitions[id];
+                        return def ? def.icon : '';
+                    }).join(' ');
+
                     return `
-                        <div class="final-stat-item" style="display:flex;justify-content:space-between;align-items:center;background:white;">
-                            <div style="display:flex;align-items:center;gap:10px;">
-                                <strong style="min-width:40px;">${rankBadge}</strong>
-                                <span>${escapeHTML(entry.player_name)}</span>
+                        <div class="leaderboard-entry" onclick="showPlayerDetails(${index})" style="cursor:pointer;">
+                            <div class="leaderboard-header">
+                                <div class="leaderboard-rank-name">
+                                    <strong class="rank-badge">${rankBadge}</strong>
+                                    <span class="player-name">${escapeHTML(entry.player_name)}</span>
+                                </div>
+                                <strong class="final-score">${entry.final_score}</strong>
                             </div>
-                            <div style="display:flex;gap:15px;align-items:center;">
-                                <span style="color:#666;">😊 ${entry.happiness}</span>
-                                <span style="color:#666;">💰 ${entry.city_funds}</span>
-                                <strong style="color:#f39c12;font-size:1.1em;">${entry.final_score}</strong>
+                            <div class="leaderboard-details">
+                                <div class="stat-row">
+                                    <span>😊 ${entry.happiness || 0}</span>
+                                    <span>💰 ${entry.city_funds || 0}</span>
+                                    <span>🏛️ ${entry.special_interest || 0}</span>
+                                    <span>📐 ${entry.planning_efficiency || 0}%</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span>🏗️ ${entry.buildings_placed || 0} buildings</span>
+                                    <span>⚡ ${entry.avg_decision_time || 0}s avg</span>
+                                    <span>🎯 ${entry.decisions_made || 0} decisions</span>
+                                </div>
+                                ${achievementIcons ? `<div class="achievement-row">${achievementIcons}</div>` : ''}
                             </div>
+                            <div class="click-hint">Click to view details</div>
                         </div>
                     `;
                 }).join('');
-                leaderboardDiv.innerHTML = `<h3>🏆 Top Mayors Leaderboard</h3>${leaderboardHTML}`;
+                leaderboardDiv.innerHTML = `<h3>👑 Top Mayors Leaderboard</h3>${leaderboardHTML}`;
             } else {
-                leaderboardDiv.innerHTML = '<h3>🏆 Top Mayors Leaderboard</h3><div style="padding:20px;text-align:center;opacity:0.7;">Be the first to complete the game!</div>';
+                leaderboardDiv.innerHTML = '<h3>👑 Top Mayors Leaderboard</h3><div style="padding:20px;text-align:center;opacity:0.7;">Be the first to complete the game!</div>';
             }
         }).catch(error => {
             console.error('Failed to load leaderboard:', error);
             const leaderboardDiv = document.getElementById('ending-leaderboard');
-            leaderboardDiv.innerHTML = '<h3>🏆 Top Mayors Leaderboard</h3><div style="padding:20px;text-align:center;opacity:0.7;">Unable to load leaderboard</div>';
+            leaderboardDiv.innerHTML = '<h3>👑 Top Mayors Leaderboard</h3><div style="padding:20px;text-align:center;opacity:0.7;">Unable to load leaderboard</div>';
         });
     }
 }
@@ -4286,6 +4364,13 @@ function renderBankruptcyEnding() {
     // Calculate play time in seconds
     const playTimeSeconds = gameState.gameStartTime ? Math.floor((gameState.gameEndTime - gameState.gameStartTime) / 1000) : 0;
 
+    // Calculate average decision time
+    const totalDecisionTime = gameState.decisions.reduce((sum, d) => sum + (d.timeSpent || 0), 0);
+    const avgDecisionTime = gameState.decisions.length > 0 ? totalDecisionTime / gameState.decisions.length : 0;
+
+    // Count buildings placed (excluding features)
+    const buildingsPlaced = gameState.cityGrid.filter(c => c !== null && c.type !== 'feature').length;
+
     // Submit bankruptcy score to backend with very low score
     if (typeof gameAPI !== 'undefined') {
         gameAPI.completeGame({
@@ -4295,7 +4380,14 @@ function renderBankruptcyEnding() {
             specialInterest: gameState.specialInterest,
             personalProfit: gameState.personalProfit,
             decisions: gameState.decisions.length,
-            playTime: playTimeSeconds
+            playTime: playTimeSeconds,
+            // New detailed stats
+            achievements: gameState.achievements,
+            buildingsPlaced: buildingsPlaced,
+            avgDecisionTime: Math.round(avgDecisionTime * 10) / 10,
+            planningEfficiency: gameState.planningEfficiency,
+            timeBonus: gameState.timeBonus,
+            zonesFormed: gameState.detectedZones.map(z => z.name)
         }).then(result => {
             if (result.success) {
                 console.log('💸 Bankruptcy score submitted!');
@@ -4379,6 +4471,198 @@ function escapeHTML(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ==================== PLAYER DETAILS MODAL ====================
+// Shows detailed player stats and achievements when clicking on leaderboard entry
+function showPlayerDetails(index) {
+    if (!window.leaderboardData || !window.leaderboardData[index]) {
+        console.error('No leaderboard data found for index:', index);
+        return;
+    }
+
+    const player = window.leaderboardData[index];
+    const rank = index + 1;
+    let rankBadge = '';
+    if (rank === 1) rankBadge = '🥇 1st Place';
+    else if (rank === 2) rankBadge = '🥈 2nd Place';
+    else if (rank === 3) rankBadge = '🥉 3rd Place';
+    else rankBadge = `#${rank}`;
+
+    // Format play time
+    const playTime = player.play_time_seconds || 0;
+    const minutes = Math.floor(playTime / 60);
+    const seconds = playTime % 60;
+    const timeStr = `${minutes}m ${seconds}s`;
+
+    // Build achievements HTML with images
+    const playerAchievements = player.achievements || [];
+    // Filter to only achievements that have definitions
+    const validAchievements = playerAchievements.filter(id => achievementDefinitions[id]);
+    let achievementsHTML = '';
+
+    if (validAchievements.length > 0) {
+        achievementsHTML = `
+            <div class="player-detail-section">
+                <h4>🏆 Achievements Earned (${validAchievements.length})</h4>
+                <div class="player-achievements-grid">
+                    ${validAchievements.map(id => {
+                        const def = achievementDefinitions[id];
+                        return `
+                            <div class="player-achievement-card">
+                                <img src="${def.image}" alt="${def.name}" class="player-achievement-image">
+                                <div class="player-achievement-name">${def.name}</div>
+                                <div class="player-achievement-desc">${def.description}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    } else {
+        achievementsHTML = `
+            <div class="player-detail-section">
+                <h4>🏆 Achievements</h4>
+                <p style="text-align:center;opacity:0.7;padding:20px;">No achievements earned</p>
+            </div>
+        `;
+    }
+
+    // Build zones HTML
+    const zones = player.zones_formed || [];
+    let zonesHTML = '';
+    if (zones.length > 0) {
+        zonesHTML = `
+            <div class="player-detail-section">
+                <h4>🏘️ Zones Formed</h4>
+                <div class="zones-list">
+                    ${zones.map(zone => `<span class="zone-badge">${zone}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Create modal HTML
+    const modalHTML = `
+        <div class="player-details-modal" onclick="closePlayerDetails(event)">
+            <div class="player-details-content" onclick="event.stopPropagation()">
+                <button class="close-modal-btn" onclick="closePlayerDetails()">&times;</button>
+
+                <div class="player-details-header">
+                    <h2>${escapeHTML(player.player_name)}</h2>
+                    <div class="player-rank">${rankBadge}</div>
+                    <div class="player-final-score">${player.final_score} pts</div>
+                </div>
+
+                ${achievementsHTML}
+
+                <div class="player-detail-section">
+                    <h4>📊 Game Statistics</h4>
+                    <div class="player-stats-grid">
+                        <div class="player-stat-item">
+                            <span class="stat-icon">😊</span>
+                            <span class="stat-label">Happiness</span>
+                            <span class="stat-value">${player.happiness || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">💰</span>
+                            <span class="stat-label">City Funds</span>
+                            <span class="stat-value">$${player.city_funds || 0}M</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🏛️</span>
+                            <span class="stat-label">Special Interest</span>
+                            <span class="stat-value">${player.special_interest || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">💵</span>
+                            <span class="stat-label">Personal Profit</span>
+                            <span class="stat-value">$${player.personal_profit || 0}M</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="player-detail-section">
+                    <h4>⚡ Performance Metrics</h4>
+                    <div class="player-stats-grid">
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🏗️</span>
+                            <span class="stat-label">Buildings Placed</span>
+                            <span class="stat-value">${player.buildings_placed || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🎯</span>
+                            <span class="stat-label">Decisions Made</span>
+                            <span class="stat-value">${player.decisions_made || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">⏱️</span>
+                            <span class="stat-label">Avg Decision Time</span>
+                            <span class="stat-value">${player.avg_decision_time || 0}s</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">📐</span>
+                            <span class="stat-label">Planning Efficiency</span>
+                            <span class="stat-value">${player.planning_efficiency || 0}%</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">⏰</span>
+                            <span class="stat-label">Time Bonus</span>
+                            <span class="stat-value">+${player.time_bonus || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🎮</span>
+                            <span class="stat-label">Play Time</span>
+                            <span class="stat-value">${timeStr}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${zonesHTML}
+
+                <div class="player-detail-footer">
+                    <span class="difficulty-badge">${player.difficulty || 'normal'} mode</span>
+                    <span class="completed-date">${player.completed_at ? new Date(player.completed_at).toLocaleDateString() : ''}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add modal to DOM
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'player-details-container';
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
+
+    // Add touch support for achievement cards
+    const achievementCards = modalContainer.querySelectorAll('.player-achievement-card');
+    achievementCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Toggle touched class for this card
+            const wasTouched = this.classList.contains('touched');
+            // Remove touched from all cards
+            achievementCards.forEach(c => c.classList.remove('touched'));
+            // Add to this card if it wasn't already touched
+            if (!wasTouched) {
+                this.classList.add('touched');
+            }
+        });
+    });
+
+    // Trigger haptic feedback
+    triggerHaptic('medium');
+}
+
+// Close player details modal
+function closePlayerDetails(event) {
+    if (event && event.target.className !== 'player-details-modal') return;
+
+    const container = document.getElementById('player-details-container');
+    if (container) {
+        container.remove();
+    }
+    triggerHaptic('light');
 }
 
 // ==================== TUTORIAL SYSTEM ====================
@@ -4751,6 +5035,34 @@ function togglePaletteSize() {
     }
 
     // Trigger haptic feedback
+    triggerHaptic('light');
+}
+
+// ==================== RESULTS TAB SWITCHING ====================
+function switchResultsTab(tabName) {
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // Remove active class from all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Add active class to clicked button
+    const clickedBtn = document.querySelector(`.tab-btn[onclick*="${tabName}"]`);
+    if (clickedBtn) {
+        clickedBtn.classList.add('active');
+    }
+
+    // Show the corresponding tab content
+    const tabContent = document.getElementById(`tab-${tabName}`);
+    if (tabContent) {
+        tabContent.classList.add('active');
+    }
+
+    // Haptic feedback
     triggerHaptic('light');
 }
 

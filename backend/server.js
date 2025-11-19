@@ -145,16 +145,23 @@ app.post('/api/game/complete', async (req, res) => {
       specialInterest,
       personalProfit,
       decisions,
-      playTime
+      playTime,
+      // New detailed stats
+      achievements,
+      buildingsPlaced,
+      avgDecisionTime,
+      planningEfficiency,
+      timeBonus,
+      zonesFormed
     } = req.body;
-    
+
     if (!sessionId) {
       return res.status(400).json({ success: false, error: 'Session ID required' });
     }
-    
+
     const query = `
       UPDATE game_sessions
-      SET 
+      SET
         final_score = $1,
         happiness = $2,
         city_funds = $3,
@@ -162,11 +169,17 @@ app.post('/api/game/complete', async (req, res) => {
         personal_profit = $5,
         decisions_made = $6,
         play_time_seconds = $7,
+        achievements = $8,
+        buildings_placed = $9,
+        avg_decision_time = $10,
+        planning_efficiency = $11,
+        time_bonus = $12,
+        zones_formed = $13,
         completed_at = NOW()
-      WHERE session_id = $8
+      WHERE session_id = $14
       RETURNING *
     `;
-    
+
     const result = await pool.query(query, [
       finalScore,
       happiness,
@@ -175,16 +188,22 @@ app.post('/api/game/complete', async (req, res) => {
       personalProfit,
       decisions,
       playTime,
+      JSON.stringify(achievements || []),
+      buildingsPlaced || 0,
+      avgDecisionTime || 0,
+      planningEfficiency || 0,
+      timeBonus || 0,
+      JSON.stringify(zonesFormed || []),
       sessionId
     ]);
-    
+
     if (result.rowCount === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Session not found or already completed' 
+      return res.status(404).json({
+        success: false,
+        error: 'Session not found or already completed'
       });
     }
-    
+
     res.json({
       success: true,
       session: result.rows[0]
@@ -199,9 +218,9 @@ app.post('/api/game/complete', async (req, res) => {
 app.get('/api/leaderboard', async (req, res) => {
   try {
     const { difficulty, limit = 10 } = req.query;
-    
+
     let query = `
-      SELECT 
+      SELECT
         player_name,
         difficulty,
         final_score,
@@ -211,11 +230,17 @@ app.get('/api/leaderboard', async (req, res) => {
         personal_profit,
         decisions_made,
         play_time_seconds,
+        achievements,
+        buildings_placed,
+        avg_decision_time,
+        planning_efficiency,
+        time_bonus,
+        zones_formed,
         completed_at
       FROM game_sessions
       WHERE completed_at IS NOT NULL
     `;
-    
+
     const params = [];
     if (difficulty) {
       query += ` AND difficulty = $1`;
@@ -226,12 +251,19 @@ app.get('/api/leaderboard', async (req, res) => {
       query += ` ORDER BY final_score DESC LIMIT $1`;
       params.push(parseInt(limit));
     }
-    
+
     const result = await pool.query(query, params);
-    
+
+    // Parse JSON fields
+    const leaderboard = result.rows.map(row => ({
+      ...row,
+      achievements: row.achievements ? (typeof row.achievements === 'string' ? JSON.parse(row.achievements) : row.achievements) : [],
+      zones_formed: row.zones_formed ? (typeof row.zones_formed === 'string' ? JSON.parse(row.zones_formed) : row.zones_formed) : []
+    }));
+
     res.json({
       success: true,
-      leaderboard: result.rows
+      leaderboard
     });
   } catch (error) {
     console.error('Error fetching leaderboard:', error);
@@ -312,10 +344,37 @@ async function initDatabase() {
         personal_profit INTEGER,
         decisions_made INTEGER,
         play_time_seconds INTEGER,
+        achievements JSONB,
+        buildings_placed INTEGER,
+        avg_decision_time REAL,
+        planning_efficiency INTEGER,
+        time_bonus INTEGER,
+        zones_formed JSONB,
         created_at TIMESTAMP DEFAULT NOW(),
         completed_at TIMESTAMP
       );
     `);
+
+    // Add new columns if they don't exist (for existing databases)
+    const alterQueries = [
+      `ALTER TABLE game_sessions ADD COLUMN IF NOT EXISTS achievements JSONB`,
+      `ALTER TABLE game_sessions ADD COLUMN IF NOT EXISTS buildings_placed INTEGER`,
+      `ALTER TABLE game_sessions ADD COLUMN IF NOT EXISTS avg_decision_time REAL`,
+      `ALTER TABLE game_sessions ADD COLUMN IF NOT EXISTS planning_efficiency INTEGER`,
+      `ALTER TABLE game_sessions ADD COLUMN IF NOT EXISTS time_bonus INTEGER`,
+      `ALTER TABLE game_sessions ADD COLUMN IF NOT EXISTS zones_formed JSONB`
+    ];
+
+    for (const query of alterQueries) {
+      try {
+        await pool.query(query);
+      } catch (err) {
+        // Ignore errors for columns that already exist
+        if (!err.message.includes('already exists')) {
+          console.warn('Warning:', err.message);
+        }
+      }
+    }
 
     // Create game_saves table
     await pool.query(`
