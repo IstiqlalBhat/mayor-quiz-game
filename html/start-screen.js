@@ -368,6 +368,206 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Show player details modal
+function showPlayerDetails(index) {
+    if (!window.leaderboardData || !window.leaderboardData[index]) {
+        console.error('No leaderboard data found for index:', index);
+        return;
+    }
+
+    const player = window.leaderboardData[index];
+    const rank = index + 1;
+    let rankBadge = '';
+    if (rank === 1) rankBadge = '🥇 1st Place';
+    else if (rank === 2) rankBadge = '🥈 2nd Place';
+    else if (rank === 3) rankBadge = '🥉 3rd Place';
+    else rankBadge = `#${rank}`;
+
+    // Format play time
+    const playTime = player.play_time_seconds || 0;
+    const minutes = Math.floor(playTime / 60);
+    const seconds = playTime % 60;
+    const timeStr = `${minutes}m ${seconds}s`;
+
+    // Build achievements HTML with images
+    const playerAchievements = player.achievements || [];
+    // Filter to only achievements that have definitions
+    const achievementDefs = window.achievementDefinitions || {};
+    const validAchievements = playerAchievements.filter(id => achievementDefs[id]);
+    let achievementsHTML = '';
+
+    if (validAchievements.length > 0) {
+        achievementsHTML = `
+            <div class="player-detail-section">
+                <h4>🏆 Achievements Earned (${validAchievements.length})</h4>
+                <div class="player-achievements-grid">
+                    ${validAchievements.map(id => {
+                        const def = achievementDefs[id];
+                        return `
+                            <div class="player-achievement-card">
+                                <img src="${def.image}" alt="${def.name}" class="player-achievement-image">
+                                <div class="player-achievement-name">${def.name}</div>
+                                <div class="player-achievement-desc">${def.description}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    } else {
+        achievementsHTML = `
+            <div class="player-detail-section">
+                <h4>🏆 Achievements</h4>
+                <p style="text-align:center;opacity:0.7;padding:20px;">No achievements earned</p>
+            </div>
+        `;
+    }
+
+    // Build zones HTML
+    const zones = player.zones_formed || [];
+    let zonesHTML = '';
+    if (zones.length > 0) {
+        zonesHTML = `
+            <div class="player-detail-section">
+                <h4>🏘️ Zones Formed</h4>
+                <div class="zones-list">
+                    ${zones.map(zone => `<span class="zone-badge">${zone}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Create modal HTML
+    const modalHTML = `
+        <div class="player-details-modal" onclick="closePlayerDetails(event)">
+            <div class="player-details-content" onclick="event.stopPropagation()">
+                <button class="close-modal-btn" onclick="closePlayerDetails()">&times;</button>
+
+                <div class="player-details-header">
+                    <h2>${escapeHtml(player.player_name)}</h2>
+                    <div class="player-rank">${rankBadge}</div>
+                    <div class="player-final-score">${player.final_score} pts</div>
+                </div>
+
+                ${achievementsHTML}
+
+                <div class="player-detail-section">
+                    <h4>📊 Game Statistics</h4>
+                    <div class="player-stats-grid">
+                        <div class="player-stat-item">
+                            <span class="stat-icon">😊</span>
+                            <span class="stat-label">Happiness</span>
+                            <span class="stat-value">${player.happiness || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">💰</span>
+                            <span class="stat-label">City Funds</span>
+                            <span class="stat-value">$${player.city_funds || 0}M</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🏛️</span>
+                            <span class="stat-label">Special Interest</span>
+                            <span class="stat-value">${player.special_interest || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">💵</span>
+                            <span class="stat-label">Personal Profit</span>
+                            <span class="stat-value">$${player.personal_profit || 0}M</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="player-detail-section">
+                    <h4>⚡ Performance Metrics</h4>
+                    <div class="player-stats-grid">
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🏗️</span>
+                            <span class="stat-label">Buildings Placed</span>
+                            <span class="stat-value">${player.buildings_placed || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🎯</span>
+                            <span class="stat-label">Decisions Made</span>
+                            <span class="stat-value">${player.decisions_made || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">⏱️</span>
+                            <span class="stat-label">Avg Decision Time</span>
+                            <span class="stat-value">${player.avg_decision_time || 0}s</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">📐</span>
+                            <span class="stat-label">Planning Efficiency</span>
+                            <span class="stat-value">${player.planning_efficiency || 0}%</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">⏰</span>
+                            <span class="stat-label">Time Bonus</span>
+                            <span class="stat-value">+${player.time_bonus || 0}</span>
+                        </div>
+                        <div class="player-stat-item">
+                            <span class="stat-icon">🎮</span>
+                            <span class="stat-label">Play Time</span>
+                            <span class="stat-value">${timeStr}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${zonesHTML}
+
+                <div class="player-detail-footer">
+                    <span class="difficulty-badge">${player.difficulty || 'normal'} mode</span>
+                    <span class="completed-date">${player.completed_at ? new Date(player.completed_at).toLocaleDateString() : ''}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add modal to DOM
+    const modalContainer = document.createElement('div');
+    modalContainer.id = 'player-details-container';
+    modalContainer.innerHTML = modalHTML;
+    document.body.appendChild(modalContainer);
+
+    // Add touch support for achievement cards
+    const achievementCards = modalContainer.querySelectorAll('.player-achievement-card');
+    achievementCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Toggle touched class for this card
+            const wasTouched = this.classList.contains('touched');
+            // Remove touched from all cards
+            achievementCards.forEach(c => c.classList.remove('touched'));
+            // Add to this card if it wasn't already touched
+            if (!wasTouched) {
+                this.classList.add('touched');
+            }
+        });
+    });
+
+    // Trigger haptic feedback
+    if (typeof triggerHaptic === 'function') {
+        triggerHaptic('medium');
+    }
+}
+
+// Close player details modal
+function closePlayerDetails(event) {
+    if (event && event.target.className !== 'player-details-modal') return;
+
+    const container = document.getElementById('player-details-container');
+    if (container) {
+        container.remove();
+    }
+    if (typeof triggerHaptic === 'function') {
+        triggerHaptic('light');
+    }
+}
+
+// Make functions globally available
+window.showPlayerDetails = showPlayerDetails;
+window.closePlayerDetails = closePlayerDetails;
+
 // ==================== QUIT ====================
 
 function handleQuitClick() {
