@@ -1,7 +1,7 @@
 // ==================== MOBILE DETECTION ====================
 function isMobileDevice() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-           window.innerWidth <= 768;
+        window.innerWidth <= 768;
 }
 
 function getGridSize() {
@@ -34,7 +34,7 @@ function createParticles() {
     const container = document.getElementById('particles');
     // Reduce particles on mobile for performance
     const particleCount = isMobileDevice() ? 15 : 30;
-    
+
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
@@ -67,626 +67,6 @@ function initializeTooltips() {
         });
     });
 }
-
-// ==================== NARRATIVE MANAGER ====================
-class NarrativeManager {
-    constructor() {
-        // Advisor definitions with their specialties and personalities
-        this.advisors = {
-            banks: {
-                id: 'banks',
-                name: 'Mr. Banks',
-                title: 'Financial Advisor',
-                portrait: 'assets/characters/banks.png',
-                specialty: ['cityFunds', 'personalProfit'],
-                color: '#ffd700',
-                personality: 'capitalist',
-                catchphrases: {
-                    positive: [
-                        "Excellent! The city's coffers will overflow!",
-                        "A sound investment, Mayor!",
-                        "The markets will love this decision!",
-                        "Money well spent indeed!"
-                    ],
-                    negative: [
-                        "This will hurt our bottom line...",
-                        "The investors won't be pleased...",
-                        "Think of the economy, Mayor!",
-                        "We're hemorrhaging funds here!"
-                    ],
-                    neutral: [
-                        "The financial impact is acceptable.",
-                        "Neither gain nor loss. Proceed carefully.",
-                        "The numbers are balanced, for now."
-                    ]
-                },
-                buildingDialogues: {
-                    house: "Residential investment! Property taxes will flow nicely.",
-                    shop: "A commercial venture! Revenue streams are looking good.",
-                    factory: "Industrial power! This will boost our economic output significantly.",
-                    park: "Parks don't generate revenue, but happy citizens spend more...",
-                    office: "Corporate real estate! The business district expands."
-                },
-                zoneDialogues: [
-                    "A commercial district forms! Property values are soaring!",
-                    "This zone will attract major investors to our city.",
-                    "Excellent clustering! Economic synergy at its finest."
-                ],
-                achievementDialogues: [
-                    "Achievement unlocked! This will look great in the annual report.",
-                    "Impressive milestone! The shareholders will be pleased.",
-                    "Success breeds success, Mayor. Keep the profits rolling!"
-                ]
-            },
-            ivy: {
-                id: 'ivy',
-                name: 'Ivy Green',
-                title: 'Environmental Activist',
-                portrait: 'assets/characters/ivygreen.png',
-                specialty: ['happiness', 'environment'],
-                color: '#4caf50',
-                personality: 'activist',
-                catchphrases: {
-                    positive: [
-                        "The people will thrive! Nature approves!",
-                        "A green choice for a brighter future!",
-                        "The community thanks you, Mayor!",
-                        "This brings joy to our citizens!"
-                    ],
-                    negative: [
-                        "The people deserve better than this!",
-                        "Think of the children, Mayor!",
-                        "Our green spaces weep today...",
-                        "Happiness cannot be sacrificed for profit!"
-                    ],
-                    neutral: [
-                        "The citizens are watching...",
-                        "A cautious step. The people wait.",
-                        "Neither celebration nor protest today."
-                    ]
-                },
-                buildingDialogues: {
-                    house: "New homes for families! The community grows stronger.",
-                    shop: "Local businesses bring life to our neighborhoods!",
-                    factory: "I hope the pollution controls are adequate...",
-                    park: "Beautiful! Green spaces heal the soul of our city.",
-                    office: "More jobs, but let's not forget work-life balance."
-                },
-                zoneDialogues: [
-                    "A thriving neighborhood emerges! Community spirit is high!",
-                    "People are coming together. This is what cities are about!",
-                    "The citizens will love this development!"
-                ],
-                achievementDialogues: [
-                    "The people celebrate! You've made them proud, Mayor.",
-                    "This achievement shows you care about our community!",
-                    "Wonderful progress! The citizens are grateful."
-                ]
-            },
-            engineer: {
-                id: 'engineer',
-                name: 'Chief Builder',
-                title: 'City Engineer',
-                portrait: 'assets/characters/engineer.png',
-                specialty: ['specialInterest', 'zoning'],
-                color: '#2196f3',
-                personality: 'engineer',
-                catchphrases: {
-                    positive: [
-                        "Structurally sound decision, Mayor!",
-                        "The infrastructure will support this!",
-                        "Excellent zoning potential here!",
-                        "The city grid approves!"
-                    ],
-                    negative: [
-                        "The zoning implications concern me...",
-                        "This disrupts our urban planning!",
-                        "The infrastructure cannot sustain this!",
-                        "Special interests are not aligned..."
-                    ],
-                    neutral: [
-                        "The blueprints are unchanged.",
-                        "A standard procedure. Nothing more.",
-                        "Engineering sees no immediate impact."
-                    ]
-                },
-                buildingDialogues: {
-                    house: "Residential zone expanded. Utility connections established.",
-                    shop: "Commercial structure in place. Good traffic flow here.",
-                    factory: "Heavy industry requires solid foundations. Well built!",
-                    park: "Green infrastructure improves drainage and air quality.",
-                    office: "High-rise potential in this location. Smart placement."
-                },
-                zoneDialogues: [
-                    "Zone synergy detected! Efficiency rating climbing!",
-                    "Urban planning at its finest! The grid is optimized.",
-                    "Infrastructure networks are strengthening!"
-                ],
-                achievementDialogues: [
-                    "Engineering milestone achieved! The blueprints don't lie.",
-                    "Structural excellence recognized! Well planned, Mayor.",
-                    "Achievement logged! City efficiency is improving."
-                ]
-            }
-        };
-
-        // Typewriter state
-        this.typewriterTimeout = null;
-        this.isTyping = false;
-        this.currentText = '';
-        this.currentIndex = 0;
-
-        // Dialogue queue system
-        this.dialogueQueue = [];
-        this.isProcessingQueue = false;
-
-        // Floating text queue
-        this.floatingTextQueue = [];
-    }
-
-    // Get advisor reaction based on choice effects
-    getAdvisorReaction(advisor, effects) {
-        let sentiment = 'neutral';
-        let relevance = 0;
-
-        // Calculate relevance and sentiment based on advisor specialty
-        if (advisor.id === 'banks') {
-            const fundsImpact = (effects.cityFunds || 0) + (effects.personalProfit || 0) * 2;
-            relevance = Math.abs(fundsImpact);
-            if (fundsImpact > 5) sentiment = 'positive';
-            else if (fundsImpact < -5) sentiment = 'negative';
-        } else if (advisor.id === 'ivy') {
-            const happinessImpact = effects.happiness || 0;
-            relevance = Math.abs(happinessImpact);
-            if (happinessImpact > 5) sentiment = 'positive';
-            else if (happinessImpact < -5) sentiment = 'negative';
-        } else if (advisor.id === 'engineer') {
-            const interestImpact = effects.specialInterest || 0;
-            relevance = Math.abs(interestImpact);
-            if (interestImpact > 5) sentiment = 'positive';
-            else if (interestImpact < -5) sentiment = 'negative';
-        }
-
-        // Get random catchphrase
-        const phrases = advisor.catchphrases[sentiment];
-        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-
-        return {
-            advisor: advisor,
-            sentiment: sentiment,
-            relevance: relevance,
-            phrase: phrase
-        };
-    }
-
-    // Get the most relevant advisor for a choice
-    getMostRelevantAdvisor(effects) {
-        const reactions = Object.values(this.advisors).map(advisor =>
-            this.getAdvisorReaction(advisor, effects)
-        );
-
-        // Sort by relevance
-        reactions.sort((a, b) => b.relevance - a.relevance);
-
-        return reactions[0];
-    }
-
-    // Create advisor portrait HTML
-    createAdvisorPortrait(advisor, sentiment = 'neutral', size = 'medium') {
-        const sizes = {
-            small: 40,
-            medium: 60,
-            large: 80
-        };
-        const px = sizes[size] || sizes.medium;
-
-        const sentimentClass = sentiment !== 'neutral' ? `advisor-${sentiment}` : '';
-
-        return `
-            <div class="advisor-portrait ${sentimentClass}" style="width: ${px}px; height: ${px}px;">
-                <img src="${advisor.portrait}" alt="${advisor.name}"
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="advisor-fallback" style="display: none; background: ${advisor.color};">
-                    ${advisor.name.charAt(0)}
-                </div>
-                <div class="advisor-indicator" style="background: ${
-                    sentiment === 'positive' ? '#4caf50' :
-                    sentiment === 'negative' ? '#f44336' :
-                    '#9e9e9e'
-                };"></div>
-            </div>
-        `;
-    }
-
-    // Create speech bubble with advisor
-    createAdvisorSpeech(advisorId, text, sentiment = 'neutral') {
-        const advisor = this.advisors[advisorId];
-        if (!advisor) return '';
-
-        return `
-            <div class="advisor-speech-container">
-                ${this.createAdvisorPortrait(advisor, sentiment, 'large')}
-                <div class="advisor-speech-bubble">
-                    <div class="advisor-name" style="color: ${advisor.color};">${advisor.name}</div>
-                    <div class="advisor-title">${advisor.title}</div>
-                    <div class="advisor-dialogue" id="advisor-dialogue-${advisorId}">
-                        ${text}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // Typewriter effect for text
-    typewriterEffect(element, text, speed = 30, callback = null) {
-        // Clear any existing typewriter
-        this.stopTypewriter();
-
-        this.isTyping = true;
-        this.currentText = text;
-        this.currentIndex = 0;
-
-        // Strip HTML tags for typing, we'll add them back
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = text;
-        const plainText = tempDiv.textContent || tempDiv.innerText;
-
-        element.innerHTML = '';
-
-        const type = () => {
-            if (this.currentIndex < plainText.length) {
-                element.textContent += plainText.charAt(this.currentIndex);
-                this.currentIndex++;
-                this.typewriterTimeout = setTimeout(type, speed);
-            } else {
-                this.isTyping = false;
-                // Restore original HTML after typing
-                element.innerHTML = text;
-                if (callback) callback();
-            }
-        };
-
-        type();
-    }
-
-    // Stop typewriter effect
-    stopTypewriter() {
-        if (this.typewriterTimeout) {
-            clearTimeout(this.typewriterTimeout);
-            this.typewriterTimeout = null;
-        }
-        this.isTyping = false;
-    }
-
-    // Skip to end of typewriter
-    skipTypewriter(element, text) {
-        this.stopTypewriter();
-        element.innerHTML = text;
-    }
-
-    // Create floating text effect
-    createFloatingText(text, x, y, color = '#ffffff', duration = 2000) {
-        const floatingText = document.createElement('div');
-        floatingText.className = 'floating-text';
-        floatingText.textContent = text;
-        floatingText.style.cssText = `
-            position: fixed;
-            left: ${x}px;
-            top: ${y}px;
-            color: ${color};
-            font-weight: bold;
-            font-size: 1.2em;
-            pointer-events: none;
-            z-index: 10000;
-            animation: floatUp ${duration}ms ease-out forwards;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-        `;
-
-        document.body.appendChild(floatingText);
-
-        setTimeout(() => {
-            floatingText.remove();
-        }, duration);
-
-        return floatingText;
-    }
-
-    // Show stat change with floating text
-    showStatChange(statName, value, element) {
-        if (!element || value === 0) return;
-
-        const rect = element.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top;
-
-        const color = value > 0 ? '#4caf50' : '#f44336';
-        const prefix = value > 0 ? '+' : '';
-        const text = `${prefix}${value}`;
-
-        this.createFloatingText(text, x, y, color);
-    }
-
-    // Generate choice card (without advisor reactions - they appear in the panel)
-    generateChoiceCardWithAdvisors(choice, index, sceneKey) {
-        return `
-            <div class="choice-card" onclick="makeChoice('${sceneKey}', ${index})">
-                <span class="choice-icon">${choice.icon}</span>
-                <div class="choice-text">${choice.text}</div>
-            </div>
-        `;
-    }
-
-    // Show advisor in the dedicated panel with typewriter dialogue
-    showAdvisorInPanel(advisorId, dialogue, sentiment = 'neutral') {
-        const advisor = this.advisors[advisorId];
-        if (!advisor) return;
-
-        // Add to queue instead of showing immediately
-        this.dialogueQueue.push({ advisorId, dialogue, sentiment });
-
-        // Process queue if not already processing
-        if (!this.isProcessingQueue) {
-            this.processDialogueQueue();
-        }
-    }
-
-    // Process dialogue queue one at a time
-    processDialogueQueue() {
-        if (this.dialogueQueue.length === 0) {
-            this.isProcessingQueue = false;
-            return;
-        }
-
-        this.isProcessingQueue = true;
-        const { advisorId, dialogue, sentiment } = this.dialogueQueue.shift();
-
-        // Map advisor IDs to panel IDs
-        const panelIdMap = {
-            'banks': 'advisor-panel-banks',
-            'ivy': 'advisor-panel-ivy',
-            'engineer': 'advisor-panel-engineer'
-        };
-
-        const dialogueIdMap = {
-            'banks': 'dialogue-text-banks',
-            'ivy': 'dialogue-text-ivy',
-            'engineer': 'dialogue-text-engineer'
-        };
-
-        // Remove speaking class from all advisors
-        Object.values(panelIdMap).forEach(id => {
-            const panel = document.getElementById(id);
-            if (panel) panel.classList.remove('speaking');
-        });
-
-        // Clear all dialogue texts
-        Object.values(dialogueIdMap).forEach(id => {
-            const text = document.getElementById(id);
-            if (text) {
-                text.textContent = '';
-                text.classList.remove('typing');
-            }
-        });
-
-        // Get the active advisor's elements
-        const panel = document.getElementById(panelIdMap[advisorId]);
-        const dialogueText = document.getElementById(dialogueIdMap[advisorId]);
-
-        if (!panel || !dialogueText) {
-            // Skip and process next
-            this.processDialogueQueue();
-            return;
-        }
-
-        // Add speaking class and start typewriter
-        panel.classList.add('speaking');
-        dialogueText.classList.add('typing');
-
-        // Typewriter effect for dialogue
-        this.typewriterToElement(dialogueText, dialogue, 25, () => {
-            dialogueText.classList.remove('typing');
-
-            // Wait a moment before processing next dialogue
-            setTimeout(() => {
-                this.processDialogueQueue();
-            }, 1500); // 1.5 second pause between dialogues
-        });
-    }
-
-    // Clear dialogue queue (use when scene changes)
-    clearDialogueQueue() {
-        this.dialogueQueue = [];
-        this.isProcessingQueue = false;
-        this.stopTypewriter();
-
-        // Remove speaking class from all advisors
-        const panelIds = ['advisor-panel-banks', 'advisor-panel-ivy', 'advisor-panel-engineer'];
-        panelIds.forEach(id => {
-            const panel = document.getElementById(id);
-            if (panel) panel.classList.remove('speaking');
-        });
-
-        // Clear all dialogue texts
-        const dialogueIds = ['dialogue-text-banks', 'dialogue-text-ivy', 'dialogue-text-engineer'];
-        dialogueIds.forEach(id => {
-            const text = document.getElementById(id);
-            if (text) {
-                text.textContent = '';
-                text.classList.remove('typing');
-            }
-        });
-    }
-
-    // Typewriter effect to a specific element
-    typewriterToElement(element, text, speed = 30, callback = null) {
-        this.stopTypewriter();
-
-        this.isTyping = true;
-        this.currentText = text;
-        this.currentIndex = 0;
-
-        const type = () => {
-            if (this.currentIndex < text.length) {
-                element.textContent += text.charAt(this.currentIndex);
-                this.currentIndex++;
-                this.typewriterTimeout = setTimeout(type, speed);
-            } else {
-                this.isTyping = false;
-                if (callback) callback();
-            }
-        };
-
-        type();
-    }
-
-    // Show advisor reaction based on scene/choice effects
-    reactToScene(sceneKey, scene) {
-        // Determine which advisor should speak based on the scene content
-        let advisorId = 'banks';
-        let dialogue = '';
-
-        const storyLower = scene.story ? scene.story.toLowerCase() : '';
-
-        // Score each advisor based on keyword matches
-        const scores = {
-            banks: 0,
-            ivy: 0,
-            engineer: 0
-        };
-
-        // Banks keywords (money, business, profit)
-        const banksKeywords = ['factory', 'fund', 'invest', 'money', 'profit', 'business', 'economic', 'tax', 'budget', 'cost', 'revenue', 'income', 'deal', 'contract'];
-        banksKeywords.forEach(keyword => {
-            if (storyLower.includes(keyword)) scores.banks += 2;
-        });
-
-        // Ivy keywords (environment, people, happiness)
-        const ivyKeywords = ['park', 'environment', 'happiness', 'citizen', 'people', 'community', 'green', 'nature', 'pollution', 'health', 'family', 'home', 'house', 'resident', 'neighborhood'];
-        ivyKeywords.forEach(keyword => {
-            if (storyLower.includes(keyword)) scores.ivy += 2;
-        });
-
-        // Engineer keywords (building, infrastructure, zoning)
-        const engineerKeywords = ['zone', 'build', 'grid', 'construct', 'infrastructure', 'road', 'bridge', 'plan', 'design', 'structure', 'location', 'place', 'adjacent', 'area'];
-        engineerKeywords.forEach(keyword => {
-            if (storyLower.includes(keyword)) scores.engineer += 2;
-        });
-
-        // Find highest scoring advisor
-        const maxScore = Math.max(scores.banks, scores.ivy, scores.engineer);
-
-        if (maxScore === 0) {
-            // No keywords matched - rotate based on scene key
-            const advisorIds = ['banks', 'ivy', 'engineer'];
-            const sceneNum = parseInt(sceneKey.replace(/\D/g, '')) || 0;
-            advisorId = advisorIds[sceneNum % 3];
-        } else if (scores.banks === maxScore) {
-            advisorId = 'banks';
-        } else if (scores.ivy === maxScore) {
-            advisorId = 'ivy';
-        } else {
-            advisorId = 'engineer';
-        }
-
-        dialogue = this.getRandomPhrase(advisorId, 'neutral');
-        this.showAdvisorInPanel(advisorId, dialogue);
-    }
-
-    // Get a random phrase from an advisor
-    getRandomPhrase(advisorId, sentiment) {
-        const advisor = this.advisors[advisorId];
-        if (!advisor) return '';
-        const phrases = advisor.catchphrases[sentiment];
-        return phrases[Math.floor(Math.random() * phrases.length)];
-    }
-
-    // React to a choice being made
-    reactToChoice(effects) {
-        const reaction = this.getMostRelevantAdvisor(effects);
-        this.showAdvisorInPanel(reaction.advisor.id, reaction.phrase, reaction.sentiment);
-    }
-
-    // React to a building being placed
-    reactToBuilding(buildingType) {
-        // Rotate advisor based on building type
-        let advisorId = 'engineer'; // Default for buildings
-
-        if (buildingType === 'factory' || buildingType === 'shop' || buildingType === 'office') {
-            advisorId = 'banks';
-        } else if (buildingType === 'park' || buildingType === 'house') {
-            advisorId = 'ivy';
-        }
-
-        const advisor = this.advisors[advisorId];
-        const dialogue = advisor.buildingDialogues[buildingType] || "Interesting placement, Mayor.";
-
-        this.showAdvisorInPanel(advisorId, dialogue);
-    }
-
-    // React to zone formation
-    reactToZone(zoneType) {
-        // Pick advisor based on zone type
-        let advisorId = 'engineer';
-
-        if (zoneType.includes('Commercial') || zoneType.includes('Industrial')) {
-            advisorId = 'banks';
-        } else if (zoneType.includes('Residential') || zoneType.includes('Park')) {
-            advisorId = 'ivy';
-        }
-
-        const advisor = this.advisors[advisorId];
-        const dialogues = advisor.zoneDialogues;
-        const dialogue = dialogues[Math.floor(Math.random() * dialogues.length)];
-
-        this.showAdvisorInPanel(advisorId, dialogue);
-    }
-
-    // React to achievement unlock
-    reactToAchievement(achievementName) {
-        // Rotate through advisors for achievements
-        const advisorIds = ['banks', 'ivy', 'engineer'];
-        const advisorId = advisorIds[Math.floor(Math.random() * advisorIds.length)];
-
-        const advisor = this.advisors[advisorId];
-        const dialogues = advisor.achievementDialogues;
-        const dialogue = dialogues[Math.floor(Math.random() * dialogues.length)];
-
-        this.showAdvisorInPanel(advisorId, dialogue);
-    }
-
-    // Show consequence text (advisor speaks in the panel separately)
-    showConsequenceWithAdvisor(consequence, effects) {
-        return `<p>${consequence}</p>`;
-    }
-
-    // Render scene narration with typewriter effect
-    renderNarration(containerElement, text, callback = null) {
-        const narratorBox = document.createElement('div');
-        narratorBox.className = 'narrator-box';
-        narratorBox.innerHTML = `
-            <div class="narrator-text" id="narrator-text"></div>
-            <div class="narrator-skip" onclick="narrativeManager.skipCurrentNarration()">
-                Click to skip
-            </div>
-        `;
-
-        containerElement.appendChild(narratorBox);
-
-        const textElement = document.getElementById('narrator-text');
-        this.typewriterEffect(textElement, text, 25, callback);
-    }
-
-    // Skip current narration
-    skipCurrentNarration() {
-        const textElement = document.getElementById('narrator-text');
-        if (textElement && this.isTyping) {
-            this.skipTypewriter(textElement, this.currentText);
-        }
-    }
-}
-
-// Create global narrative manager instance
-const narrativeManager = new NarrativeManager();
 
 // ==================== DIFFICULTY MODES ====================
 const difficultyModes = {
@@ -1476,7 +856,7 @@ function renderBuildingPalette() {
         card.className = `building-card ${!isUnlocked ? 'locked' : !canAfford ? 'disabled' : ''}`;
         card.setAttribute('data-building-id', building.id);
         card.setAttribute('draggable', canDrag ? 'true' : 'false');
-        
+
         if (!isUnlocked) {
             // Locked building
             card.innerHTML = `
@@ -1501,14 +881,14 @@ function renderBuildingPalette() {
                 </div>
                 <div class="building-effect">📊 ${building.effect}</div>
             `;
-            
+
             // Add drag event listeners if affordable
             if (canAfford) {
                 card.addEventListener('dragstart', handleBuildingDragStart);
                 card.addEventListener('dragend', handleBuildingDragEnd);
             }
         }
-        
+
         container.appendChild(card);
     });
 }
@@ -1522,16 +902,16 @@ function updateBuildingPalette() {
 function handleBuildingDragStart(e) {
     const buildingId = e.target.closest('.building-card').getAttribute('data-building-id');
     const building = buildingPalette.find(b => b.id === buildingId);
-    
+
     // Store for validation during dragover
     currentDraggedBuilding = building;
-    
+
     e.dataTransfer.effectAllowed = 'copy';
     e.dataTransfer.setData('buildingId', buildingId);
     e.dataTransfer.setData('buildingData', JSON.stringify(building));
-    
+
     e.target.closest('.building-card').classList.add('dragging');
-    
+
     // Create custom drag image (ghost)
     const dragGhost = e.target.closest('.building-card').cloneNode(true);
     dragGhost.style.position = 'absolute';
@@ -1540,16 +920,16 @@ function handleBuildingDragStart(e) {
     document.body.appendChild(dragGhost);
     e.dataTransfer.setDragImage(dragGhost, 50, 50);
     setTimeout(() => document.body.removeChild(dragGhost), 0);
-    
+
     console.log('🏗️ Started dragging:', buildingId, `Cost: $${building.cost}M`);
 }
 
 function handleBuildingDragEnd(e) {
     e.target.closest('.building-card').classList.remove('dragging');
-    
+
     // Clear drag tracking
     currentDraggedBuilding = null;
-    
+
     // Clear any drag-over states
     document.querySelectorAll('.grid-cell').forEach(cell => {
         cell.classList.remove('drag-over', 'invalid-drop');
@@ -1560,9 +940,9 @@ function handleBuildingDragEnd(e) {
 function renderCityGrid() {
     const container = document.getElementById('city-grid');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    
+
     const now = Date.now();
     const gridSize = getGridSize();
 
@@ -1641,7 +1021,7 @@ function renderCityGrid() {
             }
         });
     }
-    
+
     // Create cells based on current screen size
     for (let i = 0; i < gridSize.total; i++) {
         const cell = document.createElement('div');
@@ -1719,15 +1099,15 @@ function renderCityGrid() {
                 // Make buildings draggable for relocation (but NOT permanent features like City Hall)
                 // Check if this is a permanent feature that shouldn't be moved
                 // Features have type: 'feature' and featureId, buildings have type: building.id
-                const isPermanentFeature = building.type === 'feature' && building.featureId && 
-                    (building.featureId === 'city_hall' || 
-                     building.featureId === 'river' || 
-                     building.featureId === 'polluted_river' ||
-                     building.featureId === 'mountain' ||
-                     building.featureId === 'highway' ||
-                     building.featureId === 'protected_forest' ||
-                     building.featureId === 'flooded_area');
-                
+                const isPermanentFeature = building.type === 'feature' && building.featureId &&
+                    (building.featureId === 'city_hall' ||
+                        building.featureId === 'river' ||
+                        building.featureId === 'polluted_river' ||
+                        building.featureId === 'mountain' ||
+                        building.featureId === 'highway' ||
+                        building.featureId === 'protected_forest' ||
+                        building.featureId === 'flooded_area');
+
                 if (!isPermanentFeature) {
                     // Only make buildings draggable, not permanent features
                     cell.setAttribute('draggable', 'true');
@@ -1760,9 +1140,9 @@ function renderCityGrid() {
 
         container.appendChild(cell);
     }
-    
+
     console.log(`🏙️ City grid rendered (${gridSize.cols}x${gridSize.rows} = ${gridSize.total} cells)`);
-    
+
     // Add touch support for mobile devices
     if (isMobileDevice()) {
         initializeTouchSupport();
@@ -1782,63 +1162,63 @@ function initializeTouchSupport() {
         card.addEventListener('touchmove', handleTouchMove, { passive: false });
         card.addEventListener('touchend', handleTouchEnd, { passive: false });
     });
-    
+
     // Add touch events to grid cells
     document.querySelectorAll('.grid-cell').forEach(cell => {
         cell.addEventListener('touchstart', handleGridTouchStart, { passive: true });
         cell.addEventListener('touchmove', handleGridTouchMove, { passive: false });
         cell.addEventListener('touchend', handleGridTouchEnd, { passive: false });
     });
-    
+
     console.log('📱 Touch support initialized');
 }
 
 function handleTouchStart(e) {
     const card = e.target.closest('.building-card');
     if (!card) return;
-    
+
     const buildingId = card.getAttribute('data-building-id');
     const building = buildingPalette.find(b => b.id === buildingId);
-    
+
     if (!building) return;
-    
+
     touchDragData = {
         building: building,
         startX: e.touches[0].clientX,
         startY: e.touches[0].clientY,
         isDragging: false
     };
-    
+
     currentDraggedBuilding = building;
     card.classList.add('dragging');
-    
+
     // Light haptic feedback
     triggerHaptic('light');
-    
+
     console.log('📱 Touch drag started:', building.name);
 }
 
 function handleTouchMove(e) {
     if (!touchDragData) return;
-    
+
     e.preventDefault(); // Prevent scrolling while dragging
-    
+
     const touch = e.touches[0];
-    const moveDistance = Math.abs(touch.clientX - touchDragData.startX) + 
-                        Math.abs(touch.clientY - touchDragData.startY);
-    
+    const moveDistance = Math.abs(touch.clientX - touchDragData.startX) +
+        Math.abs(touch.clientY - touchDragData.startY);
+
     if (moveDistance > 10) {
         touchDragData.isDragging = true;
-        
+
         // Find element under touch
         const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
         const cell = elementUnderTouch?.closest('.grid-cell');
-        
+
         // Clear previous highlights
         document.querySelectorAll('.grid-cell').forEach(c => {
             c.classList.remove('drag-over', 'invalid-drop', 'adjacent-good', 'adjacent-bad');
         });
-        
+
         if (cell && !cell.classList.contains('occupied')) {
             const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
             const canAfford = gameState.cityFunds >= touchDragData.building.cost;
@@ -1922,14 +1302,14 @@ function handleTouchEnd(e) {
                 applyBuildingEffects(building);
                 placeBuilding(cellIndex, building);
                 applyAdjacencyEffects(cellIndex, building.id);
-                
+
                 // Haptic feedback for success
                 triggerHaptic('success');
-                
+
                 showCelebration(cell, building, true); // true = mobile mode (fewer particles)
                 updateStats();
                 updateEfficiencyDisplay();
-                
+
                 // Check for zones
                 const newZones = detectZones();
                 const previousZoneCount = gameState.detectedZones.length;
@@ -2006,19 +1386,19 @@ function handleGridTouchEnd(e) {
 function handleGridDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
-    
+
     const cell = e.target.closest('.grid-cell');
     if (!cell) return;
-    
+
     const cellIndex = parseInt(cell.getAttribute('data-cell-index'));
-    
+
     // Clear previous highlights
     document.querySelectorAll('.grid-cell').forEach(c => {
         if (c !== cell) {
             c.classList.remove('drag-over', 'invalid-drop', 'adjacent-good', 'adjacent-bad');
         }
     });
-    
+
     // Check if this is a valid drop
     const isOccupied = gameState.cityGrid[cellIndex] !== null;
     const canAfford = currentDraggedBuilding ? gameState.cityFunds >= currentDraggedBuilding.cost : true;
@@ -2036,17 +1416,17 @@ function handleGridDragOver(e) {
     } else {
         cell.classList.add('drag-over');
         cell.classList.remove('invalid-drop');
-        
+
         // Show adjacency preview if we have a building type
         if (currentDraggedBuilding) {
             const { beneficial, harmful } = getAdjacencyHighlights(cellIndex, currentDraggedBuilding.id);
-            
+
             // Highlight beneficial neighbors in green
             beneficial.forEach(adjIndex => {
                 const adjCell = document.querySelector(`[data-cell-index="${adjIndex}"]`);
                 if (adjCell) adjCell.classList.add('adjacent-good');
             });
-            
+
             // Highlight harmful neighbors in red
             harmful.forEach(adjIndex => {
                 const adjCell = document.querySelector(`[data-cell-index="${adjIndex}"]`);
@@ -2095,70 +1475,70 @@ function handleGridDrop(e) {
     if (isMoving) {
         // MOVE EXISTING BUILDING
         const sourceCellIndex = parseInt(e.dataTransfer.getData('sourceCellIndex'));
-        
+
         if (sourceCellIndex === cellIndex) {
             // Dropped on same cell, do nothing
             return;
         }
-        
+
         if (gameState.cityGrid[cellIndex]) {
             showToast('❌ Cannot move to occupied spot!', 'error');
             return;
         }
-        
+
         // Check relocation limit from difficulty
         if (gameState.relocationsUsed >= gameState.maxRelocations) {
             showToast(`❌ Relocation limit reached! (${gameState.maxRelocations} max)`, 'error');
             return;
         }
-        
+
         const RELOCATION_COST = 5;
         if (gameState.cityFunds < RELOCATION_COST) {
             showToast(`❌ Need $${RELOCATION_COST}M to relocate!`, 'error');
             return;
         }
-        
+
         const building = gameState.cityGrid[sourceCellIndex];
-        
+
         // Reverse old adjacency
         reverseAdjacencyEffects(sourceCellIndex, building.type);
-        
+
         // Remove from old position
         gameState.cityGrid[sourceCellIndex] = null;
-        
+
         // Deduct relocation cost
         gameState.cityFunds -= RELOCATION_COST;
-        
+
         // Increment relocation counter
         gameState.relocationsUsed++;
         gameState.achievementTracking.usedNoRelocations = false; // Track for achievement
-        
+
         // Place in new position
         gameState.cityGrid[cellIndex] = building;
         building.placedAt = Date.now(); // Update timestamp
-        
+
         // Apply new adjacency
         applyAdjacencyEffects(cellIndex, building.type);
-        
+
         // Update display
         renderCityGrid();
         updateStats();
         updateEfficiencyDisplay();
-        
+
         const relocationsLeft = gameState.maxRelocations - gameState.relocationsUsed;
         showToast(`🔄 ${building.name} relocated! -$${RELOCATION_COST}M (${relocationsLeft} left)`, 'info');
         console.log(`🔄 Moved ${building.name} from ${sourceCellIndex} to ${cellIndex}`);
-        
+
     } else {
         // PLACE NEW BUILDING
         const buildingId = e.dataTransfer.getData('buildingId');
         const building = buildingPalette.find(b => b.id === buildingId);
-        
+
         if (!building) {
             console.error('Invalid building data');
             return;
         }
-        
+
         // Validate drop
         if (gameState.cityGrid[cellIndex]) {
             showToast('❌ This spot is already occupied!', 'error');
@@ -2166,41 +1546,41 @@ function handleGridDrop(e) {
             setTimeout(() => cell.classList.remove('invalid-drop'), 500);
             return;
         }
-        
+
         if (gameState.cityFunds < building.cost) {
             showToast(`❌ Not enough funds! Need $${building.cost}M`, 'error');
             cell.classList.add('invalid-drop');
             setTimeout(() => cell.classList.remove('invalid-drop'), 500);
             return;
         }
-        
+
         // Successful placement!
         console.log('✅ Placing building:', building.name, 'at cell', cellIndex);
-        
+
         // Deduct cost
         gameState.cityFunds -= building.cost;
-        
+
         // Apply base building effects
         applyBuildingEffects(building);
-        
+
         // Place building in grid
         placeBuilding(cellIndex, building);
-        
+
         // Apply adjacency bonuses/penalties
         applyAdjacencyEffects(cellIndex, building.id);
-        
+
         // Show celebration
         showCelebration(cell, building, isMobileDevice());
-        
+
         // Haptic feedback on placement
         triggerHaptic('success');
-        
+
         // Update stats display
         updateStats();
-        
+
         // Update efficiency and check for zone bonuses
         updateEfficiencyDisplay();
-        
+
         // Check if new zones formed
         const newZones = detectZones();
         const previousZoneCount = gameState.detectedZones.length;
@@ -2240,7 +1620,7 @@ function handleGridDrop(e) {
             }
         }
     }
-    
+
     // Clean up drag states and adjacency highlights
     document.querySelectorAll('.grid-cell').forEach(c => {
         c.classList.remove('drag-over', 'invalid-drop', 'adjacent-good', 'adjacent-bad');
@@ -2253,12 +1633,12 @@ function placeBuilding(cellIndex, building) {
         console.error('Invalid cell index:', cellIndex);
         return false;
     }
-    
+
     if (gameState.cityGrid[cellIndex]) {
         console.warn('Cell already occupied:', cellIndex);
         return false;
     }
-    
+
     const buildingData = {
         type: building.id,
         icon: building.icon,
@@ -2267,9 +1647,9 @@ function placeBuilding(cellIndex, building) {
         cost: building.cost,
         effect: building.effect
     };
-    
+
     gameState.cityGrid[cellIndex] = buildingData;
-    
+
     // Add to history for undo (keep last 3)
     gameState.buildingHistory.push({
         cellIndex: cellIndex,
@@ -2281,12 +1661,12 @@ function placeBuilding(cellIndex, building) {
             specialInterest: gameState.specialInterest
         }
     });
-    
+
     // Keep only last 3 in history
     if (gameState.buildingHistory.length > 3) {
         gameState.buildingHistory.shift();
     }
-    
+
     updateUndoButton();
 
     // Play building place sound
@@ -2322,7 +1702,7 @@ function getAdjacentCells(cellIndex) {
     const row = Math.floor(cellIndex / gridSize.cols);
     const col = cellIndex % gridSize.cols;
     const adjacent = [];
-    
+
     // Up
     if (row > 0) adjacent.push(cellIndex - gridSize.cols);
     // Down
@@ -2331,7 +1711,7 @@ function getAdjacentCells(cellIndex) {
     if (col > 0) adjacent.push(cellIndex - 1);
     // Right
     if (col < gridSize.cols - 1) adjacent.push(cellIndex + 1);
-    
+
     return adjacent;
 }
 
@@ -2406,9 +1786,9 @@ function calculateAdjacency(cellIndex, buildingType) {
 // Apply adjacency effects to game state
 function applyAdjacencyEffects(cellIndex, buildingType) {
     const { bonuses, penalties, messages } = calculateAdjacency(cellIndex, buildingType);
-    
+
     let totalChanges = {};
-    
+
     // Apply bonuses
     Object.keys(bonuses).forEach(key => {
         if (key === 'happiness') gameState.happiness += bonuses[key];
@@ -2416,7 +1796,7 @@ function applyAdjacencyEffects(cellIndex, buildingType) {
         if (key === 'specialInterest') gameState.specialInterest += bonuses[key];
         totalChanges[key] = (totalChanges[key] || 0) + bonuses[key];
     });
-    
+
     // Apply penalties
     Object.keys(penalties).forEach(key => {
         if (key === 'happiness') gameState.happiness += penalties[key];
@@ -2424,17 +1804,17 @@ function applyAdjacencyEffects(cellIndex, buildingType) {
         if (key === 'specialInterest') gameState.specialInterest += penalties[key];
         totalChanges[key] = (totalChanges[key] || 0) + penalties[key];
     });
-    
+
     // Show messages
     if (messages.length > 0) {
         messages.forEach(msg => {
             showToast(msg, Object.keys(penalties).length > 0 ? 'error' : 'success');
         });
     }
-    
+
     // Update stats
     updateStats();
-    
+
     return totalChanges;
 }
 
@@ -2447,16 +1827,16 @@ function previewAdjacency(cellIndex, buildingType) {
 function getAdjacencyHighlights(cellIndex, buildingType) {
     const adjacentCells = getAdjacentCells(cellIndex);
     const rule = adjacencyRules[buildingType];
-    
+
     if (!rule) return { beneficial: [], harmful: [] };
-    
+
     let beneficial = [];
     let harmful = [];
-    
+
     adjacentCells.forEach(adjIndex => {
         const neighbor = gameState.cityGrid[adjIndex];
         if (!neighbor) return;
-        
+
         if (rule.near && rule.near.includes(neighbor.type)) {
             if (rule.bonus) {
                 beneficial.push(adjIndex);
@@ -2466,7 +1846,7 @@ function getAdjacencyHighlights(cellIndex, buildingType) {
             }
         }
     });
-    
+
     return { beneficial, harmful };
 }
 
@@ -2479,9 +1859,9 @@ function applyBuildingEffects(building) {
         'park': { happiness: 8 },
         'office': { specialInterest: 8 }
     };
-    
+
     const buildingEffects = effects[building.id] || {};
-    
+
     if (buildingEffects.happiness) {
         gameState.happiness += buildingEffects.happiness;
         console.log(`😊 Happiness ${buildingEffects.happiness > 0 ? '+' : ''}${buildingEffects.happiness}`);
@@ -2551,20 +1931,20 @@ function repositionToasts() {
 function showCelebration(cell, building, isMobile = false) {
     // Reduce particles on mobile for performance
     const particleCount = isMobile ? 4 : 8;
-    
+
     // Create sparkle particles
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'celebration-particle';
         particle.textContent = '✨';
-        
+
         const rect = cell.getBoundingClientRect();
         particle.style.left = rect.left + rect.width / 2 + 'px';
         particle.style.top = rect.top + rect.height / 2 + 'px';
         particle.style.setProperty('--angle', (i * (360 / particleCount)) + 'deg');
-        
+
         document.body.appendChild(particle);
-        
+
         // Remove after animation
         setTimeout(() => {
             if (document.body.contains(particle)) {
@@ -2572,7 +1952,7 @@ function showCelebration(cell, building, isMobile = false) {
             }
         }, 1000);
     }
-    
+
     // Show success toast
     showToast(`✅ ${building.name} placed! -$${building.cost}M`, 'success');
 }
@@ -2711,16 +2091,16 @@ let selectedCellIndex = null;
 function openActionMenu(cellIndex) {
     const building = gameState.cityGrid[cellIndex];
     if (!building) return;
-    
+
     selectedCellIndex = cellIndex;
-    
+
     const menu = document.getElementById('action-menu');
     const title = document.getElementById('action-menu-title');
     const info = document.getElementById('action-menu-info');
-    
+
     const timePlaced = Math.floor((Date.now() - building.placedAt) / 1000);
     const refund = Math.floor(building.cost / 2);
-    
+
     title.textContent = `${building.icon} ${building.name}`;
     info.innerHTML = `
         <strong>Effect:</strong> ${building.effect}<br>
@@ -2728,7 +2108,7 @@ function openActionMenu(cellIndex) {
         <strong>Refund Value:</strong> $${refund}M (50%)<br>
         <strong>Time Placed:</strong> ${timePlaced}s ago
     `;
-    
+
     menu.style.display = 'flex';
     console.log('📋 Action menu opened for cell', cellIndex);
 }
@@ -2743,37 +2123,37 @@ function closeActionMenu() {
 // Sell building
 function sellBuilding() {
     if (selectedCellIndex === null) return;
-    
+
     const building = gameState.cityGrid[selectedCellIndex];
     if (!building) return;
-    
+
     const refund = Math.floor(building.cost / 2);
-    
+
     // Haptic feedback
     triggerHaptic('medium');
-    
+
     // Reverse building effects
     reverseBuildingEffects(building.type);
-    
+
     // Reverse adjacency effects
     reverseAdjacencyEffects(selectedCellIndex, building.type);
-    
+
     // Remove from grid
     removeBuilding(selectedCellIndex);
-    
+
     // Refund 50%
     gameState.cityFunds += refund;
-    
+
     // Update stats
     updateStats();
     updateEfficiencyDisplay();
-    
+
     // Show notification
     showToast(`💰 ${building.name} sold for $${refund}M`, 'success');
-    
+
     // Close menu
     closeActionMenu();
-    
+
     console.log(`💵 Sold ${building.name}, refunded $${refund}M`);
 }
 
@@ -2786,9 +2166,9 @@ function reverseBuildingEffects(buildingType) {
         'park': { happiness: -8 },
         'office': { specialInterest: -8 }
     };
-    
+
     const reverseEffects = effects[buildingType] || {};
-    
+
     if (reverseEffects.happiness) gameState.happiness += reverseEffects.happiness;
     if (reverseEffects.cityFunds) gameState.cityFunds += reverseEffects.cityFunds;
     if (reverseEffects.specialInterest) gameState.specialInterest += reverseEffects.specialInterest;
@@ -2797,14 +2177,14 @@ function reverseBuildingEffects(buildingType) {
 // Reverse adjacency effects when removing a building
 function reverseAdjacencyEffects(cellIndex, buildingType) {
     const { bonuses, penalties } = calculateAdjacency(cellIndex, buildingType);
-    
+
     // Reverse bonuses (subtract them)
     Object.keys(bonuses).forEach(key => {
         if (key === 'happiness') gameState.happiness -= bonuses[key];
         if (key === 'cityFunds') gameState.cityFunds -= bonuses[key];
         if (key === 'specialInterest') gameState.specialInterest -= bonuses[key];
     });
-    
+
     // Reverse penalties (subtract them, which adds back)
     Object.keys(penalties).forEach(key => {
         if (key === 'happiness') gameState.happiness -= penalties[key];
@@ -2857,20 +2237,20 @@ function undoLastPlacement() {
         triggerHaptic('error');
         return;
     }
-    
+
     const lastAction = gameState.buildingHistory.pop();
-    
+
     // Haptic feedback
     triggerHaptic('medium');
-    
+
     // Remove building from grid
     gameState.cityGrid[lastAction.cellIndex] = null;
-    
+
     // Restore stats
     gameState.happiness = lastAction.previousStats.happiness;
     gameState.cityFunds = lastAction.previousStats.cityFunds;
     gameState.specialInterest = lastAction.previousStats.specialInterest;
-    
+
     // Decrease undo count
     gameState.undoCount--;
     gameState.achievementTracking.usedNoUndos = false; // Track for achievement
@@ -2889,7 +2269,7 @@ function undoLastPlacement() {
 function updateUndoButton() {
     const button = document.getElementById('undo-button');
     const countDisplay = document.getElementById('undo-count');
-    
+
     if (button && countDisplay) {
         countDisplay.textContent = `(${gameState.undoCount})`;
         button.disabled = gameState.buildingHistory.length === 0 || gameState.undoCount <= 0;
@@ -2901,7 +2281,7 @@ function updateUndoButton() {
 // Show unlock notification
 function showUnlockNotification(building) {
     showToast(`🔓 NEW BUILDING UNLOCKED: ${building.icon} ${building.name}!`, 'success');
-    
+
     // Find the card and add unlock animation
     setTimeout(() => {
         const card = document.querySelector(`[data-building-id="${building.id}"]`);
@@ -3023,7 +2403,7 @@ let draggedBuildingIndex = null;
 
 function handleOccupiedDragStart(e, cellIndex) {
     const building = gameState.cityGrid[cellIndex];
-    
+
     // Prevent dragging permanent features (City Hall, River, etc.)
     if (building && building.type === 'feature') {
         const permanentFeatures = ['city_hall', 'river', 'polluted_river', 'mountain', 'highway', 'protected_forest', 'flooded_area'];
@@ -3033,22 +2413,22 @@ function handleOccupiedDragStart(e, cellIndex) {
             return;
         }
     }
-    
+
     draggedBuildingIndex = cellIndex;
-    
+
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('moveBuilding', 'true');
     e.dataTransfer.setData('sourceCellIndex', cellIndex.toString());
-    
+
     e.target.classList.add('dragging');
-    
+
     console.log('🔄 Moving building from cell', cellIndex);
 }
 
 function handleOccupiedDragEnd(e) {
     e.target.classList.remove('dragging');
     draggedBuildingIndex = null;
-    
+
     // Clear highlights
     document.querySelectorAll('.grid-cell').forEach(cell => {
         cell.classList.remove('drag-over', 'invalid-drop', 'adjacent-good', 'adjacent-bad');
@@ -3061,14 +2441,14 @@ function handleOccupiedDragEnd(e) {
 function detectZones() {
     const zones = [];
     const buildingCounts = {};
-    
+
     // Count each building type
     gameState.cityGrid.forEach(cell => {
         if (cell) {
             buildingCounts[cell.type] = (buildingCounts[cell.type] || 0) + 1;
         }
     });
-    
+
     // Check for zone formations
     if (buildingCounts.house >= 3) {
         zones.push({
@@ -3079,7 +2459,7 @@ function detectZones() {
             icon: '🏘️'
         });
     }
-    
+
     if (buildingCounts.shop >= 3) {
         zones.push({
             type: 'commercial',
@@ -3089,7 +2469,7 @@ function detectZones() {
             icon: '🛍️'
         });
     }
-    
+
     if (buildingCounts.factory >= 3) {
         zones.push({
             type: 'industrial',
@@ -3099,7 +2479,7 @@ function detectZones() {
             icon: '🏭'
         });
     }
-    
+
     // Check for mixed-use (balanced mix)
     const buildingTypes = Object.keys(buildingCounts).length;
     const totalBuildings = Object.values(buildingCounts).reduce((a, b) => a + b, 0);
@@ -3115,7 +2495,7 @@ function detectZones() {
             });
         }
     }
-    
+
     return zones;
 }
 
@@ -3123,13 +2503,13 @@ function detectZones() {
 function calculateEfficiency() {
     let score = 0;
     const totalBuildings = gameState.cityGrid.filter(c => c !== null).length;
-    
+
     if (totalBuildings === 0) return 0;
-    
+
     // Zone formation: +10 per proper zone
     const zones = detectZones();
     score += zones.length * 10;
-    
+
     // Count building types
     const buildingCounts = {};
     gameState.cityGrid.forEach(cell => {
@@ -3137,21 +2517,21 @@ function calculateEfficiency() {
             buildingCounts[cell.type] = (buildingCounts[cell.type] || 0) + 1;
         }
     });
-    
+
     // Balanced placement: +20 if even distribution
     const buildingTypes = Object.keys(buildingCounts);
     if (buildingTypes.length >= 3) {
         const counts = Object.values(buildingCounts);
         const avg = counts.reduce((a, b) => a + b, 0) / counts.length;
         const variance = counts.reduce((sum, c) => sum + Math.pow(c - avg, 2), 0) / counts.length;
-        
+
         if (variance < 4) { // Low variance = balanced
             score += 20;
         } else if (variance < 9) {
             score += 10;
         }
     }
-    
+
     // No isolated buildings: +15 if all buildings have neighbors
     let isolatedCount = 0;
     gameState.cityGrid.forEach((cell, index) => {
@@ -3161,17 +2541,17 @@ function calculateEfficiency() {
             if (!hasNeighbor) isolatedCount++;
         }
     });
-    
+
     if (isolatedCount === 0 && totalBuildings > 0) {
         score += 15;
     } else if (isolatedCount <= 2) {
         score += 8;
     }
-    
+
     // Green spaces: +5 per park (max 25)
     const parkCount = buildingCounts.park || 0;
     score += Math.min(parkCount * 5, 25);
-    
+
     // Cap at 100
     return Math.min(score, 100);
 }
@@ -3180,7 +2560,7 @@ function calculateEfficiency() {
 function applyZoneBonuses() {
     const zones = detectZones();
     gameState.detectedZones = zones;
-    
+
     zones.forEach(zone => {
         if (zone.bonus.happiness) {
             gameState.happiness += zone.bonus.happiness;
@@ -3201,14 +2581,14 @@ function applyZoneBonuses() {
 function updateEfficiencyDisplay() {
     const efficiency = calculateEfficiency();
     gameState.planningEfficiency = efficiency;
-    
+
     const display = document.getElementById('efficiency-display');
     const valueElement = document.getElementById('efficiency-value');
-    
+
     if (valueElement) {
         valueElement.textContent = efficiency + '%';
     }
-    
+
     if (display) {
         display.classList.remove('excellent', 'good', 'poor');
         if (efficiency >= 70) {
@@ -3219,7 +2599,7 @@ function updateEfficiencyDisplay() {
             display.classList.add('poor');
         }
     }
-    
+
     // Check achievements
     checkAchievements();
 }
@@ -3525,15 +2905,15 @@ function startTimer() {
 
 function stopTimer() {
     gameState.isTimerRunning = false;
-    
+
     if (gameState.timerInterval) {
         clearInterval(gameState.timerInterval);
         gameState.timerInterval = null;
     }
-    
+
     const timerContainer = document.getElementById('timer-container');
     timerContainer.classList.remove('active', 'calm', 'warning', 'danger', 'critical');
-    
+
     // Clean up bar classes too
     const barFill = document.getElementById('timer-progress');
     if (barFill) {
@@ -3552,11 +2932,11 @@ function pauseTimer() {
 function resumeTimer() {
     if (!gameState.isTimerRunning && gameState.timerSeconds > 0) {
         gameState.isTimerRunning = true;
-        
+
         gameState.timerInterval = setInterval(() => {
             gameState.timerSeconds--;
             updateTimerDisplay();
-            
+
             if (gameState.timerSeconds <= 0) {
                 handleTimeout();
             }
@@ -3568,24 +2948,24 @@ function updateTimerDisplay() {
     const secondsElement = document.getElementById('timer-seconds');
     const barFill = document.getElementById('timer-progress');
     const timerContainer = document.getElementById('timer-container');
-    
+
     // Update seconds text
     if (secondsElement) secondsElement.textContent = gameState.timerSeconds;
-    
+
     // Calculate percentage for progress bar (dynamic based on starting time)
     const percentage = (gameState.timerSeconds / gameState.currentDecisionTime) * 100;
     if (barFill) barFill.style.width = percentage + '%';
-    
+
     // Remove all state classes
     timerContainer.classList.remove('calm', 'warning', 'danger', 'critical');
     if (barFill) barFill.classList.remove('warning', 'danger', 'critical');
-    
+
     // Apply state-based classes and audio hooks (percentage-based for variable timer)
     const percentRemaining = percentage;
     const criticalThreshold = gameState.currentDecisionTime * 0.1; // Last 10% of time
     const dangerThreshold = gameState.currentDecisionTime * 0.2;   // Last 20% of time
     const warningThreshold = gameState.currentDecisionTime * 0.5;  // Last 50% of time
-    
+
     if (gameState.timerSeconds <= criticalThreshold) {
         // Critical: Last 10% - SHAKE + URGENT
         timerContainer.classList.add('critical');
@@ -3635,7 +3015,7 @@ function updateTimerDisplay() {
         // Calm: First 50% - GREEN
         timerContainer.classList.add('calm');
     }
-    
+
     // Tick sound for last 10% (optional)
     if (gameState.timerSeconds <= criticalThreshold && gameState.timerSeconds > 0) {
         timerContainer.setAttribute('data-sound-trigger', 'tick');
@@ -3779,20 +3159,20 @@ const gameData = {
         title: "Addressing Joblessness",
         story: `<p>Without the factory, unemployment remains high in Tiger Central. People are struggling to make ends meet.</p><p>You need to find a way to help unemployed citizens. What's your approach?</p>`,
         choices: [
-            { 
-                text: "Raise taxes for unemployment benefits", 
-                icon: "💰", 
-                effects: { happiness: -15, cityFunds: 10, specialInterest: -5, personalProfit: 0 }, 
-                next: 'choice3B1', 
+            {
+                text: "Raise taxes for unemployment benefits",
+                icon: "💰",
+                effects: { happiness: -15, cityFunds: 10, specialInterest: -5, personalProfit: 0 },
+                next: 'choice3B1',
                 consequence: "Unemployment benefits help struggling families, but working citizens feel the tax burden.",
                 unlocks: ['shop'] // Economic focus unlocks shops
             },
-            { 
-                text: "Hire people for infrastructure projects", 
-                icon: "🛠️", 
-                effects: { happiness: 10, cityFunds: -15, specialInterest: 5, personalProfit: 0 }, 
-                next: 'choice3B2', 
-                consequence: "New infrastructure jobs are created. Roads and bridges are being renovated.", 
+            {
+                text: "Hire people for infrastructure projects",
+                icon: "🛠️",
+                effects: { happiness: 10, cityFunds: -15, specialInterest: 5, personalProfit: 0 },
+                next: 'choice3B2',
+                consequence: "New infrastructure jobs are created. Roads and bridges are being renovated.",
                 building: 'office',
                 unlocks: ['office'] // Infrastructure unlocks offices
             }
@@ -4250,7 +3630,7 @@ function updateStats() {
     const fundsEl = document.getElementById('cityFunds');
     const interestEl = document.getElementById('specialInterest');
     const decisionsEl = document.getElementById('decisionsMade');
-    
+
     if (happinessEl) happinessEl.textContent = gameState.happiness;
     if (fundsEl) fundsEl.textContent = gameState.cityFunds;
     if (interestEl) interestEl.textContent = gameState.specialInterest;
@@ -4313,7 +3693,7 @@ function renderScene(sceneKey) {
     // Reset choice flag for new scene
     gameState.choiceMade = false;
     gameState.timerExpired = false;
-    
+
     // Update quiz title based on scene
     if (quizTitle) {
         if (sceneKey === 'intro') {
@@ -4521,10 +3901,10 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
     let timeBankAdjustment = 0;
     if (choice.effects) {
         // Calculate total impact (positive or negative)
-        const totalImpact = (choice.effects.happiness || 0) + 
-                           (choice.effects.cityFunds || 0) + 
-                           (choice.effects.specialInterest || 0);
-        
+        const totalImpact = (choice.effects.happiness || 0) +
+            (choice.effects.cityFunds || 0) +
+            (choice.effects.specialInterest || 0);
+
         if (totalImpact > 5) {
             // Good choice: +10 seconds
             timeBankAdjustment = 10;
@@ -4534,7 +3914,7 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
             timeBankAdjustment = -5;
             gameState.timeBankSeconds -= 5;
         }
-        
+
         applyEffects(choice.effects);
 
         // Have advisor react to the choice
@@ -5022,15 +4402,15 @@ function renderEnding() {
                     </div>
                     <div class="achievement-grid">
                         ${allAchievements.map(achievement => {
-                            const isEarned = gameState.achievements.includes(achievement.id);
-                            return `
+        const isEarned = gameState.achievements.includes(achievement.id);
+        return `
                                 <div class="achievement-item ${isEarned ? 'earned' : 'locked'}">
                                     <img src="${achievement.image}" alt="${achievement.name}" class="achievement-image">
                                     <div class="achievement-name">${achievement.name}</div>
                                     <div class="achievement-desc">${achievement.description}</div>
                                 </div>
                             `;
-                        }).join('')}
+    }).join('')}
                     </div>
                 </div>
             </div>
@@ -5319,15 +4699,15 @@ function showPlayerDetails(index) {
                 <h4>🏆 Achievements Earned (${validAchievements.length})</h4>
                 <div class="player-achievements-grid">
                     ${validAchievements.map(id => {
-                        const def = achievementDefinitions[id];
-                        return `
+            const def = achievementDefinitions[id];
+            return `
                             <div class="player-achievement-card">
                                 <img src="${def.image}" alt="${def.name}" class="player-achievement-image">
                                 <div class="player-achievement-name">${def.name}</div>
                                 <div class="player-achievement-desc">${def.description}</div>
                             </div>
                         `;
-                    }).join('')}
+        }).join('')}
                 </div>
             </div>
         `;
@@ -5449,7 +4829,7 @@ function showPlayerDetails(index) {
     // Add touch support for achievement cards
     const achievementCards = modalContainer.querySelectorAll('.player-achievement-card');
     achievementCards.forEach(card => {
-        card.addEventListener('click', function(e) {
+        card.addEventListener('click', function (e) {
             e.stopPropagation();
             // Toggle touched class for this card
             const wasTouched = this.classList.contains('touched');
@@ -5570,7 +4950,7 @@ function showTutorialStep(stepIndex) {
         // Small delay to ensure DOM has rendered and CSS has applied
         setTimeout(() => {
             const element = document.getElementById(step.highlightElement) ||
-                           document.querySelector(`.${step.highlightElement}`);
+                document.querySelector(`.${step.highlightElement}`);
 
             if (element) {
                 // Force a reflow to ensure accurate measurements
@@ -5609,7 +4989,7 @@ function showTutorialStep(stepIndex) {
 
 function nextTutorialStep() {
     currentTutorialStep++;
-    
+
     if (currentTutorialStep >= tutorialSteps.length) {
         completeTutorial();
     } else {
