@@ -2219,21 +2219,51 @@ body {
     text-transform: capitalize;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+    .player-details-modal {
+        padding: 10px;
+    }
+
     .player-details-content {
         max-height: 90vh;
+        border-radius: 16px;
+    }
+
+    .close-modal-btn {
+        top: 10px;
+        right: 10px;
+        width: 36px;
+        height: 36px;
+        font-size: 1.5em;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        z-index: 10;
     }
 
     .player-details-header {
         padding: 20px;
+        padding-top: 45px;
+        border-radius: 16px 16px 0 0;
     }
 
     .player-details-header h2 {
-        font-size: 1.4em;
+        font-size: 1.3em;
+    }
+
+    .player-rank {
+        font-size: 1em;
     }
 
     .player-final-score {
-        font-size: 2em;
+        font-size: 1.8em;
+    }
+
+    .player-detail-section {
+        padding: 15px;
+    }
+
+    .player-detail-section h4 {
+        font-size: 1em;
     }
 
     .player-stats-grid {
@@ -2242,7 +2272,66 @@ body {
     }
 
     .player-stat-item {
-        padding: 10px;
+        padding: 10px 8px;
+    }
+
+    .player-stat-item .stat-icon {
+        font-size: 1.2em;
+    }
+
+    .player-stat-item .stat-label {
+        font-size: 0.65em;
+    }
+
+    .player-stat-item .stat-value {
+        font-size: 0.9em;
+    }
+
+    .player-achievements-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .player-achievement-image {
+        width: 70px;
+        height: 70px;
+    }
+
+    .player-achievement-name {
+        font-size: 0.75em;
+    }
+
+    .player-detail-footer {
+        padding: 12px 15px;
+        border-radius: 0 0 16px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-details-content {
+        max-height: 92vh;
+    }
+
+    .player-details-header {
+        padding: 15px;
+        padding-top: 40px;
+    }
+
+    .player-details-header h2 {
+        font-size: 1.2em;
+    }
+
+    .player-final-score {
+        font-size: 1.6em;
+    }
+
+    .player-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+
+    .player-stat-item {
+        padding: 8px 6px;
     }
 
     .player-achievements-grid {
@@ -3415,6 +3504,28 @@ body {
         transform: scale(0.95);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     }
+
+    /* Ensure building text is visible on mobile */
+    .building-card .building-name {
+        font-size: 0.95em;
+        color: #fff;
+        display: block;
+    }
+
+    .building-card .building-cost {
+        font-size: 0.8em;
+        display: inline-block;
+    }
+
+    .building-card .building-effect {
+        font-size: 0.75em;
+        display: block;
+        margin-top: 5px;
+    }
+
+    .building-card .building-icon {
+        font-size: 2em;
+    }
     
     /* Adjust placement message for tablets */
     .placement-message {
@@ -3677,22 +3788,36 @@ body {
     }
 
     .building-card {
-        min-width: 170px;
-        max-width: 190px;
+        min-width: 160px;
+        max-width: 180px;
         min-height: fit-content;
         padding: 8px;
     }
 
     .building-card .building-icon {
-        font-size: 1.8em;
+        font-size: 1.6em;
     }
 
     .building-card .building-name {
-        font-size: 1em;
+        font-size: 0.85em;
+        color: #fff;
+        display: block;
     }
 
     .building-card .building-cost {
-        font-size: 0.9em;
+        font-size: 0.75em;
+        display: inline-block;
+    }
+
+    .building-card .building-effect {
+        font-size: 0.7em;
+        display: block;
+        margin-top: 4px;
+        padding: 4px 6px;
+    }
+
+    .building-card .building-info {
+        display: block;
     }
 
     .choice-card {
