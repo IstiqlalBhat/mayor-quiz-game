@@ -54,19 +54,639 @@ function initializeTooltips() {
             tooltip.textContent = e.target.getAttribute('data-tooltip');
             tooltip.style.opacity = '1';
         });
-        
+
         element.addEventListener('mousemove', (e) => {
             const tooltip = document.getElementById('tooltip');
             tooltip.style.left = e.pageX + 15 + 'px';
             tooltip.style.top = e.pageY + 15 + 'px';
         });
-        
+
         element.addEventListener('mouseleave', () => {
             const tooltip = document.getElementById('tooltip');
             tooltip.style.opacity = '0';
         });
     });
 }
+
+// ==================== NARRATIVE MANAGER ====================
+class NarrativeManager {
+    constructor() {
+        // Advisor definitions with their specialties and personalities
+        this.advisors = {
+            banks: {
+                id: 'banks',
+                name: 'Mr. Banks',
+                title: 'Financial Advisor',
+                portrait: 'assets/characters/banks.png',
+                specialty: ['cityFunds', 'personalProfit'],
+                color: '#ffd700',
+                personality: 'capitalist',
+                catchphrases: {
+                    positive: [
+                        "Excellent! The city's coffers will overflow!",
+                        "A sound investment, Mayor!",
+                        "The markets will love this decision!",
+                        "Money well spent indeed!"
+                    ],
+                    negative: [
+                        "This will hurt our bottom line...",
+                        "The investors won't be pleased...",
+                        "Think of the economy, Mayor!",
+                        "We're hemorrhaging funds here!"
+                    ],
+                    neutral: [
+                        "The financial impact is acceptable.",
+                        "Neither gain nor loss. Proceed carefully.",
+                        "The numbers are balanced, for now."
+                    ]
+                },
+                buildingDialogues: {
+                    house: "Residential investment! Property taxes will flow nicely.",
+                    shop: "A commercial venture! Revenue streams are looking good.",
+                    factory: "Industrial power! This will boost our economic output significantly.",
+                    park: "Parks don't generate revenue, but happy citizens spend more...",
+                    office: "Corporate real estate! The business district expands."
+                },
+                zoneDialogues: [
+                    "A commercial district forms! Property values are soaring!",
+                    "This zone will attract major investors to our city.",
+                    "Excellent clustering! Economic synergy at its finest."
+                ],
+                achievementDialogues: [
+                    "Achievement unlocked! This will look great in the annual report.",
+                    "Impressive milestone! The shareholders will be pleased.",
+                    "Success breeds success, Mayor. Keep the profits rolling!"
+                ]
+            },
+            ivy: {
+                id: 'ivy',
+                name: 'Ivy Green',
+                title: 'Environmental Activist',
+                portrait: 'assets/characters/ivygreen.png',
+                specialty: ['happiness', 'environment'],
+                color: '#4caf50',
+                personality: 'activist',
+                catchphrases: {
+                    positive: [
+                        "The people will thrive! Nature approves!",
+                        "A green choice for a brighter future!",
+                        "The community thanks you, Mayor!",
+                        "This brings joy to our citizens!"
+                    ],
+                    negative: [
+                        "The people deserve better than this!",
+                        "Think of the children, Mayor!",
+                        "Our green spaces weep today...",
+                        "Happiness cannot be sacrificed for profit!"
+                    ],
+                    neutral: [
+                        "The citizens are watching...",
+                        "A cautious step. The people wait.",
+                        "Neither celebration nor protest today."
+                    ]
+                },
+                buildingDialogues: {
+                    house: "New homes for families! The community grows stronger.",
+                    shop: "Local businesses bring life to our neighborhoods!",
+                    factory: "I hope the pollution controls are adequate...",
+                    park: "Beautiful! Green spaces heal the soul of our city.",
+                    office: "More jobs, but let's not forget work-life balance."
+                },
+                zoneDialogues: [
+                    "A thriving neighborhood emerges! Community spirit is high!",
+                    "People are coming together. This is what cities are about!",
+                    "The citizens will love this development!"
+                ],
+                achievementDialogues: [
+                    "The people celebrate! You've made them proud, Mayor.",
+                    "This achievement shows you care about our community!",
+                    "Wonderful progress! The citizens are grateful."
+                ]
+            },
+            engineer: {
+                id: 'engineer',
+                name: 'Chief Builder',
+                title: 'City Engineer',
+                portrait: 'assets/characters/engineer.png',
+                specialty: ['specialInterest', 'zoning'],
+                color: '#2196f3',
+                personality: 'engineer',
+                catchphrases: {
+                    positive: [
+                        "Structurally sound decision, Mayor!",
+                        "The infrastructure will support this!",
+                        "Excellent zoning potential here!",
+                        "The city grid approves!"
+                    ],
+                    negative: [
+                        "The zoning implications concern me...",
+                        "This disrupts our urban planning!",
+                        "The infrastructure cannot sustain this!",
+                        "Special interests are not aligned..."
+                    ],
+                    neutral: [
+                        "The blueprints are unchanged.",
+                        "A standard procedure. Nothing more.",
+                        "Engineering sees no immediate impact."
+                    ]
+                },
+                buildingDialogues: {
+                    house: "Residential zone expanded. Utility connections established.",
+                    shop: "Commercial structure in place. Good traffic flow here.",
+                    factory: "Heavy industry requires solid foundations. Well built!",
+                    park: "Green infrastructure improves drainage and air quality.",
+                    office: "High-rise potential in this location. Smart placement."
+                },
+                zoneDialogues: [
+                    "Zone synergy detected! Efficiency rating climbing!",
+                    "Urban planning at its finest! The grid is optimized.",
+                    "Infrastructure networks are strengthening!"
+                ],
+                achievementDialogues: [
+                    "Engineering milestone achieved! The blueprints don't lie.",
+                    "Structural excellence recognized! Well planned, Mayor.",
+                    "Achievement logged! City efficiency is improving."
+                ]
+            }
+        };
+
+        // Typewriter state
+        this.typewriterTimeout = null;
+        this.isTyping = false;
+        this.currentText = '';
+        this.currentIndex = 0;
+
+        // Dialogue queue system
+        this.dialogueQueue = [];
+        this.isProcessingQueue = false;
+
+        // Floating text queue
+        this.floatingTextQueue = [];
+    }
+
+    // Get advisor reaction based on choice effects
+    getAdvisorReaction(advisor, effects) {
+        let sentiment = 'neutral';
+        let relevance = 0;
+
+        // Calculate relevance and sentiment based on advisor specialty
+        if (advisor.id === 'banks') {
+            const fundsImpact = (effects.cityFunds || 0) + (effects.personalProfit || 0) * 2;
+            relevance = Math.abs(fundsImpact);
+            if (fundsImpact > 5) sentiment = 'positive';
+            else if (fundsImpact < -5) sentiment = 'negative';
+        } else if (advisor.id === 'ivy') {
+            const happinessImpact = effects.happiness || 0;
+            relevance = Math.abs(happinessImpact);
+            if (happinessImpact > 5) sentiment = 'positive';
+            else if (happinessImpact < -5) sentiment = 'negative';
+        } else if (advisor.id === 'engineer') {
+            const interestImpact = effects.specialInterest || 0;
+            relevance = Math.abs(interestImpact);
+            if (interestImpact > 5) sentiment = 'positive';
+            else if (interestImpact < -5) sentiment = 'negative';
+        }
+
+        // Get random catchphrase
+        const phrases = advisor.catchphrases[sentiment];
+        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+
+        return {
+            advisor: advisor,
+            sentiment: sentiment,
+            relevance: relevance,
+            phrase: phrase
+        };
+    }
+
+    // Get the most relevant advisor for a choice
+    getMostRelevantAdvisor(effects) {
+        const reactions = Object.values(this.advisors).map(advisor =>
+            this.getAdvisorReaction(advisor, effects)
+        );
+
+        // Sort by relevance
+        reactions.sort((a, b) => b.relevance - a.relevance);
+
+        return reactions[0];
+    }
+
+    // Create advisor portrait HTML
+    createAdvisorPortrait(advisor, sentiment = 'neutral', size = 'medium') {
+        const sizes = {
+            small: 40,
+            medium: 60,
+            large: 80
+        };
+        const px = sizes[size] || sizes.medium;
+
+        const sentimentClass = sentiment !== 'neutral' ? `advisor-${sentiment}` : '';
+
+        return `
+            <div class="advisor-portrait ${sentimentClass}" style="width: ${px}px; height: ${px}px;">
+                <img src="${advisor.portrait}" alt="${advisor.name}"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="advisor-fallback" style="display: none; background: ${advisor.color};">
+                    ${advisor.name.charAt(0)}
+                </div>
+                <div class="advisor-indicator" style="background: ${
+                    sentiment === 'positive' ? '#4caf50' :
+                    sentiment === 'negative' ? '#f44336' :
+                    '#9e9e9e'
+                };"></div>
+            </div>
+        `;
+    }
+
+    // Create speech bubble with advisor
+    createAdvisorSpeech(advisorId, text, sentiment = 'neutral') {
+        const advisor = this.advisors[advisorId];
+        if (!advisor) return '';
+
+        return `
+            <div class="advisor-speech-container">
+                ${this.createAdvisorPortrait(advisor, sentiment, 'large')}
+                <div class="advisor-speech-bubble">
+                    <div class="advisor-name" style="color: ${advisor.color};">${advisor.name}</div>
+                    <div class="advisor-title">${advisor.title}</div>
+                    <div class="advisor-dialogue" id="advisor-dialogue-${advisorId}">
+                        ${text}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Typewriter effect for text
+    typewriterEffect(element, text, speed = 30, callback = null) {
+        // Clear any existing typewriter
+        this.stopTypewriter();
+
+        this.isTyping = true;
+        this.currentText = text;
+        this.currentIndex = 0;
+
+        // Strip HTML tags for typing, we'll add them back
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = text;
+        const plainText = tempDiv.textContent || tempDiv.innerText;
+
+        element.innerHTML = '';
+
+        const type = () => {
+            if (this.currentIndex < plainText.length) {
+                element.textContent += plainText.charAt(this.currentIndex);
+                this.currentIndex++;
+                this.typewriterTimeout = setTimeout(type, speed);
+            } else {
+                this.isTyping = false;
+                // Restore original HTML after typing
+                element.innerHTML = text;
+                if (callback) callback();
+            }
+        };
+
+        type();
+    }
+
+    // Stop typewriter effect
+    stopTypewriter() {
+        if (this.typewriterTimeout) {
+            clearTimeout(this.typewriterTimeout);
+            this.typewriterTimeout = null;
+        }
+        this.isTyping = false;
+    }
+
+    // Skip to end of typewriter
+    skipTypewriter(element, text) {
+        this.stopTypewriter();
+        element.innerHTML = text;
+    }
+
+    // Create floating text effect
+    createFloatingText(text, x, y, color = '#ffffff', duration = 2000) {
+        const floatingText = document.createElement('div');
+        floatingText.className = 'floating-text';
+        floatingText.textContent = text;
+        floatingText.style.cssText = `
+            position: fixed;
+            left: ${x}px;
+            top: ${y}px;
+            color: ${color};
+            font-weight: bold;
+            font-size: 1.2em;
+            pointer-events: none;
+            z-index: 10000;
+            animation: floatUp ${duration}ms ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        `;
+
+        document.body.appendChild(floatingText);
+
+        setTimeout(() => {
+            floatingText.remove();
+        }, duration);
+
+        return floatingText;
+    }
+
+    // Show stat change with floating text
+    showStatChange(statName, value, element) {
+        if (!element || value === 0) return;
+
+        const rect = element.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top;
+
+        const color = value > 0 ? '#4caf50' : '#f44336';
+        const prefix = value > 0 ? '+' : '';
+        const text = `${prefix}${value}`;
+
+        this.createFloatingText(text, x, y, color);
+    }
+
+    // Generate choice card (without advisor reactions - they appear in the panel)
+    generateChoiceCardWithAdvisors(choice, index, sceneKey) {
+        return `
+            <div class="choice-card" onclick="makeChoice('${sceneKey}', ${index})">
+                <span class="choice-icon">${choice.icon}</span>
+                <div class="choice-text">${choice.text}</div>
+            </div>
+        `;
+    }
+
+    // Show advisor in the dedicated panel with typewriter dialogue
+    showAdvisorInPanel(advisorId, dialogue, sentiment = 'neutral') {
+        const advisor = this.advisors[advisorId];
+        if (!advisor) return;
+
+        // Add to queue instead of showing immediately
+        this.dialogueQueue.push({ advisorId, dialogue, sentiment });
+
+        // Process queue if not already processing
+        if (!this.isProcessingQueue) {
+            this.processDialogueQueue();
+        }
+    }
+
+    // Process dialogue queue one at a time
+    processDialogueQueue() {
+        if (this.dialogueQueue.length === 0) {
+            this.isProcessingQueue = false;
+            return;
+        }
+
+        this.isProcessingQueue = true;
+        const { advisorId, dialogue, sentiment } = this.dialogueQueue.shift();
+
+        // Map advisor IDs to panel IDs
+        const panelIdMap = {
+            'banks': 'advisor-panel-banks',
+            'ivy': 'advisor-panel-ivy',
+            'engineer': 'advisor-panel-engineer'
+        };
+
+        const dialogueIdMap = {
+            'banks': 'dialogue-text-banks',
+            'ivy': 'dialogue-text-ivy',
+            'engineer': 'dialogue-text-engineer'
+        };
+
+        // Remove speaking class from all advisors
+        Object.values(panelIdMap).forEach(id => {
+            const panel = document.getElementById(id);
+            if (panel) panel.classList.remove('speaking');
+        });
+
+        // Clear all dialogue texts
+        Object.values(dialogueIdMap).forEach(id => {
+            const text = document.getElementById(id);
+            if (text) {
+                text.textContent = '';
+                text.classList.remove('typing');
+            }
+        });
+
+        // Get the active advisor's elements
+        const panel = document.getElementById(panelIdMap[advisorId]);
+        const dialogueText = document.getElementById(dialogueIdMap[advisorId]);
+
+        if (!panel || !dialogueText) {
+            // Skip and process next
+            this.processDialogueQueue();
+            return;
+        }
+
+        // Add speaking class and start typewriter
+        panel.classList.add('speaking');
+        dialogueText.classList.add('typing');
+
+        // Typewriter effect for dialogue
+        this.typewriterToElement(dialogueText, dialogue, 25, () => {
+            dialogueText.classList.remove('typing');
+
+            // Wait a moment before processing next dialogue
+            setTimeout(() => {
+                this.processDialogueQueue();
+            }, 1500); // 1.5 second pause between dialogues
+        });
+    }
+
+    // Clear dialogue queue (use when scene changes)
+    clearDialogueQueue() {
+        this.dialogueQueue = [];
+        this.isProcessingQueue = false;
+        this.stopTypewriter();
+
+        // Remove speaking class from all advisors
+        const panelIds = ['advisor-panel-banks', 'advisor-panel-ivy', 'advisor-panel-engineer'];
+        panelIds.forEach(id => {
+            const panel = document.getElementById(id);
+            if (panel) panel.classList.remove('speaking');
+        });
+
+        // Clear all dialogue texts
+        const dialogueIds = ['dialogue-text-banks', 'dialogue-text-ivy', 'dialogue-text-engineer'];
+        dialogueIds.forEach(id => {
+            const text = document.getElementById(id);
+            if (text) {
+                text.textContent = '';
+                text.classList.remove('typing');
+            }
+        });
+    }
+
+    // Typewriter effect to a specific element
+    typewriterToElement(element, text, speed = 30, callback = null) {
+        this.stopTypewriter();
+
+        this.isTyping = true;
+        this.currentText = text;
+        this.currentIndex = 0;
+
+        const type = () => {
+            if (this.currentIndex < text.length) {
+                element.textContent += text.charAt(this.currentIndex);
+                this.currentIndex++;
+                this.typewriterTimeout = setTimeout(type, speed);
+            } else {
+                this.isTyping = false;
+                if (callback) callback();
+            }
+        };
+
+        type();
+    }
+
+    // Show advisor reaction based on scene/choice effects
+    reactToScene(sceneKey, scene) {
+        // Determine which advisor should speak based on the scene content
+        let advisorId = 'banks';
+        let dialogue = '';
+
+        const storyLower = scene.story ? scene.story.toLowerCase() : '';
+
+        // Score each advisor based on keyword matches
+        const scores = {
+            banks: 0,
+            ivy: 0,
+            engineer: 0
+        };
+
+        // Banks keywords (money, business, profit)
+        const banksKeywords = ['factory', 'fund', 'invest', 'money', 'profit', 'business', 'economic', 'tax', 'budget', 'cost', 'revenue', 'income', 'deal', 'contract'];
+        banksKeywords.forEach(keyword => {
+            if (storyLower.includes(keyword)) scores.banks += 2;
+        });
+
+        // Ivy keywords (environment, people, happiness)
+        const ivyKeywords = ['park', 'environment', 'happiness', 'citizen', 'people', 'community', 'green', 'nature', 'pollution', 'health', 'family', 'home', 'house', 'resident', 'neighborhood'];
+        ivyKeywords.forEach(keyword => {
+            if (storyLower.includes(keyword)) scores.ivy += 2;
+        });
+
+        // Engineer keywords (building, infrastructure, zoning)
+        const engineerKeywords = ['zone', 'build', 'grid', 'construct', 'infrastructure', 'road', 'bridge', 'plan', 'design', 'structure', 'location', 'place', 'adjacent', 'area'];
+        engineerKeywords.forEach(keyword => {
+            if (storyLower.includes(keyword)) scores.engineer += 2;
+        });
+
+        // Find highest scoring advisor
+        const maxScore = Math.max(scores.banks, scores.ivy, scores.engineer);
+
+        if (maxScore === 0) {
+            // No keywords matched - rotate based on scene key
+            const advisorIds = ['banks', 'ivy', 'engineer'];
+            const sceneNum = parseInt(sceneKey.replace(/\D/g, '')) || 0;
+            advisorId = advisorIds[sceneNum % 3];
+        } else if (scores.banks === maxScore) {
+            advisorId = 'banks';
+        } else if (scores.ivy === maxScore) {
+            advisorId = 'ivy';
+        } else {
+            advisorId = 'engineer';
+        }
+
+        dialogue = this.getRandomPhrase(advisorId, 'neutral');
+        this.showAdvisorInPanel(advisorId, dialogue);
+    }
+
+    // Get a random phrase from an advisor
+    getRandomPhrase(advisorId, sentiment) {
+        const advisor = this.advisors[advisorId];
+        if (!advisor) return '';
+        const phrases = advisor.catchphrases[sentiment];
+        return phrases[Math.floor(Math.random() * phrases.length)];
+    }
+
+    // React to a choice being made
+    reactToChoice(effects) {
+        const reaction = this.getMostRelevantAdvisor(effects);
+        this.showAdvisorInPanel(reaction.advisor.id, reaction.phrase, reaction.sentiment);
+    }
+
+    // React to a building being placed
+    reactToBuilding(buildingType) {
+        // Rotate advisor based on building type
+        let advisorId = 'engineer'; // Default for buildings
+
+        if (buildingType === 'factory' || buildingType === 'shop' || buildingType === 'office') {
+            advisorId = 'banks';
+        } else if (buildingType === 'park' || buildingType === 'house') {
+            advisorId = 'ivy';
+        }
+
+        const advisor = this.advisors[advisorId];
+        const dialogue = advisor.buildingDialogues[buildingType] || "Interesting placement, Mayor.";
+
+        this.showAdvisorInPanel(advisorId, dialogue);
+    }
+
+    // React to zone formation
+    reactToZone(zoneType) {
+        // Pick advisor based on zone type
+        let advisorId = 'engineer';
+
+        if (zoneType.includes('Commercial') || zoneType.includes('Industrial')) {
+            advisorId = 'banks';
+        } else if (zoneType.includes('Residential') || zoneType.includes('Park')) {
+            advisorId = 'ivy';
+        }
+
+        const advisor = this.advisors[advisorId];
+        const dialogues = advisor.zoneDialogues;
+        const dialogue = dialogues[Math.floor(Math.random() * dialogues.length)];
+
+        this.showAdvisorInPanel(advisorId, dialogue);
+    }
+
+    // React to achievement unlock
+    reactToAchievement(achievementName) {
+        // Rotate through advisors for achievements
+        const advisorIds = ['banks', 'ivy', 'engineer'];
+        const advisorId = advisorIds[Math.floor(Math.random() * advisorIds.length)];
+
+        const advisor = this.advisors[advisorId];
+        const dialogues = advisor.achievementDialogues;
+        const dialogue = dialogues[Math.floor(Math.random() * dialogues.length)];
+
+        this.showAdvisorInPanel(advisorId, dialogue);
+    }
+
+    // Show consequence text (advisor speaks in the panel separately)
+    showConsequenceWithAdvisor(consequence, effects) {
+        return `<p>${consequence}</p>`;
+    }
+
+    // Render scene narration with typewriter effect
+    renderNarration(containerElement, text, callback = null) {
+        const narratorBox = document.createElement('div');
+        narratorBox.className = 'narrator-box';
+        narratorBox.innerHTML = `
+            <div class="narrator-text" id="narrator-text"></div>
+            <div class="narrator-skip" onclick="narrativeManager.skipCurrentNarration()">
+                Click to skip
+            </div>
+        `;
+
+        containerElement.appendChild(narratorBox);
+
+        const textElement = document.getElementById('narrator-text');
+        this.typewriterEffect(textElement, text, 25, callback);
+    }
+
+    // Skip current narration
+    skipCurrentNarration() {
+        const textElement = document.getElementById('narrator-text');
+        if (textElement && this.isTyping) {
+            this.skipTypewriter(textElement, this.currentText);
+        }
+    }
+}
+
+// Create global narrative manager instance
+const narrativeManager = new NarrativeManager();
 
 // ==================== DIFFICULTY MODES ====================
 const difficultyModes = {
@@ -1046,6 +1666,7 @@ function renderCityGrid() {
                 const icon = document.createElement('span');
                 icon.className = 'grid-cell-icon feature-icon';
                 icon.textContent = cellData.icon;
+                cell.classList.add('has-feature');
                 cell.appendChild(icon);
 
                 // Add tooltip for features
@@ -1077,8 +1698,15 @@ function renderCityGrid() {
                 }
 
                 const icon = document.createElement('span');
-                icon.className = 'grid-cell-icon';
+                icon.className = 'grid-cell-icon building-icon';
                 icon.textContent = building.icon;
+
+                // Add pop animation for very recently placed buildings (< 500ms)
+                if (building.placedAt && (now - building.placedAt) < 500) {
+                    icon.classList.add('building-pop');
+                }
+
+                cell.classList.add('has-building');
                 cell.appendChild(icon);
 
                 // Add click handler for action menu
@@ -1313,11 +1941,17 @@ function handleTouchEnd(e) {
                         if (typeof audioManager !== 'undefined') {
                             audioManager.playZoneFormed();
                         }
+
+                        // Show confetti for zone formation
+                        showConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+
+                        // Have advisor react to zone formation
+                        narrativeManager.reactToZone(zone.name);
                     });
                     applyZoneBonuses();
                     updateStats();
                 }
-                
+
                 // Check mandatory placement
                 if (gameState.awaitingPlacement && gameState.pendingBuildingPlacement) {
                     // Compare by ID string to avoid reference issues
@@ -1578,11 +2212,17 @@ function handleGridDrop(e) {
                 if (typeof audioManager !== 'undefined') {
                     audioManager.playZoneFormed();
                 }
+
+                // Show confetti for zone formation
+                showConfetti(window.innerWidth / 2, window.innerHeight / 3, 40);
+
+                // Have advisor react to zone formation
+                narrativeManager.reactToZone(zone.name);
             });
             applyZoneBonuses();
             updateStats();
         }
-        
+
         // Check if this was a mandatory placement
         if (gameState.awaitingPlacement && gameState.pendingBuildingPlacement) {
             // Compare by ID string to avoid reference issues
@@ -1656,6 +2296,10 @@ function placeBuilding(cellIndex, building) {
 
     console.log('✅ Building placed:', building.name, 'at cell', cellIndex);
     renderCityGrid();
+
+    // Have advisor react to building placement
+    narrativeManager.reactToBuilding(building.id);
+
     return true;
 }
 
@@ -1931,6 +2575,133 @@ function showCelebration(cell, building, isMobile = false) {
     
     // Show success toast
     showToast(`✅ ${building.name} placed! -$${building.cost}M`, 'success');
+}
+
+// ==================== JUICE EFFECTS ====================
+
+// Show confetti explosion at position (for zones/achievements)
+function showConfetti(x, y, count = 30) {
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#38f9d7', '#ffecd2', '#fcb69f'];
+
+    for (let i = 0; i < count; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+
+        // Random color
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+        // Random shape (square or rectangle)
+        const isSquare = Math.random() > 0.5;
+        confetti.style.width = isSquare ? '10px' : '8px';
+        confetti.style.height = isSquare ? '10px' : '15px';
+        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+
+        // Start position with spread
+        const startX = x + (Math.random() - 0.5) * 100;
+        const startY = y - 50;
+        confetti.style.left = startX + 'px';
+        confetti.style.top = startY + 'px';
+
+        // Random horizontal drift
+        const drift = (Math.random() - 0.5) * 200;
+        confetti.style.setProperty('--drift', drift + 'px');
+
+        // Random animation delay for stagger effect
+        confetti.style.animationDelay = (Math.random() * 0.3) + 's';
+
+        document.body.appendChild(confetti);
+
+        // Remove after animation
+        setTimeout(() => {
+            if (document.body.contains(confetti)) {
+                document.body.removeChild(confetti);
+            }
+        }, 3500);
+    }
+
+    console.log('🎊 Confetti explosion at', x, y);
+}
+
+// Show floating number at position (for money changes)
+function showFloatingNumber(amount, x, y) {
+    if (amount === 0) return;
+
+    const floater = document.createElement('div');
+    floater.className = 'floating-number ' + (amount > 0 ? 'positive' : 'negative');
+    floater.textContent = (amount > 0 ? '+' : '') + '$' + amount + 'M';
+
+    // Position at cursor/event location
+    floater.style.left = x + 'px';
+    floater.style.top = y + 'px';
+
+    document.body.appendChild(floater);
+
+    // Remove after animation (3s to match CSS)
+    setTimeout(() => {
+        if (document.body.contains(floater)) {
+            document.body.removeChild(floater);
+        }
+    }, 3500);
+
+    console.log('💵 Floating number:', amount > 0 ? '+' : '', '$', amount, 'M');
+}
+
+// Track last click/touch position for floating numbers
+let lastInteractionPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+
+// Update on any click/touch
+document.addEventListener('click', (e) => {
+    lastInteractionPosition = { x: e.clientX, y: e.clientY };
+});
+
+document.addEventListener('touchend', (e) => {
+    if (e.changedTouches && e.changedTouches[0]) {
+        lastInteractionPosition = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    }
+});
+
+// Update weather overlay based on happiness
+function updateWeather() {
+    let overlay = document.getElementById('weather-overlay');
+
+    // Create overlay if it doesn't exist
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'weather-overlay';
+        overlay.className = 'weather-overlay';
+        document.body.appendChild(overlay);
+    }
+
+    // Clear existing weather effects
+    overlay.innerHTML = '';
+    overlay.className = 'weather-overlay';
+
+    const happiness = gameState.happiness;
+
+    if (happiness < 30) {
+        // Rain effect for low happiness
+        overlay.classList.add('weather-rain');
+
+        // Create rain drops
+        const dropCount = Math.min(50, Math.floor((30 - happiness) * 2));
+        for (let i = 0; i < dropCount; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'rain-drop';
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.animationDelay = Math.random() * 0.8 + 's';
+            drop.style.animationDuration = (0.5 + Math.random() * 0.3) + 's';
+            overlay.appendChild(drop);
+        }
+
+        console.log('🌧️ Weather: Rain (happiness:', happiness, ')');
+    } else if (happiness > 70) {
+        // Sunshine effect for high happiness
+        overlay.classList.add('weather-sunshine');
+        console.log('☀️ Weather: Sunshine (happiness:', happiness, ')');
+    } else {
+        // Neutral - clear weather
+        console.log('⛅ Weather: Clear (happiness:', happiness, ')');
+    }
 }
 
 // ==================== BUILDING MANAGEMENT ====================
@@ -2635,6 +3406,12 @@ function checkAchievements(isGameEnd = false) {
         if (typeof audioManager !== 'undefined') {
             audioManager.playAchievement();
         }
+
+        // Show confetti for achievement
+        showConfetti(window.innerWidth / 2, window.innerHeight / 4, 50);
+
+        // Have advisor react to achievement
+        narrativeManager.reactToAchievement(achievement.name);
     });
 
     // Update achievement counter in header
@@ -3478,15 +4255,39 @@ function updateStats() {
     if (fundsEl) fundsEl.textContent = gameState.cityFunds;
     if (interestEl) interestEl.textContent = gameState.specialInterest;
     if (decisionsEl) decisionsEl.textContent = gameState.decisions.length;
-    
+
     // Update building palette to reflect affordability
     updateBuildingPalette();
+
+    // Update weather effects based on happiness
+    updateWeather();
 }
 
 function applyEffects(effects) {
-    if (effects.happiness) gameState.happiness += effects.happiness;
-    if (effects.cityFunds) gameState.cityFunds += effects.cityFunds;
-    if (effects.specialInterest) gameState.specialInterest += effects.specialInterest;
+    // Apply effects and show floating text for each stat change
+    if (effects.happiness) {
+        gameState.happiness += effects.happiness;
+        const happinessEl = document.getElementById('happiness');
+        if (happinessEl) {
+            narrativeManager.showStatChange('happiness', effects.happiness, happinessEl);
+        }
+    }
+    if (effects.cityFunds) {
+        gameState.cityFunds += effects.cityFunds;
+        // Show floating number for money changes
+        showFloatingNumber(effects.cityFunds, lastInteractionPosition.x, lastInteractionPosition.y);
+        const fundsEl = document.getElementById('cityFunds');
+        if (fundsEl) {
+            narrativeManager.showStatChange('cityFunds', effects.cityFunds, fundsEl);
+        }
+    }
+    if (effects.specialInterest) {
+        gameState.specialInterest += effects.specialInterest;
+        const interestEl = document.getElementById('specialInterest');
+        if (interestEl) {
+            narrativeManager.showStatChange('specialInterest', effects.specialInterest, interestEl);
+        }
+    }
     if (effects.personalProfit) {
         const oldProfit = gameState.personalProfit;
         gameState.personalProfit += effects.personalProfit;
@@ -3505,6 +4306,9 @@ function renderScene(sceneKey) {
     // Always stop any existing timer first
     stopTimer();
     setCurrentSceneKey(sceneKey);
+
+    // Clear any pending dialogues from previous scene
+    narrativeManager.clearDialogueQueue();
 
     // Reset choice flag for new scene
     gameState.choiceMade = false;
@@ -3546,15 +4350,18 @@ function renderScene(sceneKey) {
     } else {
         html += `<div class="choices">`;
         scene.choices.forEach((choice, index) => {
-            html += `<div class="choice-card" onclick="makeChoice('${sceneKey}', ${index})">`;
-            html += `<span class="choice-icon">${choice.icon}</span>`;
-            html += `<div class="choice-text">${choice.text}</div>`;
-            html += `</div>`;
+            // Use NarrativeManager to generate choice cards with advisor reactions
+            html += narrativeManager.generateChoiceCardWithAdvisors(choice, index, sceneKey);
         });
         html += `</div>`;
     }
 
     content.innerHTML = html;
+
+    // Have advisor react to the scene
+    if (sceneKey !== 'intro' && sceneKey !== 'ending') {
+        narrativeManager.reactToScene(sceneKey, scene);
+    }
 
     // Start timer for ALL decision scenes (not intro or ending)
     if (sceneKey !== 'intro' && sceneKey !== 'ending') {
@@ -3730,6 +4537,9 @@ function makeChoice(sceneKey, choiceIndex, isTimedOut = false) {
         
         applyEffects(choice.effects);
 
+        // Have advisor react to the choice
+        narrativeManager.reactToChoice(choice.effects);
+
         if (choice.consequence) {
             showConsequence(choice.effects, choice.consequence, earnedTimeBonus, timeBankAdjustment, timeSpent);
         }
@@ -3759,7 +4569,9 @@ function showConsequence(effects, message, earnedTimeBonus = 0, timeBankAdjustme
     consequenceDiv.className = 'consequences';
 
     let html = '<h3>⚡ Consequences</h3>';
-    html += `<p>${message}</p>`;
+
+    // Use NarrativeManager for consequence with advisor commentary
+    html += narrativeManager.showConsequenceWithAdvisor(message, effects);
 
     if (effects.happiness) {
         html += `<div class="consequence-item ${effects.happiness > 0 ? 'positive' : 'negative'}">`;

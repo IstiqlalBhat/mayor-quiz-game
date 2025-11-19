@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
 
 /* ==================== RESET & BASE STYLES ==================== */
 * {
@@ -555,7 +556,165 @@ body {
     justify-content: center;
     align-items: center;
     height: 100%;
-    width: 100%;
+    width: auto;
+}
+
+/* Advisor Panel - Base styles */
+.advisor-panel {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+/* Individual advisor positions - all on left side */
+.advisor-banks {
+    left: 10px;
+    top: 30px;
+}
+
+.advisor-ivy {
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.advisor-engineer {
+    left: 10px;
+    bottom: 30px;
+}
+
+.advisor-character {
+    width: 160px;
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.advisor-character img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(3px 5px 8px rgba(0, 0, 0, 0.4));
+    transition: all 0.3s ease;
+}
+
+/* Dialogue box - hidden by default */
+.advisor-dialogue-box {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: #2a2a2a;
+    font-family: 'Patrick Hand', 'Fredoka', cursive;
+    font-size: 1em;
+    line-height: 1.35;
+    max-width: 200px;
+    min-height: 60px;
+    position: absolute;
+    border: 3px solid #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+/* Dialogue box positions for each advisor */
+.advisor-banks .advisor-dialogue-box {
+    top: 50%;
+    left: 100%;
+    margin-left: 15px;
+    transform: translateY(-50%) scale(0.9);
+}
+
+.advisor-banks .advisor-dialogue-box::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 8px solid transparent;
+    border-right-color: rgba(255, 255, 255, 0.95);
+}
+
+.advisor-ivy .advisor-dialogue-box {
+    top: 50%;
+    left: 100%;
+    margin-left: 12px;
+    transform: translateY(-50%) scale(0.9);
+}
+
+.advisor-ivy .advisor-dialogue-box::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 8px solid transparent;
+    border-right-color: rgba(255, 255, 255, 0.95);
+}
+
+.advisor-engineer .advisor-dialogue-box {
+    top: 50%;
+    left: 100%;
+    margin-left: 12px;
+    transform: translateY(-50%) scale(0.9);
+}
+
+.advisor-engineer .advisor-dialogue-box::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 8px solid transparent;
+    border-right-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Show dialogue when speaking */
+.advisor-panel.speaking .advisor-dialogue-box {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+}
+
+.advisor-name-tag {
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 700;
+    font-size: 0.85em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.advisor-dialogue-text {
+    font-family: 'Patrick Hand', 'Fredoka', cursive;
+    font-size: 0.95em;
+    font-weight: 400;
+    color: #333;
+}
+
+/* Typewriter cursor for advisor dialogue */
+.advisor-dialogue-text.typing::after {
+    content: '|';
+    color: #333;
+    animation: blink 0.7s infinite;
+    margin-left: 2px;
+}
+
+/* Advisor panel animations */
+.advisor-panel.speaking .advisor-character img {
+    transform: scale(1.08);
+    filter: drop-shadow(4px 6px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* Dim non-speaking advisors */
+.advisor-panel:not(.speaking) .advisor-character img {
+    opacity: 0.7;
+    filter: drop-shadow(2px 3px 5px rgba(0, 0, 0, 0.3)) grayscale(30%);
 }
 
 /* City Grid Layout */
@@ -585,7 +744,7 @@ body {
     position: relative;
     cursor: pointer;
     transition: all 0.3s ease;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* Grass texture effect */
@@ -628,18 +787,34 @@ body {
 
 /* Building icon in grid */
 .grid-cell-icon {
-    font-size: 3em;
+    font-size: 42px;
     line-height: 1;
-    animation: buildingPop 0.4s ease-out;
     position: relative;
     z-index: 1;
     filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-@keyframes buildingPop {
-    0% { transform: scale(0) rotate(-180deg); opacity: 0; }
-    50% { transform: scale(1.2) rotate(10deg); }
-    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+/* Pop animation for newly placed buildings */
+.grid-cell-icon.building-pop {
+    animation: buildingPopIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes buildingPopIn {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.4);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 /* Drag over state */
@@ -1719,6 +1894,218 @@ body {
 
     .achievement-desc {
         font-size: 0.6em;
+    }
+}
+
+/* ==================== JUICE EFFECTS ==================== */
+
+/* Confetti particle */
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+    z-index: 10000;
+    animation: confetti-fall 3s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+    0% {
+        transform: translateY(0) translateX(0) rotateZ(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh) translateX(var(--drift, 0px)) rotateZ(720deg);
+        opacity: 0;
+    }
+}
+
+/* Floating number effect */
+.floating-number {
+    position: fixed;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    pointer-events: none;
+    z-index: 10000;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7), 0 0 10px rgba(0, 0, 0, 0.3);
+    animation: float-up 3s ease-out forwards;
+}
+
+.floating-number.positive {
+    color: #00b894;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 184, 148, 0.5);
+}
+
+.floating-number.negative {
+    color: #e74c3c;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7), 0 0 15px rgba(231, 76, 60, 0.5);
+}
+
+@keyframes float-up {
+    0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 0;
+    }
+    10% {
+        transform: translateY(-10px) scale(1.3);
+        opacity: 1;
+    }
+    60% {
+        transform: translateY(-50px) scale(1.1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Building pop animation */
+.building-pop {
+    animation: pop-in 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+@keyframes pop-in {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    60% {
+        transform: scale(1.3);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Building bobbing animation */
+.grid-cell.has-building .building-icon {
+    animation: building-bob 3s ease-in-out infinite;
+}
+
+@keyframes building-bob {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Feature bobbing (slower) */
+.grid-cell.has-feature .feature-icon {
+    animation: feature-bob 4s ease-in-out infinite;
+}
+
+@keyframes feature-bob {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-2px) scale(1.05);
+    }
+}
+
+/* Weather overlay container */
+.weather-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 0.5s ease;
+}
+
+/* Rain effect */
+.weather-rain {
+    background: linear-gradient(transparent 0%, rgba(100, 150, 200, 0.1) 100%);
+}
+
+.rain-drop {
+    position: absolute;
+    width: 2px;
+    height: 20px;
+    background: linear-gradient(transparent, rgba(174, 194, 224, 0.6));
+    animation: rain-fall 0.8s linear infinite;
+}
+
+@keyframes rain-fall {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+}
+
+/* Sunshine effect */
+.weather-sunshine {
+    background: radial-gradient(ellipse at top, rgba(255, 223, 100, 0.15) 0%, transparent 70%);
+}
+
+.sun-ray {
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    width: 3px;
+    height: 150px;
+    background: linear-gradient(rgba(255, 223, 100, 0.4), transparent);
+    transform-origin: top center;
+    animation: sun-pulse 3s ease-in-out infinite;
+}
+
+@keyframes sun-pulse {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scaleY(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scaleY(1.1);
+    }
+}
+
+/* Zone formation glow */
+.zone-glow {
+    animation: zone-pulse 2s ease-in-out infinite;
+}
+
+@keyframes zone-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+    }
+}
+
+/* Achievement unlock flash */
+.achievement-flash {
+    animation: achievement-burst 0.6s ease-out;
+}
+
+@keyframes achievement-burst {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.1);
+        filter: brightness(1.5);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
     }
 }
 
@@ -4664,21 +5051,356 @@ body {
     .game-logo {
         font-size: 2.5em;
     }
-    
+
     .start-content {
         padding: 20px;
     }
-    
+
     .modal-content {
         padding: 25px 15px;
     }
-    
+
     .modal-actions {
         flex-direction: column;
     }
-    
+
     .leaderboard-entry {
         flex-direction: column;
         text-align: center;
+    }
+}
+
+/* ==================== NARRATIVE SYSTEM STYLES ==================== */
+
+/* Advisor Portrait */
+.advisor-portrait {
+    position: relative;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    background: #2a2a2a;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.advisor-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.advisor-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5em;
+    color: #1a1a1a;
+    border-radius: 50%;
+}
+
+.advisor-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #1a1a1a;
+}
+
+.advisor-positive {
+    border-color: #4caf50;
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.advisor-negative {
+    border-color: #f44336;
+    box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+}
+
+/* Advisor Speech Container */
+.advisor-speech-container {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    animation: slideInLeft 0.4s ease-out;
+}
+
+.advisor-speech-bubble {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 12px 15px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.advisor-speech-bubble::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 20px;
+    border: 8px solid transparent;
+    border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+.advisor-name {
+    font-weight: 600;
+    font-size: 1.1em;
+    margin-bottom: 2px;
+}
+
+.advisor-title {
+    font-size: 0.8em;
+    opacity: 0.7;
+    margin-bottom: 8px;
+}
+
+.advisor-dialogue {
+    font-size: 0.95em;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+/* Choice Card Advisor Reactions */
+.choice-advisor-reactions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    justify-content: center;
+}
+
+.choice-advisor-reaction {
+    position: relative;
+    cursor: help;
+    transition: transform 0.2s ease;
+}
+
+.choice-advisor-reaction:hover {
+    transform: scale(1.1);
+}
+
+.choice-advisor-reaction .advisor-portrait {
+    width: 35px;
+    height: 35px;
+}
+
+.choice-advisor-reaction .advisor-indicator {
+    width: 8px;
+    height: 8px;
+}
+
+/* Consequence with Advisor */
+.consequence-with-advisor {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.consequence-text {
+    margin-bottom: 10px;
+}
+
+.advisor-comment {
+    margin-top: 15px;
+}
+
+/* Floating Text Animation */
+@keyframes floatUp {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translateY(-30px) scale(1.2);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-60px) scale(0.8);
+    }
+}
+
+.floating-text {
+    animation: floatUp 2s ease-out forwards;
+}
+
+/* Slide In Animation */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Narrator Box */
+.narrator-box {
+    position: relative;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+.narrator-text {
+    line-height: 1.6;
+    min-height: 60px;
+}
+
+.narrator-skip {
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
+    font-size: 0.75em;
+    opacity: 0.5;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.narrator-skip:hover {
+    opacity: 1;
+}
+
+/* Typewriter Cursor Effect */
+.narrator-text::after {
+    content: '|';
+    animation: blink 0.7s infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+    .advisor-speech-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .advisor-speech-bubble::before {
+        display: none;
+    }
+
+    .choice-advisor-reactions {
+        flex-wrap: wrap;
+    }
+
+    .choice-advisor-reaction .advisor-portrait {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .advisor-portrait {
+        border-width: 2px;
+    }
+
+    .advisor-speech-container {
+        padding: 10px;
+        gap: 10px;
+    }
+
+    .advisor-name {
+        font-size: 1em;
+    }
+
+    .advisor-dialogue {
+        font-size: 0.9em;
+    }
+}
+
+/* Mobile responsive for advisor panels */
+@media (max-width: 768px) {
+    .advisor-character {
+        width: 100px;
+        height: 125px;
+    }
+
+    .advisor-banks {
+        left: 5px;
+        top: 20px;
+    }
+
+    .advisor-ivy {
+        left: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .advisor-engineer {
+        left: 5px;
+        bottom: 20px;
+    }
+
+    .advisor-dialogue-box {
+        padding: 8px 10px;
+        font-size: 0.85em;
+        max-width: 140px;
+        min-height: 45px;
+    }
+
+    .advisor-name-tag {
+        font-size: 0.75em;
+    }
+
+    .advisor-dialogue-text {
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 480px) {
+    .advisor-character {
+        width: 65px;
+        height: 80px;
+    }
+
+    .advisor-banks {
+        left: 3px;
+        top: 15px;
+    }
+
+    .advisor-ivy {
+        left: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .advisor-engineer {
+        left: 3px;
+        bottom: 15px;
+    }
+
+    .advisor-dialogue-box {
+        padding: 6px 8px;
+        font-size: 0.75em;
+        max-width: 110px;
+        min-height: 35px;
+        border-radius: 8px;
+        border-width: 2px;
+    }
+
+    .advisor-name-tag {
+        font-size: 0.65em;
+        margin-bottom: 2px;
+    }
+
+    .advisor-dialogue-text {
+        font-size: 0.7em;
     }
 }
