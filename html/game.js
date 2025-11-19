@@ -814,9 +814,20 @@ function renderBuildingPalette() {
     let buildingsToShow = buildingPalette;
     if (gameState.awaitingPlacement && gameState.pendingBuildingPlacement) {
         const mandatoryBuilding = gameState.pendingBuildingPlacement.building;
-        buildingsToShow = buildingPalette.filter(b => b.id === mandatoryBuilding.id);
-        console.log(`🔒 Mandatory placement mode: Only showing ${mandatoryBuilding.name}`);
+        if (mandatoryBuilding) {
+            buildingsToShow = buildingPalette.filter(b => b.id === mandatoryBuilding.id);
+            console.log(`🔒 Mandatory placement mode: Only showing ${mandatoryBuilding.name} (ID: ${mandatoryBuilding.id})`);
+        } else {
+            console.error('❌ pendingBuildingPlacement.building is null/undefined!');
+            // Clear invalid state
+            gameState.pendingBuildingPlacement = null;
+            gameState.awaitingPlacement = false;
+        }
     } else {
+        console.log(`📋 Normal palette mode - awaitingPlacement: ${gameState.awaitingPlacement}`);
+    }
+
+    if (!gameState.awaitingPlacement) {
         // Filter buildings based on current chapter
         const currentChapter = getCurrentChapter();
         if (currentChapter === 2) {
@@ -1308,11 +1319,21 @@ function handleTouchEnd(e) {
                 }
                 
                 // Check mandatory placement
-                if (gameState.awaitingPlacement && 
-                    gameState.pendingBuildingPlacement &&
-                    gameState.pendingBuildingPlacement.building.id === building.id) {
-                    showToast('✅ Mandatory building placed! Story continues...', 'success');
-                    setTimeout(() => completeMandatoryPlacement(), 1500);
+                if (gameState.awaitingPlacement && gameState.pendingBuildingPlacement) {
+                    // Compare by ID string to avoid reference issues
+                    const pendingId = gameState.pendingBuildingPlacement.building?.id;
+                    const placedId = building.id;
+
+                    if (pendingId === placedId) {
+                        showToast('✅ Mandatory building placed! Story continues...', 'success');
+                        setTimeout(() => completeMandatoryPlacement(), 1500);
+                    } else {
+                        console.warn(`⚠️ Placed ${placedId} but pending was ${pendingId}`);
+                        // Still complete if we're in mandatory mode and placed ANY building
+                        // This handles edge cases where IDs might not match exactly
+                        showToast('✅ Building placed! Story continues...', 'success');
+                        setTimeout(() => completeMandatoryPlacement(), 1500);
+                    }
                 }
             } else {
                 // Insufficient funds
@@ -1321,7 +1342,7 @@ function handleTouchEnd(e) {
             }
         }
     }
-    
+
     // Clean up
     currentDraggedBuilding = null;
     touchDragData = null;
@@ -1563,16 +1584,20 @@ function handleGridDrop(e) {
         }
         
         // Check if this was a mandatory placement
-        if (gameState.awaitingPlacement && 
-            gameState.pendingBuildingPlacement &&
-            gameState.pendingBuildingPlacement.building.id === building.id) {
-            
-            showToast('✅ Mandatory building placed! Story continues...', 'success');
-            
-            // Complete mandatory placement after short delay
-            setTimeout(() => {
-                completeMandatoryPlacement();
-            }, 1500);
+        if (gameState.awaitingPlacement && gameState.pendingBuildingPlacement) {
+            // Compare by ID string to avoid reference issues
+            const pendingId = gameState.pendingBuildingPlacement.building?.id;
+            const placedId = building.id;
+
+            if (pendingId === placedId) {
+                showToast('✅ Mandatory building placed! Story continues...', 'success');
+                setTimeout(() => completeMandatoryPlacement(), 1500);
+            } else {
+                console.warn(`⚠️ Placed ${placedId} but pending was ${pendingId}`);
+                // Still complete if we're in mandatory mode and placed ANY building
+                showToast('✅ Building placed! Story continues...', 'success');
+                setTimeout(() => completeMandatoryPlacement(), 1500);
+            }
         }
     }
     
@@ -2184,14 +2209,25 @@ function hideMandatoryPlacementOverlay() {
 
 // Complete mandatory placement and continue to next scene
 function completeMandatoryPlacement() {
-    if (!gameState.pendingBuildingPlacement) return;
+    if (!gameState.pendingBuildingPlacement) {
+        console.warn('⚠️ completeMandatoryPlacement called but no pending placement');
+        // Still clear state defensively
+        gameState.awaitingPlacement = false;
+        gameState.placementConstraints = null;
+        hideMandatoryPlacementOverlay();
+        renderBuildingPalette();
+        return;
+    }
 
     const nextScene = gameState.pendingBuildingPlacement.nextScene;
+    const buildingName = gameState.pendingBuildingPlacement.building?.name || 'Unknown';
 
-    // Clear placement state
+    console.log(`🏗️ Completing mandatory placement of ${buildingName}, next: ${nextScene}`);
+
+    // Clear placement state FIRST
     gameState.pendingBuildingPlacement = null;
     gameState.awaitingPlacement = false;
-    gameState.placementConstraints = null; // Clear constraints
+    gameState.placementConstraints = null;
 
     // Hide overlay
     hideMandatoryPlacementOverlay();
@@ -2201,6 +2237,9 @@ function completeMandatoryPlacement() {
 
     // Re-render building palette to show all buildings again
     renderBuildingPalette();
+
+    // Verify state is cleared
+    console.log(`📋 State cleared - awaitingPlacement: ${gameState.awaitingPlacement}, pendingBuildingPlacement: ${gameState.pendingBuildingPlacement}`);
 
     // Continue to next scene
     renderScene(nextScene);
@@ -3785,6 +3824,13 @@ function continueAfterConsequence() {
             // Building not found in palette - log error and skip to next scene
             console.error(`❌ Building not found in buildingPalette! Building ID: "${buildingId}". Available buildings:`, buildingPalette.map(b => b.id).join(', '));
             showToast('⚠️ Building not available, continuing story...', 'warning');
+
+            // IMPORTANT: Clear pending placement state to prevent bugs
+            gameState.pendingBuildingPlacement = null;
+            gameState.awaitingPlacement = false;
+            gameState.placementConstraints = null;
+            renderBuildingPalette();
+
             setTimeout(() => {
                 renderScene(nextScene);
             }, 1000);
