@@ -4,6 +4,8 @@
 
 class NarrativeManager {
     constructor() {
+        console.log('🎭 NarrativeManager constructor called');
+
         // Advisor definitions with their specialties and personalities
         this.advisors = {
             banks: {
@@ -1024,3 +1026,4 @@ class NarrativeManager {
 
 // Create global narrative manager instance
 const narrativeManager = new NarrativeManager();
+console.log('✅ Global narrativeManager created successfully', narrativeManager);
