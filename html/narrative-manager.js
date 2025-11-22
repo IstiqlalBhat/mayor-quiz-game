@@ -575,7 +575,12 @@ class NarrativeManager {
     // Show advisor in the dedicated panel with typewriter dialogue
     showAdvisorInPanel(advisorId, dialogue, sentiment = 'neutral') {
         const advisor = this.advisors[advisorId];
-        if (!advisor) return;
+        if (!advisor) {
+            console.warn('⚠️ Advisor not found:', advisorId);
+            return;
+        }
+
+        console.log('📢 Adding dialogue to queue:', { advisorId: advisor.name, dialogue: dialogue.substring(0, 50) + '...' });
 
         // Add to queue instead of showing immediately
         this.dialogueQueue.push({ advisorId, dialogue, sentiment });
@@ -621,6 +626,8 @@ class NarrativeManager {
         const { advisorId, dialogue, sentiment } = this.dialogueQueue.shift();
         const advisor = this.advisors[advisorId];
 
+        console.log('🎤 Processing dialogue from queue:', { advisorId, advisor: advisor?.name });
+
         this.updateQueueIndicator();
 
         // Get advisor container elements
@@ -629,7 +636,10 @@ class NarrativeManager {
         const advisorName = document.getElementById('advisor-bar-name');
         const advisorText = document.getElementById('advisor-bar-text');
 
+        console.log('🎯 Found elements:', { advisorContainer: !!advisorContainer, advisorImage: !!advisorImage, advisorName: !!advisorName, advisorText: !!advisorText });
+
         if (!advisorContainer || !advisorImage || !advisorName || !advisorText) {
+            console.error('❌ Missing required dialogue elements! Container:', !!advisorContainer, 'Image:', !!advisorImage, 'Name:', !!advisorName, 'Text:', !!advisorText);
             this.processDialogueQueue();
             return;
         }
@@ -771,6 +781,8 @@ class NarrativeManager {
 
     // React to building placement with context awareness
     reactToBuilding(buildingType, cellIndex = null, gameState = null) {
+        console.log('🏢 reactToBuilding called with:', buildingType);
+
         // Determine primary advisor based on building type
         let advisorId = 'engineer';
 
@@ -783,6 +795,8 @@ class NarrativeManager {
         const advisor = this.advisors[advisorId];
         let dialogues = advisor.buildingDialogues[buildingType];
         let dialogue = Array.isArray(dialogues) ? dialogues[Math.floor(Math.random() * dialogues.length)] : dialogues || "Interesting placement, Mayor.";
+
+        console.log('💬 Building dialogue:', { buildingType, advisorId, dialogue: dialogue.substring(0, 50) + '...' });
 
         this.showAdvisorInPanel(advisorId, dialogue);
 
@@ -852,6 +866,8 @@ class NarrativeManager {
 
     // React to zone formation - multiple advisors comment
     reactToZone(zoneType, zoneSize = 3) {
+        console.log('🏘️ reactToZone called with:', zoneType);
+
         // Primary advisor based on zone type
         let primaryAdvisor = 'engineer';
         let secondaryAdvisor = null;
@@ -871,6 +887,7 @@ class NarrativeManager {
         const advisor = this.advisors[primaryAdvisor];
         const zoneDialogues = advisor.zoneDialogues[zoneType] || advisor.zoneDialogues['default'];
         const dialogue = zoneDialogues[Math.floor(Math.random() * zoneDialogues.length)];
+        console.log('🌆 Zone dialogue:', { zoneType, primaryAdvisor, dialogue: dialogue.substring(0, 50) + '...' });
         this.showAdvisorInPanel(primaryAdvisor, dialogue);
 
         // For larger zones, secondary advisor comments too
@@ -884,12 +901,16 @@ class NarrativeManager {
 
     // React to achievement unlock
     reactToAchievement(achievementName) {
+        console.log('🏆 reactToAchievement called with:', achievementName);
+
         // Rotate through advisors
         const advisorIds = ['banks', 'ivy', 'engineer'];
         const advisorId = advisorIds[Math.floor(Math.random() * advisorIds.length)];
 
         const advisor = this.advisors[advisorId];
         const dialogue = advisor.achievementDialogues[Math.floor(Math.random() * advisor.achievementDialogues.length)];
+
+        console.log('🎉 Achievement dialogue:', { achievementName, advisorId, dialogue: dialogue.substring(0, 50) + '...' });
 
         this.showAdvisorInPanel(advisorId, dialogue);
     }
