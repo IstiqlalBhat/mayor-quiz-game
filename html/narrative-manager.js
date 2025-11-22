@@ -4,8 +4,6 @@
 
 class NarrativeManager {
     constructor() {
-        console.log('🎭 NarrativeManager constructor called');
-
         // Advisor definitions with their specialties and personalities
         this.advisors = {
             banks: {
@@ -18,130 +16,129 @@ class NarrativeManager {
                 personality: 'capitalist',
                 catchphrases: {
                     positive: [
-                        "Excellent! The city's coffers will overflow!",
-                        "A sound investment, Mayor! My calculator is singing.",
-                        "The markets will love this decision! Stocks are up!",
-                        "Money well spent indeed! ROI is looking spectacular.",
-                        "Fiscal responsibility at its finest. Well done.",
-                        "I smell profit! And it smells like victory.",
-                        "Cha-ching! That's the sound of success, Mayor."
+                        "Excellent! Mayor Pawsworth, you've got the financial instincts of a Wall Street lion!",
+                        "Now THAT'S how you make the economy purr! Well done!",
+                        "The investors are roaring with approval, Your Stripedness!",
+                        "Money well spent! Even a tiger knows when to pounce on opportunity.",
+                        "You've earned your stripes today, Mayor! The treasury thanks you.",
+                        "I smell profit! Smells better than a fresh catch, doesn't it?",
+                        "Ka-ching! That's the sound of our city prowling toward prosperity!"
                     ],
                     negative: [
-                        "This will hurt our bottom line... significantly.",
-                        "The investors won't be pleased...",
-                        "Think of the economy, Mayor! We're not a charity.",
-                        "We're hemorrhaging funds here! Plug the leak!",
-                        "My spreadsheets are bleeding red ink!",
-                        "This is fiscal suicide! Reconsider immediately!",
-                        "I cannot endorse this financial recklessness."
+                        "Mayor Pawsworth, we're not running a charity zoo here!",
+                        "This will have our budget limping like wounded prey...",
+                        "Think of the economy! We can't just give away our kill!",
+                        "We're bleeding money faster than a gazelle at dinnertime!",
+                        "Your Stripedness, my spreadsheets are turning redder than raw meat!",
+                        "This is financial suicide! Even apex predators need to eat!",
+                        "I cannot endorse this! We'll be the hunted, not the hunters!"
                     ],
                     neutral: [
-                        "The financial impact is acceptable. Barely.",
-                        "Neither gain nor loss. Proceed carefully.",
-                        "The numbers are balanced, for now.",
-                        "A break-even proposition. Not exciting, but safe.",
-                        "Market stability is maintained. Carry on."
+                        "The numbers are... acceptable. Barely worth a tail twitch.",
+                        "Neither feast nor famine, Mayor Pawsworth.",
+                        "Balanced like a tiger on a tightrope, I suppose.",
+                        "Not exciting, but it won't get us declawed either.",
+                        "The market prowls steady. No need to show our claws yet."
                     ]
                 },
                 buildingDialogues: {
                     house: [
-                        "Residential investment! Property taxes will flow nicely.",
-                        "More taxpayers? Excellent strategy, Mayor.",
-                        "Housing market is booming. Let's capitalize on it."
+                        "More dens for the pride! Property taxes will flow nicely.",
+                        "Every tiger needs a territory, Mayor. Smart thinking!",
+                        "Housing market's hot! Strike while the iron's as hot as your stripes!"
                     ],
                     shop: [
-                        "A commercial venture! Revenue streams are looking good.",
-                        "Sales tax revenue incoming! Music to my ears.",
-                        "Small business, big profits. A wise choice."
+                        "Commerce! Where predator meets profit, Your Stripedness!",
+                        "Sales tax revenue! Music to my ears - better than a purr!",
+                        "Small businesses are the gazelles that feed our economy!"
                     ],
                     factory: [
-                        "Industrial power! This will boost our economic output significantly.",
-                        "Production means profit. Let the smoke stacks rise!",
-                        "Jobs and exports. The backbone of a strong economy."
+                        "Industrial might! This'll put some roar in our economic engine!",
+                        "Production means profit! Let the machinery purr!",
+                        "Jobs and exports - the meat and potatoes of any tiger's economy!"
                     ],
                     park: [
-                        "Parks don't generate revenue, but happy citizens spend more...",
-                        "Maintenance costs are high, but it might boost property values.",
-                        "I suppose a little green makes the gold shine brighter."
+                        "Parks? Well... even tigers need somewhere to stretch and sun themselves.",
+                        "Not profitable, but happy citizens do hunt for bargains more...",
+                        "Fine, fine. Even Wall Street tigers need their jungle gyms."
                     ],
                     office: [
-                        "Corporate real estate! The business district expands.",
-                        "White-collar jobs bring high-tier tax revenue. Splendid.",
-                        "Sky-high buildings for sky-high profits!"
+                        "Corporate territory! The concrete jungle expands!",
+                        "White-collar prey... I mean, jobs! Excellent, Mayor Pawsworth!",
+                        "Skyscrapers reaching as high as a tiger's ambitions!"
                     ]
                 },
                 zoneDialogues: {
                     'Commercial District': [
-                        "A commercial district forms! Property values are soaring!",
-                        "This zone will attract major investors to our city.",
-                        "Retail paradise! The money will flow like water."
+                        "A shopping jungle forms! Mayor Pawsworth, you're a retail predator!",
+                        "This zone will attract the biggest financial tigers to our city!",
+                        "Commerce paradise! Money flowing like a river full of salmon!"
                     ],
                     'Industrial Zone': [
-                        "Industrial might! Exports will skyrocket.",
-                        "Manufacturing hub established. GDP is climbing!",
-                        "The factories sing the song of prosperity!"
+                        "Industrial strength! Our city roars with productive power!",
+                        "Manufacturing might! We're the apex predator of production!",
+                        "The factories purr with prosperity, Your Stripedness!"
                     ],
                     'Residential Area': [
-                        "More residents means more taxpayers. Acceptable.",
-                        "Property taxes will fill our coffers nicely.",
-                        "A stable tax base is forming. Good."
+                        "More taxpayers joining the pride. Acceptable.",
+                        "Property taxes from all these dens will fatten our coffers nicely.",
+                        "A stable tax base - every tiger needs a steady food source."
                     ],
                     'Business Park': [
-                        "Corporate synergy! This will attract Fortune 500 companies.",
-                        "A business hub of this caliber will put us on the map!",
-                        "High-value real estate clustering. Magnificent!"
+                        "Corporate tigers gathering! This is our financial hunting ground!",
+                        "Mayor Pawsworth, you've created a watering hole for wealth!",
+                        "High-value territory! Even lone tigers respect this achievement!"
                     ],
                     'Green Belt': [
-                        "Green space doesn't pay dividends, but I suppose it has... charm.",
-                        "Property values nearby will increase. That's something.",
-                        "Fine, fine. Happy citizens do spend more money."
+                        "Green space? Well, even I admit tigers need their jungle...",
+                        "Property values will rise. Tigers do prefer scenic hunting grounds.",
+                        "Fine, Mayor. Happy citizens are generous citizens."
                     ],
                     'default': [
-                        "Excellent clustering! Economic synergy at its finest.",
-                        "Look at that density! Maximum revenue per square foot.",
-                        "A financial hub in the making. I'm impressed."
+                        "Excellent territorial expansion, Your Stripedness!",
+                        "Maximum profit per paw print! Magnificent!",
+                        "A financial jungle in the making. You're the apex mayor!"
                     ]
                 },
                 achievementDialogues: [
-                    "Achievement unlocked! This will look great in the annual report.",
-                    "Impressive milestone! The shareholders will be pleased.",
-                    "Success breeds success, Mayor. Keep the profits rolling!",
-                    "A bonus-worthy performance! If we had bonuses...",
-                    "You're making history, and money! Mostly money."
+                    "Achievement unlocked! The shareholders are purring with delight!",
+                    "Impressive, Mayor Pawsworth! You've earned your economic stripes!",
+                    "Success! You hunt profit like a true financial predator!",
+                    "Bonus-worthy! If we paid bonuses to tigers, that is...",
+                    "You're making history AND money! Mostly money, Your Stripedness!"
                 ],
                 statWarnings: {
                     fundsLow: [
-                        "Mayor, our funds are critically low! We need revenue NOW!",
-                        "The treasury is nearly empty! Cut costs or raise taxes!",
-                        "Financial emergency! We're approaching bankruptcy!"
+                        "Mayor Pawsworth! Our treasury is emptier than a tiger's stomach in winter!",
+                        "We're down to our last gazelle! Cut costs or hunt for revenue!",
+                        "Financial emergency! Even tigers can't survive on pride alone!"
                     ],
                     fundsCritical: [
-                        "MAYOR! We're broke! The city will collapse without funds!",
-                        "This is a fiscal apocalypse! Do something immediately!"
+                        "MAYOR! We're BROKE! The city's about to become prey!",
+                        "This is catastrophic! Do something before we're all declawed!"
                     ],
                     fundsHigh: [
-                        "Our coffers overflow! Time to invest in growth.",
-                        "Excellent reserves! We can afford expansion."
+                        "Our coffers are full as a tiger after a feast! Time to expand territory!",
+                        "Excellent reserves, Your Stripedness! We can afford to prowl boldly!"
                     ]
                 },
-                // Reactions to other advisors
                 advisorReactions: {
                     ivy: [
-                        "Yes, yes, the environment... but what about the budget?",
-                        "Ivy makes a fair point, but consider the revenue...",
-                        "Trees are nice, but money doesn't grow on them!"
+                        "Yes, yes, Ivy wants to save every blade of grass... but who pays for it?",
+                        "Trees are lovely, but money doesn't grow on them, despite what Ivy thinks!",
+                        "Ivy's bleeding heart will bleed our budget dry!"
                     ],
                     engineer: [
-                        "The Chief's zoning plan looks profitable. I approve.",
-                        "Good infrastructure means good business. Proceed.",
-                        "If it's efficient, it's profitable. I'm listening."
+                        "The Chief's infrastructure looks profitable. I approve!",
+                        "Good bones make good business. Build away, Chief!",
+                        "Efficiency equals profit. The Chief gets it!"
                     ]
                 },
                 efficiencyDialogues: {
-                    milestone25: "25% efficiency. A modest start. We can do better.",
-                    milestone50: "50% efficiency! The city is becoming profitable.",
-                    milestone75: "75% efficiency! Investors are taking notice!",
-                    milestone90: "90%+ efficiency! This is a masterclass in urban economics!"
+                    milestone25: "25% efficiency. A cub's first hunt. We can do better, Mayor Pawsworth.",
+                    milestone50: "50% efficiency! The city's starting to show its stripes!",
+                    milestone75: "75% efficiency! Investors are circling like hungry tigers!",
+                    milestone90: "90%+ efficiency! Mayor Pawsworth, you're the apex of urban economics!"
                 }
             },
             ivy: {
@@ -154,129 +151,129 @@ class NarrativeManager {
                 personality: 'activist',
                 catchphrases: {
                     positive: [
-                        "The people will thrive! Nature approves!",
-                        "A green choice for a brighter future!",
-                        "The community thanks you, Mayor!",
-                        "This brings joy to our citizens!",
-                        "Harmony with nature is the true path.",
-                        "I can feel the city breathing easier already.",
-                        "Wonderful! A sustainable choice for generations."
+                        "Mayor Pawsworth, you're proving tigers CAN change their stripes!",
+                        "The citizens are purring with joy! Nature approves!",
+                        "A green choice! Even a carnivore can care for the ecosystem!",
+                        "You're giving our city room to breathe, Your Stripedness!",
+                        "Beautiful! Harmony between predator and paradise!",
+                        "The urban jungle is healing! Thank you, Mayor Pawsworth!",
+                        "Wonderful! Future cubs will thank you for this!"
                     ],
                     negative: [
-                        "The people deserve better than this!",
-                        "Think of the children, Mayor!",
-                        "Our green spaces weep today...",
-                        "Happiness cannot be sacrificed for profit!",
-                        "This is a disaster for the ecosystem!",
-                        "The citizens are suffering from this decision!",
-                        "Nature will not forgive this transgression."
+                        "Mayor Pawsworth, just because you're a predator doesn't mean you should prey on citizens!",
+                        "Think of the cubs! What world are we leaving them?",
+                        "Our green spaces are disappearing faster than antelope at a tiger convention!",
+                        "Happiness isn't something you can hunt and capture!",
+                        "This is a catastrophe! And not the fun cat kind!",
+                        "The citizens need nurturing, not just surviving!",
+                        "Even tigers need trees to shade under, Mayor!"
                     ],
                     neutral: [
-                        "The citizens are watching... waiting.",
-                        "A cautious step. The people wait.",
-                        "Neither celebration nor protest today.",
-                        "It's okay, but we could do better.",
-                        "Balance is key. Don't tip the scales."
+                        "The citizens watch with cautious eyes, like deer at a watering hole.",
+                        "A careful step, Mayor Pawsworth. The pack is waiting.",
+                        "Neither roar of approval nor hiss of displeasure today.",
+                        "It's okay, but remember - even tigers need balance in nature.",
+                        "The ecosystem remains stable... for now."
                     ]
                 },
                 buildingDialogues: {
                     house: [
-                        "New homes for families! The community grows stronger.",
-                        "A place to belong. Every citizen deserves a home.",
-                        "Neighborhoods are the heart of our city."
+                        "New dens for families! Every creature needs a safe home, Mayor Pawsworth!",
+                        "Homes where cubs can grow! The community strengthens!",
+                        "Even lone tigers eventually need a pride, Mayor!"
                     ],
                     shop: [
-                        "Local businesses bring life to our neighborhoods!",
-                        "A place for people to gather and connect.",
-                        "Support local! It builds community spirit."
+                        "Local businesses! Where the community gathers like a watering hole!",
+                        "Supporting local! Better than any corporate predator!",
+                        "Small shops have big hearts, Your Stripedness!"
                     ],
                     factory: [
-                        "I hope the pollution controls are adequate...",
-                        "Industry is necessary, but at what cost to the air?",
-                        "Please ensure the workers are treated well."
+                        "A factory... I hope it won't pollute our hunting grounds, Mayor.",
+                        "Industry is necessary, but at what cost to our natural habitat?",
+                        "Please ensure the workers aren't treated like prey, Mayor Pawsworth."
                     ],
                     park: [
-                        "Beautiful! Green spaces heal the soul of our city.",
-                        "Trees are the lungs of the city. Thank you, Mayor!",
-                        "A sanctuary for nature and people alike. Perfect."
+                        "Beautiful! Every tiger needs their jungle, even in the city!",
+                        "Green spaces! Where citizens can be free, not caged!",
+                        "Thank you, Mayor Pawsworth! Nature and nurture combined!"
                     ],
                     office: [
-                        "More jobs, but let's not forget work-life balance.",
-                        "Glass towers... I hope they're bird-safe.",
-                        "Employment is good, but stress is bad."
+                        "More jobs, but remember - even tigers need work-life balance!",
+                        "Glass towers... I hope they have bird-safe glass, Your Stripedness.",
+                        "Corporate cages... at least make them comfortable ones!"
                     ]
                 },
                 zoneDialogues: {
                     'Residential Area': [
-                        "A thriving neighborhood emerges! Community spirit soars!",
-                        "People coming together. This is what cities are about!",
-                        "The citizens will love this! It feels like home."
+                        "A thriving pride emerges! Community spirit soars, Mayor Pawsworth!",
+                        "Families gathering! This is what makes a city more than just territory!",
+                        "The citizens feel at home - not like prey, but like pride!"
                     ],
                     'Green Belt': [
-                        "A green sanctuary! The birds are already singing!",
-                        "Nature reclaims its place. This is beautiful!",
-                        "Clean air, happy citizens. Perfect harmony!"
+                        "A green sanctuary! Even urban tigers need their jungle!",
+                        "Nature reclaims its rightful place! The birds sing for you, Mayor!",
+                        "Clean air, happy citizens! This is the habitat we need!"
                     ],
                     'Commercial District': [
-                        "I hope these businesses are eco-friendly...",
-                        "Commerce is fine, but where are the trees?",
-                        "At least people have places to shop locally."
+                        "Commerce is fine, but where will the butterflies land, Mayor Pawsworth?",
+                        "Shopping... but at what cost to our green spaces?",
+                        "At least it's local business, not some corporate predator."
                     ],
                     'Industrial Zone': [
-                        "So many factories... the air quality concerns me.",
-                        "I pray the workers have good conditions.",
-                        "Progress shouldn't come at nature's expense."
+                        "So much concrete... are we building a city or a cage, Mayor?",
+                        "I hope these factories don't turn our air toxic!",
+                        "Progress shouldn't mean turning paradise into wasteland!"
                     ],
                     'Business Park': [
-                        "Office workers need green spaces too, Mayor.",
-                        "I hope there's good public transit to reduce emissions.",
-                        "Corporate... but necessary for employment, I suppose."
+                        "Corporate territory... remember, Mayor, even tigers can't eat money.",
+                        "I hope there's green space between all that gray!",
+                        "Jobs are good, but not at the cost of our souls!"
                     ],
                     'default': [
-                        "A vibrant community! You can feel the energy.",
-                        "People are connecting. This brings me joy!",
-                        "The neighborhood is coming alive!"
+                        "The community grows! Like a healthy ecosystem!",
+                        "People connecting - that's the real treasure, Mayor Pawsworth!",
+                        "Life finds a way, even in the concrete jungle!"
                     ]
                 },
                 achievementDialogues: [
-                    "The people celebrate! You've made them proud, Mayor.",
-                    "This achievement shows you care about our community!",
-                    "Wonderful progress! The citizens are grateful.",
-                    "A victory for the people and the planet!",
-                    "Your heart is in the right place, and it shows."
+                    "The people celebrate! Mayor Pawsworth has a heart under those stripes!",
+                    "This proves even apex predators can be protectors!",
+                    "Wonderful! You're not just a tiger, you're a guardian!",
+                    "A victory for both the wild and the mild!",
+                    "Your legacy will outlive all nine lives, Mayor!"
                 ],
                 statWarnings: {
                     happinessLow: [
-                        "Mayor, the citizens are unhappy! We need parks and homes!",
-                        "Morale is plummeting! The people need your attention!",
-                        "Unhappiness breeds unrest. Please help them!"
+                        "Mayor Pawsworth, the citizens are miserable! They need more than just survival!",
+                        "Morale is lower than a tiger's belly in tall grass! Help them!",
+                        "Unhappy citizens make for unstable territory, Your Stripedness!"
                     ],
                     happinessCritical: [
-                        "CRISIS! The citizens are miserable! Act NOW!",
-                        "The people are on the verge of revolt! Help them!"
+                        "CRISIS! The citizens might flee like startled gazelles!",
+                        "Mayor! They're on the verge of revolt! Show them you care!"
                     ],
                     happinessHigh: [
-                        "The citizens are joyful! What a wonderful city!",
-                        "Happiness abounds! You're a beloved Mayor!"
+                        "The citizens are joyful! They're purring louder than you, Mayor!",
+                        "Happiness abounds! You're not just feared, you're loved!"
                     ]
                 },
                 advisorReactions: {
                     banks: [
-                        "Money isn't everything, Mr. Banks!",
-                        "There's more to life than profit margins.",
-                        "The people matter more than the bottom line!"
+                        "Mr. Banks only sees dollar signs, not living beings!",
+                        "There's more to life than being the richest tiger in the jungle!",
+                        "Banks would pave paradise for a penny more profit!"
                     ],
                     engineer: [
-                        "Chief, remember to include green spaces in your plans!",
-                        "Efficiency is good, but don't forget the parks!",
-                        "I like your zoning, but where will children play?"
+                        "Chief, your blueprints need more green and less gray!",
+                        "Efficiency is good, but don't forget the heart of the city!",
+                        "Where will the children play in your perfect grid, Chief?"
                     ]
                 },
                 efficiencyDialogues: {
-                    milestone25: "25% efficiency. Let's make it greener!",
-                    milestone50: "50%! The city is growing harmoniously.",
-                    milestone75: "75%! The citizens are thriving!",
-                    milestone90: "90%+! A model sustainable city! I'm so proud!"
+                    milestone25: "25% efficiency. The ecosystem is finding its balance, Mayor.",
+                    milestone50: "50%! The urban jungle is starting to thrive!",
+                    milestone75: "75%! Citizens and nature in harmony - well done, Your Stripedness!",
+                    milestone90: "90%+! A sustainable paradise! Even for a tiger!"
                 }
             },
             engineer: {
@@ -289,136 +286,135 @@ class NarrativeManager {
                 personality: 'engineer',
                 catchphrases: {
                     positive: [
-                        "Structurally sound decision, Mayor!",
-                        "The infrastructure will support this!",
-                        "Excellent zoning potential here!",
-                        "The city grid approves! Efficiency is up.",
-                        "Optimized! That's what I like to see.",
-                        "According to my calculations, this is perfect.",
-                        "A masterpiece of urban engineering!"
+                        "Structurally sound as a tiger's den, Mayor Pawsworth!",
+                        "The infrastructure can handle even your mighty paws!",
+                        "Excellent zoning! Organized like a perfect hunt pattern!",
+                        "The city grid purrs with efficiency, Your Stripedness!",
+                        "Optimized! Sharp as your claws, smooth as your stride!",
+                        "My calculations show this is purrfect, Mayor!",
+                        "Engineering excellence worthy of an apex predator!"
                     ],
                     negative: [
-                        "The zoning implications concern me...",
-                        "This disrupts our urban planning!",
-                        "The infrastructure cannot sustain this!",
-                        "Special interests are not aligned...",
-                        "This violates several building codes!",
-                        "Inefficient! We're wasting potential here.",
-                        "My blueprints don't account for this!"
+                        "Mayor Pawsworth, this violates the natural order of urban planning!",
+                        "The infrastructure will collapse faster than a house of cards in a tiger cage!",
+                        "This disrupts the entire ecosystem of our city grid!",
+                        "Even a tiger can't ignore the laws of physics, Your Stripedness!",
+                        "My blueprints are roaring in protest!",
+                        "Inefficient! We're wasting more potential than a tiger going vegetarian!",
+                        "This is chaos! Not even controlled chaos - just chaos!"
                     ],
                     neutral: [
-                        "The blueprints are unchanged. Proceeding.",
-                        "A standard procedure. Nothing more.",
-                        "Engineering sees no immediate impact.",
-                        "Within acceptable tolerances.",
-                        "Functionally adequate. It works."
+                        "Within tolerance. No need to sharpen claws over this.",
+                        "Standard procedure. Nothing to roar about, Mayor.",
+                        "The blueprints remain stable, like a resting tiger.",
+                        "Functionally adequate. It won't win awards, but it works.",
+                        "The grid accepts this change without complaint."
                     ]
                 },
                 buildingDialogues: {
                     house: [
-                        "Residential zone expanded. Utilities connected.",
-                        "Standard housing unit. Efficient use of space.",
-                        "Population density increasing. Infrastructure holds."
+                        "Residential expansion confirmed. Each den properly connected to utilities.",
+                        "Housing density optimal. Even tigers need neighbors, Mayor!",
+                        "Population capacity increased. The pride grows!"
                     ],
                     shop: [
-                        "Commercial structure in place. Good traffic flow.",
-                        "Retail zoning confirmed. Loading zones accessible.",
-                        "Service sector expansion. Logistics optimized."
+                        "Commercial node established. Traffic patterns optimized for the hunt... I mean, shopping!",
+                        "Retail infrastructure solid. Can handle Black Friday stampedes!",
+                        "Service sector positioned perfectly. Efficient as a tiger's hunting route!"
                     ],
                     factory: [
-                        "Heavy industry requires solid foundations. Well built!",
-                        "Power grid load increasing. We can handle it.",
-                        "Industrial zoning optimized. Access roads clear."
+                        "Heavy industry locked in! Foundation strong enough for a tiger's weight!",
+                        "Industrial capacity roaring to life! Power grid holding steady!",
+                        "Manufacturing base established. Purring like a well-oiled machine!"
                     ],
                     park: [
-                        "Green infrastructure improves drainage and air quality.",
-                        "Recreational zoning. Good for spacing density.",
-                        "Landscaping complete. Soil stability excellent."
+                        "Green infrastructure improves drainage. Even engineers appreciate nature, Mayor!",
+                        "Recreational zoning confirmed. Every tiger needs room to play!",
+                        "Natural spacing achieved. The grid breathes easier!"
                     ],
                     office: [
-                        "High-rise potential in this location. Smart.",
-                        "Vertical expansion is efficient. Elevators operational.",
-                        "Commercial density maximized. Good skyline."
+                        "Vertical expansion initiated! Reaching as high as a tiger's leap!",
+                        "Commercial density maximized. The skyline has new stripes!",
+                        "High-rise approved. Engineering marvels for an engineering marvel of a mayor!"
                     ]
                 },
                 zoneDialogues: {
                     'Industrial Zone': [
-                        "Zone synergy detected! Industrial efficiency at 100%!",
-                        "Manufacturing cluster formed! Logistics optimized!",
-                        "Heavy industry zone established. Power grid stable."
+                        "Industrial synergy achieved! The machinery roars in harmony, Mayor Pawsworth!",
+                        "Manufacturing cluster operational! Efficient as a tiger's hunt!",
+                        "Heavy industry zone purring at maximum capacity!"
                     ],
                     'Business Park': [
-                        "Corporate district synergy! Infrastructure networks aligned!",
-                        "Business clustering maximizes shared utilities!",
-                        "Office zone efficiency is off the charts!"
+                        "Corporate infrastructure aligned! The concrete jungle takes shape!",
+                        "Business clustering achieved! Synergy worthy of a tiger's coordination!",
+                        "Office efficiency off the charts! Even you'd be impressed, Your Stripedness!"
                     ],
                     'Residential Area': [
-                        "Residential cluster formed. Utility networks shared.",
-                        "Neighborhood zoning complete. Good density ratio.",
-                        "Housing district established. Schools can be added."
+                        "Residential grid optimized. Every tiger has their territory now!",
+                        "Neighborhood infrastructure complete. The pride is housed!",
+                        "Housing efficiency achieved. Dens for all!"
                     ],
                     'Commercial District': [
-                        "Commercial zone synergy! Traffic patterns optimized.",
-                        "Retail district formed. Delivery logistics streamlined.",
-                        "Shopping district complete. Parking adequate."
+                        "Commercial zone synchronized! Traffic flows like a river!",
+                        "Retail district operational. The shopping hunt can begin!",
+                        "Market infrastructure perfected, Mayor Pawsworth!"
                     ],
                     'Green Belt': [
-                        "Green zone established. Drainage improved citywide.",
-                        "Park network formed. Air quality readings up.",
-                        "Recreational zone complete. Pedestrian paths connected."
+                        "Green zone integrated! Nature and engineering in balance!",
+                        "Park network connected. Even I appreciate this, Your Stripedness!",
+                        "Recreational grid complete. Room for tigers to roam!"
                     ],
                     'default': [
-                        "Zone synergy detected! Efficiency rating climbing!",
-                        "Urban planning at its finest! Grid optimized.",
-                        "Perfect zoning alignment! It's beautiful."
+                        "Zone synergy detected! The grid roars with approval!",
+                        "Urban planning perfection! Worthy of a tiger's precision!",
+                        "Optimal configuration achieved, Mayor Pawsworth!"
                     ]
                 },
                 achievementDialogues: [
-                    "Engineering milestone achieved! The blueprints don't lie.",
-                    "Structural excellence recognized! Well planned.",
-                    "Achievement logged! City efficiency improving.",
-                    "Calculated success! The numbers don't lie.",
-                    "A monumental feat of engineering!"
+                    "Engineering milestone reached! Even a tiger can appreciate good design!",
+                    "Structural excellence! Built to last longer than nine lives!",
+                    "Achievement calculated and confirmed, Your Stripedness!",
+                    "The numbers don't lie - you're an apex engineer, Mayor!",
+                    "Monumental! This infrastructure could support a thousand tigers!"
                 ],
                 statWarnings: {
                     interestLow: [
-                        "Special interests are displeased! We need offices and factories!",
-                        "The stakeholders are losing confidence in us!",
-                        "Infrastructure support is waning. Build more!"
+                        "Mayor Pawsworth, the stakeholders are getting skittish as antelope!",
+                        "Infrastructure support is wavering! We need to show our strength!",
+                        "Special interests are prowling elsewhere! Build to bring them back!"
                     ],
                     interestCritical: [
-                        "ALERT! Special interests will pull funding!",
-                        "We're losing all stakeholder support! Emergency!"
+                        "ALERT! Stakeholders fleeing like prey from a predator!",
+                        "Emergency, Your Stripedness! We're losing all support!"
                     ],
                     interestHigh: [
-                        "Stakeholders are fully invested! Excellent support.",
-                        "Special interests are aligned. Maximum backing!"
+                        "Stakeholders fully invested! They trust the tiger's vision!",
+                        "Maximum support achieved! Even lone wolves want in!"
                     ]
                 },
                 advisorReactions: {
                     banks: [
-                        "Mr. Banks, profitable buildings need good foundations!",
-                        "Money is good, but the grid must be stable first.",
-                        "I can make your investments structurally sound."
+                        "Mr. Banks, even golden buildings need solid foundations!",
+                        "Profit is good, but the infrastructure must support it!",
+                        "I'll make your money-making dreams structurally sound!"
                     ],
                     ivy: [
-                        "Ivy, green spaces improve overall city efficiency!",
-                        "Parks aid drainage. I support your proposal.",
-                        "Environmental zones have engineering benefits too."
+                        "Ivy's right - green spaces improve overall grid efficiency!",
+                        "Nature and engineering can coexist. I've calculated it!",
+                        "Environmental zones have surprising structural benefits!"
                     ]
                 },
                 efficiencyDialogues: {
-                    milestone25: "25% efficiency. The grid needs optimization.",
-                    milestone50: "50%! Infrastructure is stabilizing nicely.",
-                    milestone75: "75%! Near-optimal urban planning achieved!",
-                    milestone90: "90%+! This is textbook perfect city engineering!"
+                    milestone25: "25% efficiency. The grid needs sharpening, like claws on a scratching post.",
+                    milestone50: "50%! Infrastructure prowling toward optimization!",
+                    milestone75: "75%! Near-purrfect urban planning, Mayor Pawsworth!",
+                    milestone90: "90%+! Engineering excellence worthy of a tiger's precision!"
                 },
-                // Special building context reactions
                 adjacencyWarnings: {
-                    factoryNearHouse: "Warning: Factory near residential. Noise complaints expected.",
-                    factoryNearPark: "Alert: Industrial pollution will affect the park.",
-                    goodPlacement: "Excellent placement! Adjacency bonuses maximized.",
-                    zonePotential: "Place one more and you'll form a zone!"
+                    factoryNearHouse: "Warning! Factories near dens will disturb the pride's sleep!",
+                    factoryNearPark: "Alert! Industrial pollution will spoil the hunting grounds!",
+                    goodPlacement: "Excellent positioning! Strategic as a tiger's ambush!",
+                    zonePotential: "One more and you'll mark this territory as a zone!"
                 }
             }
         };
