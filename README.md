@@ -378,8 +378,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) file for 
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/mayor-quiz-game/issues)
-- **Documentation**: See [CLAUDE.md](CLAUDE.md) for AI development guide
+- **Issues**: [GitHub Issues](https://github.com/yourusername/mayor-quiz-game/issue
 - **API Docs**: See [BACKEND_FEATURES.md](BACKEND_FEATURES.md)
 
 ## 🗺️ Roadmap
