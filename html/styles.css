@@ -3609,7 +3609,9 @@ body {
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    /* Safari fix: use clip instead of hidden, and add min-height */
+    overflow: clip;
+    min-height: 0;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -3619,6 +3621,8 @@ body {
     padding: 15px 20px;
     text-align: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    /* Prevent header from shrinking - Safari fix */
+    flex-shrink: 0;
 }
 
 .palette-header h3 {
@@ -3636,7 +3640,9 @@ body {
 }
 
 .palette-buildings {
-    flex: 1;
+    flex: 1 1 0;
+    /* Safari flexbox scroll fix - min-height: 0 is critical */
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 10px;
@@ -3648,7 +3654,6 @@ body {
     -webkit-overflow-scrolling: touch;
     /* Safari/WebKit scrolling fixes */
     overscroll-behavior: contain;
-    touch-action: pan-y;
     /* Ensure scrollbar is always visible on WebKit */
     scrollbar-gutter: stable;
 }
@@ -3835,6 +3840,8 @@ body {
     padding: 15px 20px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-top: 2px solid rgba(102, 126, 234, 0.2);
+    /* Prevent footer from shrinking - Safari fix */
+    flex-shrink: 0;
 }
 
 .undo-button {
