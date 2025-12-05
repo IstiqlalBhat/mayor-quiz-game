@@ -1201,11 +1201,16 @@ function handleTouchStart(e) {
 function handleTouchMove(e) {
     if (!touchDragData) return;
 
-    e.preventDefault(); // Prevent scrolling while dragging
-
     const touch = e.touches[0];
     const moveDistance = Math.abs(touch.clientX - touchDragData.startX) +
         Math.abs(touch.clientY - touchDragData.startY);
+
+    // Only prevent scrolling once significant movement detected (dragging started)
+    if (moveDistance > 10 || touchDragData.isDragging) {
+        e.preventDefault(); // Prevent scrolling while dragging
+    } else {
+        return; // Allow normal scrolling for small movements
+    }
 
     if (moveDistance > 10) {
         touchDragData.isDragging = true;

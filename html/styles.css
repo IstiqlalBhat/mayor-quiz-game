@@ -1336,7 +1336,8 @@ body {
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 1;
-    overflow: hidden;
+    /* Safari fix: use clip instead of hidden to allow inner scrolling */
+    overflow: clip;
 }
 
 .game-content-overlay.hidden {
@@ -1573,6 +1574,7 @@ body {
     min-height: 0;
     /* Allow flexbox to shrink below content size */
     overflow-y: auto;
+    overflow-x: hidden;
     background: linear-gradient(to bottom,
             rgba(255, 255, 255, 0.15) 0%,
             rgba(255, 255, 255, 0.08) 100%);
@@ -1580,16 +1582,30 @@ body {
     -webkit-backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
+    /* Safari scrolling fixes */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y pinch-zoom;
+    /* Ensure scrollbar is always visible */
+    scrollbar-gutter: stable;
+}
+
+.game-content::-webkit-scrollbar {
+    width: 8px;
 }
 
 .game-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 10px;
 }
 
 .game-content::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 10px;
+}
+
+.game-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5a6fd4 0%, #6a4291 100%);
 }
 
 /* Story Section */
@@ -3627,9 +3643,14 @@ body {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    /* Smooth scrolling */
+    /* Smooth scrolling - Safari fix */
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    /* Safari/WebKit scrolling fixes */
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    /* Ensure scrollbar is always visible on WebKit */
+    scrollbar-gutter: stable;
 }
 
 .palette-buildings::-webkit-scrollbar {
@@ -4294,9 +4315,12 @@ body {
         padding: 8px 12px 12px;
         gap: 10px;
         scroll-snap-type: x proximity;
-        /* Smooth scrolling on iOS */
+        /* Smooth scrolling on iOS/Safari */
         -webkit-overflow-scrolling: touch;
         scroll-behavior: smooth;
+        /* Safari scrolling fixes */
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
         /* Show scrollbar on tablets for better UX */
         scrollbar-width: thin;
         scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05);
@@ -4402,11 +4426,17 @@ body {
     /* Quiz overlay adjustments for mobile */
     .game-content-overlay {
         background: rgba(0, 0, 0, 0.98);
-        /* Better scrolling on mobile */
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        /* Safari fix: use clip on parent, let child handle scrolling */
+        overflow: clip;
         left: 50%;
         /* Center normally on mobile (palette is at bottom) */
+    }
+
+    .game-content {
+        /* Better scrolling on mobile - Safari fixes */
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-y pinch-zoom;
     }
 
     .quiz-header {
@@ -4843,12 +4873,17 @@ body {
         min-height: 48px;
     }
 
-    /* Smooth momentum scrolling on iOS */
-    .game-content-overlay,
+    /* Smooth momentum scrolling on iOS/Safari */
+    .game-content-overlay {
+        overflow: clip;
+    }
+    
+    .game-content,
     .palette-buildings,
     .leaderboard-list {
         -webkit-overflow-scrolling: touch;
         scroll-behavior: smooth;
+        overscroll-behavior: contain;
     }
 }
 
@@ -4932,6 +4967,9 @@ body {
         gap: 6px;
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
+        /* Safari scrolling fixes */
+        overscroll-behavior-y: contain;
+        touch-action: pan-y;
     }
 
     .building-card {
