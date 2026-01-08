@@ -171,10 +171,7 @@ mayor-quiz-game/
 │   └── server.js             # Express server with PostgreSQL
 │
 ├── package.json              # Dependencies and scripts
-├── CLAUDE.md                 # AI development guide
-├── BACKEND_FEATURES.md       # Complete API documentation
-├── SETUP.md                  # Detailed setup instructions
-├── DEPLOYMENT.md             # Deployment guide
+├── docs/                     # Documentation files
 └── README.md                 # This file
 ```
 
@@ -374,7 +371,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) file for 
 
 - Inspired by city-building classics and political decision games
 - Built for educational purposes to explore civic engagement
-- Thanks to all playtesters and contributors
+- Thanks to all playtesters
 
 ## 📞 Support
 

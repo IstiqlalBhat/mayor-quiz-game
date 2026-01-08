@@ -82,9 +82,8 @@ mayor-quiz-game/
 │
 ├── server.js                       # Entry point (redirects to backend/server.js)
 ├── package.json                    # Node dependencies
-├── CLAUDE.md                       # AI assistant instructions
+├── docs/                           # Documentation files
 ├── Architecture.MD                 # This file
-└── BACKEND_FEATURES.md             # Complete API documentation
 ```
 
 ---

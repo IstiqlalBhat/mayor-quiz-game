@@ -1548,7 +1548,6 @@ Options: [Play Again] [Quit]
 
 ## Quick Reference Links
 
-- **CLAUDE.md** - Complete development documentation
 - **SCORING.md** - Detailed scoring algorithm explanation
 - **AUDIO_FIX_COMPLETE.md** - Audio system implementation
 - **ARCHITECTURE.md** - Technical architecture deep dive
