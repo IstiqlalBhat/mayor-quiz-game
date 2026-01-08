@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
 
 /* ==================== RESET & BASE STYLES ==================== */
@@ -1127,7 +1127,7 @@ body {
 }
 
 .grid-cell.locked-cell::after {
-    content: '🔒';
+    content: 'ðŸ”’';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -4121,7 +4121,7 @@ body {
     }
 }
 
-/* Mobile and Tablet Portrait (≤ 768px) */
+/* Mobile and Tablet Portrait (â‰¤ 768px) */
 @media (max-width: 768px) {
 
     /* Use dvh (dynamic viewport height) to account for mobile browser chrome */
@@ -4609,7 +4609,7 @@ body {
     }
 }
 
-/* Small Mobile (≤ 480px) */
+/* Small Mobile (â‰¤ 480px) */
 @media (max-width: 480px) {
     .header h1 {
         font-size: 1.4em;
@@ -4866,7 +4866,7 @@ body {
 
     /* Long-press hint for occupied cells */
     .grid-cell.occupied::after {
-        content: '👆';
+        content: 'ðŸ‘†';
         position: absolute;
         bottom: 2px;
         right: 2px;
@@ -5861,8 +5861,7 @@ body {
     }
 }
 
-/* ==================== CONSOLIDATED MOBILE LAYOUT FIX ==================== */
-/* ==================== CONSOLIDATED MOBILE LAYOUT FIX V2 ==================== */
+/* ==================== CONSOLIDATED MOBILE LAYOUT FIX V3 (POLISH) ==================== */
 /* Using Flexbox Column Layout for Stability on Mobile */
 @media (max-width: 768px) {
 
@@ -5926,6 +5925,7 @@ body {
         height: 50px !important;
         min-height: 50px !important;
         flex: 0 0 50px !important;
+        overflow: hidden !important;
     }
 
     /* 4. City View & Grid Center Alignment */
@@ -5960,6 +5960,7 @@ body {
     }
 
     /* 5. Header - Absolute Top of Game Wrapper */
+    /* Updated for Polish: Justify space-between + Centered Timer */
     .header {
         position: absolute !important;
         top: 0;
@@ -5968,10 +5969,14 @@ body {
         z-index: 100;
         height: auto;
         min-height: 50px;
-        padding: 5px 10px;
+        padding: 5px 15px;
+        /* More standard padding */
         background: transparent;
         pointer-events: none;
-        /* Let clicks pass through empty areas */
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
     }
 
     .header * {
@@ -5979,26 +5984,74 @@ body {
         /* Re-enable for buttons */
     }
 
+    /* Force Timer to Center Absolute */
+    .timer-container {
+        position: absolute !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        top: 10px !important;
+        margin: 0 !important;
+        z-index: 101 !important;
+    }
+
     /* 6. Stats & Advisor - Bottom of Game Wrapper */
+    /* Polished Stats Panel: Dark bar, Rounded Pills */
     .stats-panel {
         position: absolute !important;
         bottom: 0 !important;
         left: 0 !important;
         right: 0 !important;
         height: 60px !important;
-        background: rgba(26, 26, 26, 0.95);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        /* Image shows dark background */
+        background: rgba(20, 20, 20, 0.95);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
         z-index: 90;
         display: flex !important;
         align-items: center;
         overflow-x: auto;
+        padding: 5px 10px !important;
+        gap: 8px !important;
+        justify-content: flex-start !important;
+        /* Allow scroll if needed, or start */
     }
 
+    /* Rounded Pill Stats Items */
+    .stat {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 20px !important;
+        padding: 6px 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        height: 36px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .stat-label {
+        font-size: 0.65em !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        opacity: 0.8 !important;
+        margin-right: 2px !important;
+        display: inline-block !important;
+    }
+
+    .stat-value {
+        font-size: 0.95em !important;
+        font-weight: 700 !important;
+    }
+
+    .stat-icon {
+        font-size: 1.1em !important;
+    }
+
+    /* 7. Advisor - Polished Position */
     .advisor-container {
         position: absolute !important;
-        bottom: 65px !important;
-        /* Sit right above stats */
-        left: 10px !important;
+        bottom: 70px !important;
+        /* Sit right above stats (60px + 10px buffer) */
+        left: 5px !important;
         z-index: 95;
         transform: scale(0.85) !important;
         transform-origin: bottom left !important;
@@ -6007,11 +6060,11 @@ body {
 
     .advisor-dialogue-box {
         pointer-events: auto;
-        max-width: 200px;
-        /* Prevent text covering grid */
+        max-width: 220px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6) !important;
     }
 
-    /* 7. Palette Internals */
+    /* 8. Palette Internals */
     .palette-header {
         height: 45px !important;
         min-height: 45px !important;
@@ -6046,14 +6099,17 @@ body {
         display: flex !important;
         align-items: center;
         gap: 5px;
-        padding: 5px 12px;
+        padding: 6px 14px;
         background: rgba(255, 255, 255, 0.15);
         border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 12px;
+        border-radius: 20px !important;
+        /* Pill shape */
         cursor: pointer;
+        font-weight: 600 !important;
+        font-size: 0.85em !important;
     }
 
-    /* 8. Toast Notification Fix - Force to Top and High Z-Index */
+    /* 9. Toast Notification Fix - Force to Top and High Z-Index */
     div[class*="toast"],
     .toast,
     .notification-toast,
@@ -6069,7 +6125,7 @@ body {
         max-width: 90% !important;
     }
 
-    /* 9. Modal Overlays - Centered and Scrollable */
+    /* 10. Modal Overlays - Centered and Scrollable */
     .game-content-overlay {
         position: absolute !important;
         top: 50% !important;
@@ -6089,7 +6145,7 @@ body {
         padding-bottom: 20px;
     }
 
-    /* 10. Disable Shake Effects to prevent layout jank */
+    /* 11. Disable Shake Effects to prevent layout jank */
     .timer-container.critical,
     .timer-container.danger {
         animation: none !important;
