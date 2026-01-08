@@ -8,11 +8,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
 
-// Database connection
-const pool = new Pool({
+// Database connection (reuse between invocations when possible)
+const pool = global.pgPool || new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
+if (!global.pgPool) {
+  global.pgPool = pool;
+}
 
 // Middleware
 app.use(cors());
@@ -401,6 +404,7 @@ async function initDatabase() {
   }
 }
 
+if (!process.env.VERCEL) {
 // Start server
 app.listen(PORT, HOST, async () => {
   console.log('\n🏛️  ManeStreet Backend Server Started!');
@@ -427,3 +431,6 @@ process.on('SIGTERM', async () => {
   await pool.end();
   process.exit(0);
 });
+}
+
+module.exports = { app, initDatabase, pool };
