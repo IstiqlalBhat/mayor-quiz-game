@@ -6247,3 +6247,74 @@ body {
         bottom: 200px !important;
     }
 }
+/* ==================== MOBILE FIX V3 - Scrolling & Hide Button ==================== */
+@media (max-width: 768px) {
+
+    /* 1. RESTORE the palette hide/resize button */
+    .palette-resize-btn {
+        display: flex !important;
+        position: absolute;
+        top: 8px;
+        right: 10px;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        color: white;
+        font-size: 0.85em;
+        cursor: pointer;
+        z-index: 1010;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .palette-header {
+        position: relative;
+    }
+
+    /* 2. FIX scrolling in game content overlay (quiz/story area) */
+    .game-content-overlay {
+        overflow: visible !important;
+    }
+
+    .game-content {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
+        max-height: calc(70vh - 80px);
+        /* Account for header */
+        touch-action: pan-y;
+    }
+
+    /* 3. When palette is minimized/hidden, adjust the game wrapper */
+    .building-palette.minimized {
+        height: 50px !important;
+        /* Just show header */
+    }
+
+    .building-palette.minimized .palette-buildings {
+        display: none !important;
+    }
+
+    .building-palette.minimized .palette-footer {
+        display: none !important;
+    }
+
+    /* When palette is minimized, give more space to game */
+    .game-wrapper.palette-minimized {
+        bottom: 50px !important;
+    }
+
+    /* 4. Ensure the quiz content doesn't overflow behind palette */
+    .game-content-overlay {
+        max-height: calc(100vh - 260px);
+        /* Leave room for palette */
+        top: 45%;
+    }
+
+    /* 5. Fix stats panel to not block content */
+    .stats-panel {
+        position: relative !important;
+        flex-shrink: 0;
+    }
+}
