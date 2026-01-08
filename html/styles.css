@@ -6387,3 +6387,92 @@ body {
         font-size: 0.8em;
     }
 }
+/* ==================== MOBILE FIX V5 - Empty Space & Button Alignment ==================== */
+@media (max-width: 768px) {
+
+    /* 1. Remove excessive padding/spacing in game content overlay */
+    .game-content {
+        padding: 10px 15px 15px !important;
+        /* Reduced bottom padding from 40px */
+    }
+
+    .game-content-overlay {
+        max-height: fit-content;
+        height: auto;
+    }
+
+    /* Remove extra space after choices */
+    .choices-container {
+        margin-bottom: 0 !important;
+        padding-bottom: 10px !important;
+    }
+
+    .choice-card:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    /* Continue button container - reduce margin */
+    .continue-btn-container {
+        margin: 15px auto 10px !important;
+        padding: 0 !important;
+    }
+
+    /* 2. Fix Quiz Header Hide button - prevent overlay */
+    .quiz-header {
+        padding: 10px 15px !important;
+        gap: 10px;
+    }
+
+    .quiz-header h3 {
+        flex: 1;
+        margin-right: 10px;
+        font-size: 0.95em;
+    }
+
+    .quiz-toggle {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        font-size: 0.8em;
+    }
+
+    /* 3. Fix Building Palette header and Hide button alignment */
+    .palette-header {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 10px 15px !important;
+        height: auto !important;
+        min-height: 45px;
+    }
+
+    .palette-header-content {
+        flex: 1;
+    }
+
+    .palette-header-content h3 {
+        font-size: 1em;
+        margin: 0;
+    }
+
+    /* Reset the resize button positioning */
+    .palette-resize-btn {
+        position: static !important;
+        display: flex !important;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 15px;
+        color: white;
+        font-size: 0.85em;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    /* Ensure palette buildings area has no extra space */
+    .palette-buildings {
+        padding: 8px 10px !important;
+    }
+}
