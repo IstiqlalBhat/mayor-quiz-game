@@ -5861,689 +5861,176 @@ body {
     }
 }
 
-/* ==================== MOBILE OPTIMIZATIONS (ADDED) ==================== */
+/* ==================== CONSOLIDATED MOBILE LAYOUT FIX ==================== */
 @media (max-width: 768px) {
 
-    /* Layout Reset */
+    /* 1. Main Game Layout */
     .game-wrapper {
-        right: 0 !important;
-        bottom: 240px !important;
-        /* Space for bottom palette */
-        padding: 5px !important;
-        width: 100%;
-    }
-
-    /* Bottom Palette */
-    .building-palette {
-        width: 100% !important;
-        height: 240px !important;
-        top: auto !important;
-        bottom: 0 !important;
-        right: 0 !important;
+        position: fixed !important;
+        top: 0 !important;
         left: 0 !important;
-        border-left: none !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-        flex-direction: column;
-        background: rgba(45, 52, 54, 0.98);
-        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+        right: 0 !important;
+        /* Reserve space for palette (220px) */
+        bottom: 220px !important;
+        width: 100% !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        transition: bottom 0.3s ease;
+        overflow: hidden !important;
     }
 
-    .palette-header {
-        padding: 8px 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        height: 50px;
+    /* 2. City View & Grid */
+    .city-view {
+        flex: 1 !important;
+        position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        overflow: hidden !important;
     }
 
-    .palette-header h3 {
-        font-size: 1.1em;
-        margin: 0;
-    }
-
-    .palette-subtitle {
-        display: none;
-    }
-
-    /* Make custom resize button visible/adjusted if needed, 
-       but we force height so maybe hide it or adjust its function 
-    */
-    .palette-resize-btn {
-        display: none !important;
-    }
-
-    /* Horizontal Scrolling Buildings */
-    .palette-buildings {
-        flex-direction: row !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        padding: 10px;
-        gap: 15px;
-        height: calc(100% - 50px);
-        /* Subtract header */
-        align-items: center;
-        /* Center items vertically */
-        width: 100%;
-    }
-
-    .palette-footer {
-        display: none;
-        /* Hide undo button in footer, maybe move it to header? */
-        /* Or keep it but it takes space. Let's start with hiding it or making it absolute */
-    }
-
-    /* Re-position Undo button to be floating or in header */
-    .undo-button {
-        position: absolute;
-        top: 10px;
-        right: 15px;
-        padding: 5px 10px;
-        min-width: auto;
-        font-size: 0.9em;
-        z-index: 1002;
-    }
-
-    .building-card {
-        min-width: 140px;
-        width: 140px;
-        height: auto;
-        min-height: 160px;
-        flex-shrink: 0;
-        margin-bottom: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    /* Grid Scaling */
     .grid-container {
-        display: flex;
-        align-items: flex-start;
-        justify-content: center;
-        height: 100%;
-        width: 100%;
-        overflow: hidden;
-        padding-top: 20px;
+        flex: 1 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        /* Center vertically and horizontally */
+        width: 100% !important;
+        height: 100% !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        /* Ensure specific padding top/bottom to avoid cutting off */
+        padding-top: 50px !important;
+        /* Space for header */
+        padding-bottom: 90px !important;
+        /* Space for Advisor/Stats */
     }
 
     .city-grid {
-        /* Default width is ~730px. Scale to fit. */
-        transform-origin: top center;
-        transform: scale(0.55);
-        margin-bottom: 50px;
-        /* Space for advisor */
+        /* Safe scale for mobile */
+        transform: scale(0.7) !important;
+        transform-origin: center center !important;
+        /* Center scaling */
+        margin: 0 !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
     }
 
-    /* Header & Stats Compactness */
+    /* 3. Header */
     .header {
-        padding: 8px 10px;
-        width: 100%;
-    }
-
-    .header h1 {
-        font-size: 1.2em;
-    }
-
-    .stats-panel {
-        padding: 5px;
-        gap: 5px;
-        overflow-x: auto;
-        /* Allow scroll if needed */
-        justify-content: flex-start;
-        -ms-overflow-style: none;
-        /* IE and Edge */
-        scrollbar-width: none;
-        /* Firefox */
-        width: 100%;
-    }
-
-    .stats-panel::-webkit-scrollbar {
-        display: none;
-    }
-
-    .stat {
-        min-width: auto;
-        padding: 4px 8px;
-        flex-shrink: 0;
-    }
-
-    .stat-label {
-        font-size: 0.6em;
-    }
-
-    .stat-value {
-        font-size: 1em;
-    }
-
-    .stat-icon {
-        font-size: 1.1em;
-    }
-
-    /* Advisor Adjustments */
-    .advisor-container {
-        bottom: 20px;
-        left: 10px;
-        pointer-events: none;
-        /* Let clicks pass through if needed */
-        z-index: 90;
-        transform: scale(0.9) translateX(0) !important;
-        opacity: 1 !important;
-    }
-
-    .advisor-character {
-        width: 90px;
-        height: 90px;
-    }
-
-    .advisor-dialogue-box {
-        max-width: 180px;
-        margin-left: -10px;
-        margin-bottom: 5px;
-        pointer-events: auto;
-        font-size: 0.85em;
-        padding: 8px;
-    }
-
-    /* Game Content Overlay (Quiz) */
-    .game-content-overlay {
-        width: 95%;
-        max-height: 70vh;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-}
-
-@media (max-width: 400px) {
-    .city-grid {
-        transform: scale(0.45);
-    }
-
-    .advisor-character {
-        width: 70px;
-        height: 70px;
-    }
-
-    .building-card {
-        min-width: 120px;
-        width: 120px;
-        min-height: 150px;
-    }
-}
-
-/* Fix for Undo Button visibility on mobile */
-@media (max-width: 768px) {
-    .palette-footer {
-        display: block !important;
-        position: static;
-        height: 0;
-        width: 0;
-        padding: 0;
-        margin: 0;
-        overflow: visible;
-        border: none;
-    }
-}
-
-/* ==================== REFINED MOBILE FIXES ==================== */
-@media (max-width: 768px) {
-
-    /* 1. Header Layout - Prevent overlaps */
-    .header {
-        height: auto;
-        min-height: 50px;
-        flex-wrap: wrap;
-        /* Allow wrapping if really narrow */
-    }
-
-    /* 2. Stats Panel - Move purely below header or stick to bottom of game-container */
-    .stats-panel {
-        /* On mobile, stats panel is at the bottom of the game view area, 
-           so it sits right above the building palette. */
-        position: absolute;
-        bottom: 0;
+        position: absolute !important;
+        top: 0;
         left: 0;
         right: 0;
-        z-index: 95;
-        border-radius: 0;
-        background: rgba(26, 26, 26, 0.9);
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 8px 5px;
         height: auto;
-        min-height: 60px;
-    }
-
-    /* Adjust game wrapper to account for palette (240px) */
-    .game-wrapper {
-        bottom: 240px !important;
-        /* Stats panel takes up bottom ~60px of this area */
-    }
-
-    /* 3. Advisor - Move UP to clear the Stats Panel */
-    .advisor-container {
-        /* Stats panel is ~60px, give some buffer */
-        bottom: 75px !important;
-        left: 5px;
-        opacity: 1 !important;
-    }
-
-    /* 4. Grid - Position better */
-    .grid-container {
-        /* Give space for header (top) and advisor/stats (bottom) */
-        padding-top: 60px;
-        padding-bottom: 120px;
-        align-items: center;
-        /* Center vertical */
-    }
-
-    .city-grid {
-        /* Scale slightly larger than 0.55 if possible, but 0.55 is safe. 
-           Let's try 0.6 and ensure margins are handled */
-        transform: scale(0.6);
-        margin-bottom: 0;
-    }
-
-    /* 5. Palette Header & Undo Button Cleanup */
-    .palette-header {
-        position: relative;
-        padding: 5px 15px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-
-    .palette-header h3 {
-        font-size: 1em;
-        /* Make sure it doesn't overlap undo */
-        max-width: 60%;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        text-align: left;
-    }
-
-    /* Undo button needs to be inside the header flow or positioned cleanly */
-    .undo-button {
-        position: static;
-        /* Remove absolute positioning */
-        transform: none;
-        margin: 0;
-        padding: 6px 12px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 15px;
-        z-index: 1005;
-    }
-
-    /* Restore footer display none since we moved undo button logic */
-    .palette-footer {
-        display: none !important;
-        /* We will manually place the undo button in the header via JS if needed, 
-           BUT: The Undo button HTML is physically in .palette-footer.
-           CSS cannot move DOM elements. 
-           
-           Hack: We absolute position the footer's buffer to top-right of palette. */
-        position: absolute !important;
-        top: 5px;
-        right: 10px;
-        height: auto !important;
-        width: auto !important;
-        background: transparent;
-        padding: 0 !important;
-        z-index: 1005;
-    }
-
-    .undo-button {
-        /* Re-apply button styling for the footer placement */
-        position: relative;
-        top: auto;
-        right: auto;
-    }
-
-    /* 6. Building Cards - Reduce clutter */
-    .building-card {
-        min-width: 110px;
-        width: 110px;
-        min-height: 140px;
-        padding: 6px;
-    }
-
-    .building-icon {
-        font-size: 1.5em;
-    }
-
-    .building-name {
-        font-size: 0.85em;
-        margin-bottom: 2px;
-    }
-
-    .building-cost {
-        font-size: 0.8em;
-        padding: 2px 6px;
-    }
-
-    .building-desc {
-        font-size: 0.7em;
-        line-height: 1.1;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    /* Fix "Locked" overlay size */
-    .building-card.locked::after {
-        font-size: 0.9em;
-        /* Smaller lock text/icon */
-    }
-
-    /* Flatten the palette slightly if needed */
-    .building-palette {
-        height: 200px !important;
-        /* Save 40px */
-    }
-
-    .palette-buildings {
-        height: calc(100% - 40px);
-    }
-
-    /* Since palette is shorter, adjust game wrapper bottom */
-    .game-wrapper {
-        bottom: 200px !important;
-    }
-}
-
-/* ==================== MOBILE FIX V3 - Scrolling & Hide Button ==================== */
-@media (max-width: 768px) {
-
-    /* 1. RESTORE the palette hide/resize button */
-    .palette-resize-btn {
-        display: flex !important;
-        position: absolute;
-        top: 8px;
-        right: 10px;
-        padding: 6px 12px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 15px;
-        color: white;
-        font-size: 0.85em;
-        cursor: pointer;
-        z-index: 1010;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .palette-header {
-        position: relative;
-    }
-
-    /* 2. FIX scrolling in game content overlay (quiz/story area) */
-    .game-content-overlay {
-        overflow: visible !important;
-    }
-
-    .game-content {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        -webkit-overflow-scrolling: touch;
-        max-height: calc(70vh - 80px);
-        /* Account for header */
-        touch-action: pan-y;
-    }
-
-    /* 3. When palette is minimized/hidden, adjust the game wrapper */
-    .building-palette.minimized {
-        height: 50px !important;
-        /* Just show header */
-    }
-
-    .building-palette.minimized .palette-buildings {
-        display: none !important;
-    }
-
-    .building-palette.minimized .palette-footer {
-        display: none !important;
-    }
-
-    /* When palette is minimized, give more space to game */
-    .game-wrapper.palette-minimized {
-        bottom: 50px !important;
-    }
-
-    /* 4. Ensure the quiz content doesn't overflow behind palette */
-    .game-content-overlay {
-        max-height: calc(100vh - 260px);
-        /* Leave room for palette */
-        top: 45%;
-    }
-
-    /* 5. Fix stats panel to not block content */
-    .stats-panel {
-        position: relative !important;
-        flex-shrink: 0;
-    }
-}
-
-/* ==================== MOBILE FIX V4 - Font Size & Grid Scale ==================== */
-@media (max-width: 768px) {
-
-    /* 1. Reduce font sizes in decision/quiz area */
-    .game-content-overlay {
-        font-size: 0.9em;
-    }
-
-    .quiz-header h3 {
-        font-size: 1em;
-    }
-
-    .story-section h2 {
-        font-size: 1.1em;
-    }
-
-    .story-section p {
-        font-size: 0.85em;
-        line-height: 1.4;
-    }
-
-    .choice-card {
-        padding: 10px 12px;
-        font-size: 0.85em;
-        min-height: 60px;
-    }
-
-    .choice-text {
-        font-size: 0.9em;
-    }
-
-    .choice-effects {
-        font-size: 0.75em;
-    }
-
-    /* Chapter title styling */
-    .chapter-title,
-    .story-section h2 {
-        font-size: 1.2em;
-    }
-
-    /* 2. Increase grid scale for better visibility */
-    .city-grid {
-        transform: scale(0.75) !important;
-        transform-origin: top center;
-    }
-
-    .grid-cell-icon {
-        font-size: 32px;
-    }
-}
-
-@media (max-width: 400px) {
-
-    /* Even smaller screens */
-    .city-grid {
-        transform: scale(0.65) !important;
-    }
-
-    .choice-card {
-        padding: 8px 10px;
-        font-size: 0.8em;
         min-height: 50px;
+        z-index: 80;
+        padding: 5px 10px;
+        display: flex;
+        flex-wrap: wrap;
     }
 
-    .story-section p {
-        font-size: 0.8em;
-    }
-}
-
-/* ==================== MOBILE FIX V5 - Empty Space & Button Alignment ==================== */
-@media (max-width: 768px) {
-
-    /* 1. Remove excessive padding/spacing in game content overlay */
-    .game-content {
-        padding: 10px 15px 15px !important;
-        /* Reduced bottom padding from 40px */
-    }
-
-    .game-content-overlay {
-        max-height: fit-content;
-        height: auto;
+    /* 4. Stats Panel - Fixed at bottom of Game Wrapper */
+    .stats-panel {
+        position: absolute !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 60px !important;
+        padding: 5px !important;
+        background: rgba(26, 26, 26, 0.95);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 95;
+        white-space: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
     }
 
-    /* Remove extra space after choices */
-    .choices-container {
-        margin-bottom: 0 !important;
-        padding-bottom: 10px !important;
-    }
-
-    .choice-card:last-child {
-        margin-bottom: 0 !important;
-    }
-
-    /* Continue button container - reduce margin */
-    .continue-btn-container {
-        margin: 15px auto 10px !important;
-        padding: 0 !important;
-    }
-
-    /* 2. Fix Quiz Header Hide button - prevent overlay */
-    .quiz-header {
-        padding: 10px 15px !important;
-        gap: 10px;
-    }
-
-    .quiz-header h3 {
-        flex: 1;
-        margin-right: 10px;
-        font-size: 0.95em;
-    }
-
-    .quiz-toggle {
-        flex-shrink: 0;
-        padding: 8px 14px;
-        font-size: 0.8em;
-    }
-
-    /* 3. Fix Building Palette header and Hide button alignment */
-    .palette-header {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        padding: 10px 15px !important;
-        height: auto !important;
-        min-height: 45px;
-    }
-
-    .palette-header-content {
-        flex: 1;
-    }
-
-    .palette-header-content h3 {
-        font-size: 1em;
-        margin: 0;
-    }
-
-    /* Reset the resize button positioning */
-    .palette-resize-btn {
-        position: static !important;
-        display: flex !important;
-        align-items: center;
-        gap: 5px;
-        padding: 6px 12px;
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 15px;
-        color: white;
-        font-size: 0.85em;
-        cursor: pointer;
-        flex-shrink: 0;
-    }
-
-    /* Ensure palette buildings area has no extra space */
-    .palette-buildings {
-        padding: 8px 10px !important;
-    }
-}
-
-/* ==================== MOBILE FIX V6 - Grid, Dynamic Palette, Hurry Effects ==================== */
-@media (max-width: 768px) {
-
-    /* (A) INCREASE GRID SIZE & OVERLAY ADVISOR */
-    .city-grid {
-        transform: scale(0.85) !important;
-        transform-origin: top center;
-    }
-
-    /* Advisor overlays on grid - positioned inside city-view */
+    /* 5. Advisor - Sit above Stats Panel */
     .advisor-container {
         position: absolute !important;
-        bottom: 10px !important;
-        left: 5px !important;
-        z-index: 100 !important;
-        /* Don't affect grid layout */
+        bottom: 65px !important;
+        /* Above stats (60px) + buffer */
+        left: 10px !important;
+        z-index: 90 !important;
         pointer-events: none;
+        transform: scale(0.9) !important;
+        transform-origin: bottom left !important;
+        opacity: 1 !important;
     }
 
     .advisor-dialogue-box {
         pointer-events: auto;
+        max-width: 200px;
     }
 
-    /* Make city-view take available space */
-    .city-view {
-        position: relative;
-        flex: 1;
-        min-height: 0;
-    }
-
-    /* (B) DYNAMIC PALETTE - Fill space when hidden */
-    /* Set bottom margin to match palette height */
-    .game-wrapper {
-        bottom: 220px !important;
-        transition: bottom 0.3s ease;
-    }
-
-    /* Palette sits at bottom with fixed height */
+    /* 6. Building Palette - Footer Area */
     .building-palette {
         position: fixed !important;
         bottom: 0 !important;
         left: 0 !important;
-        right: 0 !important;
         width: 100% !important;
         height: 220px !important;
         max-height: 220px !important;
-        transition: height 0.3s ease;
+        flex-direction: column !important;
+        display: flex !important;
         z-index: 1000 !important;
+        border-right: none !important;
+        border-left: none !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(45, 52, 54, 0.98);
+        transition: height 0.3s ease;
     }
 
-    /* When palette is minimized/collapsed */
+    .palette-header {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        height: 45px !important;
+        min-height: 45px !important;
+        padding: 0 15px !important;
+        width: 100%;
+    }
+
+    .palette-buildings {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 10px !important;
+        gap: 15px !important;
+        height: calc(100% - 45px) !important;
+        width: 100% !important;
+    }
+
+    .palette-footer {
+        display: none !important;
+        /* Hide original footer location */
+    }
+
+    /* 7. Hide/Resize Button */
+    .palette-resize-btn {
+        display: flex !important;
+        position: static !important;
+        /* Inline in header */
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 0.85em;
+    }
+
+    /* 8. Dynamic Collapsing Logic */
+    /* When .minimized class is added to palette (via JS) */
     .building-palette.minimized,
     .building-palette.collapsed {
-        max-height: 50px !important;
         height: 50px !important;
+        max-height: 50px !important;
+        overflow: hidden !important;
     }
 
     .building-palette.minimized .palette-buildings,
@@ -6551,75 +6038,84 @@ body {
         display: none !important;
     }
 
-    /* Game container should extend to bottom when palette is small */
-    .game-container {
-        padding-bottom: 220px;
-        /* Default palette height */
-        transition: padding-bottom 0.3s ease;
+    /* Adjust Game Wrapper when palette is minimized */
+    body:has(.building-palette.minimized) .game-wrapper,
+    body:has(.building-palette.collapsed) .game-wrapper {
+        bottom: 50px !important;
+        /* Reclaim space */
     }
 
-    /* Override: When JS adds class for minimized palette */
-    body.palette-minimized .game-container,
-    body.palette-collapsed .game-container {
-        padding-bottom: 50px !important;
+    /* Fallback for older browsers if :has isn't supported, 
+       JS usually toggles a class on body too */
+    body.palette-minimized .game-wrapper {
+        bottom: 50px !important;
     }
 
-    /* Remove grey background below palette */
-    .building-palette::after {
-        display: none !important;
+    /* 9. Quiz Overlay Scrolling Fix */
+    .game-content-overlay {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        width: 95% !important;
+        max-height: 85vh !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        /* Internal scroll */
     }
 
-    /* (C) FIX HURRY EFFECTS - Contain animations */
+    .game-content {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        flex: 1;
+        padding-bottom: 20px !important;
+    }
+
+    /* 10. Hurry Effects Fix (Disable Layout Shift) */
     .timer-container {
-        position: relative !important;
-        z-index: 10;
-        /* Prevent shake from affecting layout */
         transform-style: preserve-3d;
     }
 
     .timer-container.critical,
     .timer-container.danger {
-        /* Contain the shake animation within bounds */
         animation: none !important;
+        /* Stop shaking */
     }
 
-    /* Still show visual urgency but without layout-breaking shake */
     .timer-container.critical .timer-display,
     .timer-container.danger .timer-display {
-        animation: mobileUrgentPulse 0.5s ease-in-out infinite;
+        animation: mobilePulse 1s infinite alternate;
     }
 
-    @keyframes mobileUrgentPulse {
-
-        0%,
-        100% {
-            box-shadow: 0 0 15px rgba(255, 118, 117, 0.6);
-            border-color: rgba(255, 118, 117, 0.8);
+    @keyframes mobilePulse {
+        from {
+            box-shadow: 0 0 10px red;
+            border-color: red;
         }
 
-        50% {
-            box-shadow: 0 0 25px rgba(255, 118, 117, 1);
-            border-color: rgba(255, 118, 117, 1);
+        to {
+            box-shadow: 0 0 20px darkred;
+            border-color: darkred;
         }
     }
 
-    /* HURRY text - keep it visible but compact */
     .timer-urgent-text {
-        font-size: 0.9em !important;
-        margin-top: 2px !important;
         animation: none !important;
-        /* Just color pulse instead of size */
-        color: #ff7675;
-    }
-
-    /* Efficiency display positioning */
-    .efficiency-display {
-        position: static !important;
+        font-size: 0.8em !important;
     }
 }
 
 @media (max-width: 400px) {
+
+    /* Small Phone adjustments */
     .city-grid {
-        transform: scale(0.75) !important;
+        transform: scale(0.55) !important;
+    }
+
+    .advisor-container {
+        transform: scale(0.8) !important;
+        bottom: 60px !important;
+        left: 5px !important;
     }
 }
