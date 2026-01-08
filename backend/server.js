@@ -9,14 +9,26 @@ const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
 
 // Database connection (reuse between invocations when possible)
-// Supabase requires SSL - enable it if DATABASE_URL contains 'supabase' or in production
-const isSupabase = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('supabase');
-const sslConfig = (isSupabase || process.env.NODE_ENV === 'production')
+// Vercel-Supabase integration uses POSTGRES_URL, fallback to DATABASE_URL for local dev
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+
+// Log which connection is being used (for debugging)
+console.log('Using database connection:', connectionString ? 'Found' : 'NOT FOUND');
+console.log('Available DB env vars:', {
+  POSTGRES_URL: !!process.env.POSTGRES_URL,
+  POSTGRES_URL_NON_POOLING: !!process.env.POSTGRES_URL_NON_POOLING,
+  DATABASE_URL: !!process.env.DATABASE_URL
+});
+
+// Supabase/Vercel requires SSL in production
+const sslConfig = (connectionString && connectionString.includes('supabase')) ||
+                  (connectionString && connectionString.includes('pooler')) ||
+                  process.env.NODE_ENV === 'production'
   ? { rejectUnauthorized: false }
   : false;
 
 const pool = global.pgPool || new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: connectionString,
   ssl: sslConfig
 });
 if (!global.pgPool) {
