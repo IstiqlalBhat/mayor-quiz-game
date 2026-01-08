@@ -1323,6 +1323,8 @@ body {
     /* Dialog box dimensions */
     width: 90%;
     max-width: 700px;
+    /* Explicit height constraint for scroll to work */
+    height: auto;
     max-height: 85vh;
     /* Liquid glass effect */
     background: linear-gradient(135deg,
@@ -1341,8 +1343,8 @@ body {
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 1;
-    /* Use hidden instead of clip to allow child scrolling */
-    overflow: hidden;
+    /* Allow child scrolling - do not use overflow: hidden which clips scrollbars */
+    overflow: visible;
 }
 
 .game-content-overlay.hidden {
@@ -1447,8 +1449,10 @@ body {
 /* ==================== FLOATING UNHIDE BUTTON ==================== */
 .unhide-button {
     position: fixed;
+    /* Position in center-left area above game content, accounting for palette */
     top: 25px;
-    left: 58%;
+    left: calc(50% - 160px);
+    /* Same offset as game-content-overlay */
     transform: translateX(-50%);
     /* Enhanced glassmorphism */
     background: linear-gradient(135deg,
@@ -1458,18 +1462,19 @@ body {
     -webkit-backdrop-filter: blur(15px);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.4);
-    padding: 8px 18px;
+    padding: 10px 20px;
     border-radius: 30px;
     cursor: pointer;
     box-shadow:
         0 10px 30px rgba(102, 126, 234, 0.5),
         inset 0 0 0 1px rgba(255, 255, 255, 0.2),
         0 0 40px rgba(102, 126, 234, 0.3);
-    transition: box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    /* CRITICAL: Initially hidden, JS sets to 'flex' when shown */
     display: none;
     align-items: center;
     gap: 10px;
-    font-size: 0.85em;
+    font-size: 0.9em;
     font-weight: 600;
     z-index: 1250;
     animation: unhideShake 1.5s ease-in-out infinite;
@@ -1578,6 +1583,9 @@ body {
     /* Allow to grow and shrink */
     min-height: 0;
     /* Allow flexbox to shrink below content size */
+    /* CRITICAL: Explicit max-height to enable scrolling within flex container */
+    max-height: calc(85vh - 80px);
+    /* 85vh parent - ~80px header */
     overflow-y: auto;
     overflow-x: hidden;
     background: linear-gradient(to bottom,
@@ -1593,6 +1601,8 @@ body {
     touch-action: pan-y pinch-zoom;
     /* Ensure scrollbar is always visible */
     scrollbar-gutter: stable;
+    /* Force scrollbar visibility for debugging */
+    scrollbar-width: thin;
 }
 
 .game-content::-webkit-scrollbar {
