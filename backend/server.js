@@ -4,6 +4,11 @@ const { Pool } = require('pg');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
+// Allow self-signed certificates for Supabase/Vercel in production
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
@@ -24,14 +29,17 @@ if (connectionString) {
   const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
   const sslConfig = isLocalhost ? false : { rejectUnauthorized: false };
 
-  pool = global.pgPool || new Pool({
+  // Clear old cached pool to ensure fresh SSL settings
+  if (global.pgPool) {
+    global.pgPool = null;
+  }
+
+  pool = new Pool({
     connectionString: connectionString,
     ssl: sslConfig
   });
 
-  if (!global.pgPool) {
-    global.pgPool = pool;
-  }
+  global.pgPool = pool;
 } else {
   console.error('WARNING: No database connection string found!');
 }
