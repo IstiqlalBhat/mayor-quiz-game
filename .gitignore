@@ -16,3 +16,5 @@ npm-debug.log
 # Large audio files (use mp3 instead)
 *.wav
 html/audio/**/*.wav
+.vercel
+.env*.local
