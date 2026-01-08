@@ -1308,7 +1308,6 @@ body {
 /* ==================== DYNAMIC QUIZ OVERLAY ==================== */
 .game-content-overlay {
     position: fixed;
-    /* Changed from absolute to fixed to match placement-overlay stacking context */
     /* Center the dialog box, accounting for building palette on desktop (320px on right) */
     top: 50%;
     left: calc(50% - 160px);
@@ -1317,7 +1316,7 @@ body {
     /* Dialog box dimensions */
     width: 90%;
     max-width: 700px;
-    max-height: 80vh;
+    max-height: 85vh;
     /* Liquid glass effect */
     background: linear-gradient(135deg,
             rgba(255, 255, 255, 0.15) 0%,
@@ -1331,13 +1330,12 @@ body {
         inset 0 0 0 1px rgba(255, 255, 255, 0.2),
         0 0 80px rgba(102, 126, 234, 0.3);
     z-index: 1000;
-    /* Higher than placement-overlay (999) */
     display: flex;
     flex-direction: column;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 1;
-    /* Safari fix: use clip instead of hidden to allow inner scrolling */
-    overflow: clip;
+    /* Use hidden instead of clip to allow child scrolling */
+    overflow: hidden;
 }
 
 .game-content-overlay.hidden {
@@ -3609,8 +3607,7 @@ body {
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    /* Safari fix: use clip instead of hidden, and add min-height */
-    overflow: clip;
+    overflow: hidden;
     min-height: 0;
     border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -4433,8 +4430,7 @@ body {
     /* Quiz overlay adjustments for mobile */
     .game-content-overlay {
         background: rgba(0, 0, 0, 0.98);
-        /* Safari fix: use clip on parent, let child handle scrolling */
-        overflow: clip;
+        overflow: hidden;
         left: 50%;
         /* Center normally on mobile (palette is at bottom) */
     }
@@ -4882,7 +4878,7 @@ body {
 
     /* Smooth momentum scrolling on iOS/Safari */
     .game-content-overlay {
-        overflow: clip;
+        overflow: hidden;
     }
     
     .game-content,
