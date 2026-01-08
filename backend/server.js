@@ -20,12 +20,9 @@ console.log('DB Connection:', connectionString ? 'Found' : 'NOT FOUND');
 let pool = null;
 
 if (connectionString) {
-  // Supabase/Vercel requires SSL in production
-  const sslConfig = connectionString.includes('supabase') ||
-                    connectionString.includes('pooler') ||
-                    process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: false }
-    : false;
+  // Use SSL for any remote database (not localhost)
+  const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+  const sslConfig = isLocalhost ? false : { rejectUnauthorized: false };
 
   pool = global.pgPool || new Pool({
     connectionString: connectionString,
