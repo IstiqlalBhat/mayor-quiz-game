@@ -1,11 +1,31 @@
-const serverless = require('serverless-http');
-const { app, initDatabase } = require('../backend/server');
+let serverless, app, initDatabase, handler;
+let loadError = null;
+
+// Wrap module loading in try-catch to prevent crashes
+try {
+  serverless = require('serverless-http');
+  const server = require('../backend/server');
+  app = server.app;
+  initDatabase = server.initDatabase;
+  handler = serverless(app);
+} catch (err) {
+  console.error('Module load error:', err);
+  loadError = err;
+}
 
 let initialized = false;
 let initError = null;
-const handler = serverless(app);
 
 module.exports = async (req, res) => {
+  // If module failed to load, return error
+  if (loadError) {
+    return res.status(500).json({
+      success: false,
+      error: 'Module load error',
+      message: loadError.message
+    });
+  }
+
   try {
     // Initialize database on first request
     if (!initialized && !initError) {
@@ -19,11 +39,11 @@ module.exports = async (req, res) => {
       }
     }
 
-    // If init failed, still try to handle the request (some routes may not need DB)
+    // Handle the request
     return handler(req, res);
   } catch (error) {
     console.error('Serverless handler error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Server error',
       message: error.message,
