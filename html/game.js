@@ -15,59 +15,9 @@ function getGridSize() {
     }
 }
 
-// Haptic feedback (if supported)
-function triggerHaptic(type = 'light') {
-    if (navigator.vibrate) {
-        const patterns = {
-            light: [10],
-            medium: [20],
-            heavy: [30],
-            success: [10, 50, 10],
-            error: [50, 100, 50]
-        };
-        navigator.vibrate(patterns[type] || patterns.light);
-    }
-}
-
-// ==================== PARTICLE BACKGROUND ====================
-function createParticles() {
-    const container = document.getElementById('particles');
-    // Reduce particles on mobile for performance
-    const particleCount = isMobileDevice() ? 15 : 30;
-
-    for (let i = 0; i < particleCount; i++) {
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.style.left = Math.random() * 100 + '%';
-        particle.style.top = Math.random() * 100 + '%';
-        particle.style.animationDelay = Math.random() * 20 + 's';
-        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-        container.appendChild(particle);
-    }
-}
-
-// ==================== TOOLTIP FUNCTIONALITY ====================
-function initializeTooltips() {
-    document.querySelectorAll('[data-tooltip]').forEach(element => {
-        element.addEventListener('mouseenter', (e) => {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.textContent = e.target.getAttribute('data-tooltip');
-            tooltip.style.opacity = '1';
-        });
-
-        element.addEventListener('mousemove', (e) => {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.style.left = e.pageX + 15 + 'px';
-            tooltip.style.top = e.pageY + 15 + 'px';
-        });
-
-        element.addEventListener('mouseleave', () => {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.style.opacity = '0';
-        });
-    });
-}
-
+// NOTE: triggerHaptic is now defined in ui-effects.js
+// NOTE: createParticles is now defined in ui-effects.js
+// NOTE: initializeTooltips is now defined in ui-effects.js
 // ==================== DIFFICULTY MODES ====================
 const difficultyModes = {
     easy: {
