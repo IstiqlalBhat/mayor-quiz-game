@@ -9,9 +9,15 @@ const PORT = process.env.PORT || 5000;
 const HOST = '0.0.0.0';
 
 // Database connection (reuse between invocations when possible)
+// Supabase requires SSL - enable it if DATABASE_URL contains 'supabase' or in production
+const isSupabase = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('supabase');
+const sslConfig = (isSupabase || process.env.NODE_ENV === 'production')
+  ? { rejectUnauthorized: false }
+  : false;
+
 const pool = global.pgPool || new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: sslConfig
 });
 if (!global.pgPool) {
   global.pgPool = pool;
@@ -35,8 +41,24 @@ app.use((req, res, next) => {
 // ==================== API ENDPOINTS ====================
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'ManeStreet Backend API is running!' });
+app.get('/api/health', async (req, res) => {
+  try {
+    // Test database connection
+    const dbTest = await pool.query('SELECT NOW()');
+    res.json({
+      status: 'ok',
+      message: 'ManeStreet Backend API is running!',
+      database: 'connected',
+      timestamp: dbTest.rows[0].now
+    });
+  } catch (error) {
+    res.json({
+      status: 'ok',
+      message: 'ManeStreet Backend API is running!',
+      database: 'error',
+      dbError: error.message
+    });
+  }
 });
 
 // Create new game session
