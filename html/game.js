@@ -622,11 +622,10 @@ function renderCityGrid() {
     }
 }
 
-// Track currently dragged building for validation
-let currentDraggedBuilding = null;
+// NOTE: currentDraggedBuilding is now defined in building-system.js
 
 // ==================== TOUCH SUPPORT FOR MOBILE ====================
-let touchDragData = null;
+// NOTE: touchDragData is now defined in touch-handler.js
 
 function initializeTouchSupport() {
     // Add touch events to building cards
@@ -1354,8 +1353,7 @@ function applyBuildingEffects(building) {
     }
 }
 
-// Toast notification tracking
-let activeToasts = [];
+// NOTE: activeToasts is now defined in ui-effects.js
 
 // Show toast notification with stacking
 function showToast(message, type = 'info') {
@@ -1504,19 +1502,7 @@ function showFloatingNumber(amount, x, y) {
     console.log('💵 Floating number:', amount > 0 ? '+' : '', '$', amount, 'M');
 }
 
-// Track last click/touch position for floating numbers
-let lastInteractionPosition = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-
-// Update on any click/touch
-document.addEventListener('click', (e) => {
-    lastInteractionPosition = { x: e.clientX, y: e.clientY };
-});
-
-document.addEventListener('touchend', (e) => {
-    if (e.changedTouches && e.changedTouches[0]) {
-        lastInteractionPosition = { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
-    }
-});
+// NOTE: lastInteractionPosition and its event listeners are now in ui-effects.js
 
 // Update weather overlay based on happiness
 function updateWeather() {
@@ -1563,7 +1549,7 @@ function updateWeather() {
 }
 
 // ==================== BUILDING MANAGEMENT ====================
-let selectedCellIndex = null;
+// NOTE: selectedCellIndex is now defined in building-system.js
 
 // Open action menu for a building
 function openActionMenu(cellIndex) {
@@ -1877,7 +1863,7 @@ function completeMandatoryPlacement() {
 }
 
 // ==================== DRAG TO MOVE EXISTING BUILDINGS ====================
-let draggedBuildingIndex = null;
+// NOTE: draggedBuildingIndex is now defined in building-system.js
 
 function handleOccupiedDragStart(e, cellIndex) {
     const building = gameState.cityGrid[cellIndex];
@@ -4280,7 +4266,7 @@ const tutorialSteps = [
     }
 ];
 
-let currentTutorialStep = 0;
+// NOTE: currentTutorialStep is now defined in tutorial-system.js
 
 function checkFirstTime() {
     const hasPlayed = localStorage.getItem('manestreet_played');
