@@ -5854,3 +5854,224 @@ body {
     }
 }
 
+/* ==================== MOBILE OPTIMIZATIONS (ADDED) ==================== */
+@media (max-width: 768px) {
+
+    /* Layout Reset */
+    .game-wrapper {
+        right: 0 !important;
+        bottom: 240px !important;
+        /* Space for bottom palette */
+        padding: 5px !important;
+        width: 100%;
+    }
+
+    /* Bottom Palette */
+    .building-palette {
+        width: 100% !important;
+        height: 240px !important;
+        top: auto !important;
+        bottom: 0 !important;
+        right: 0 !important;
+        left: 0 !important;
+        border-left: none !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        flex-direction: column;
+        background: rgba(45, 52, 54, 0.98);
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .palette-header {
+        padding: 8px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 50px;
+    }
+
+    .palette-header h3 {
+        font-size: 1.1em;
+        margin: 0;
+    }
+
+    .palette-subtitle {
+        display: none;
+    }
+
+    /* Make custom resize button visible/adjusted if needed, 
+       but we force height so maybe hide it or adjust its function 
+    */
+    .palette-resize-btn {
+        display: none !important;
+    }
+
+    /* Horizontal Scrolling Buildings */
+    .palette-buildings {
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 10px;
+        gap: 15px;
+        height: calc(100% - 50px);
+        /* Subtract header */
+        align-items: center;
+        /* Center items vertically */
+        width: 100%;
+    }
+
+    .palette-footer {
+        display: none;
+        /* Hide undo button in footer, maybe move it to header? */
+        /* Or keep it but it takes space. Let's start with hiding it or making it absolute */
+    }
+
+    /* Re-position Undo button to be floating or in header */
+    .undo-button {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        padding: 5px 10px;
+        min-width: auto;
+        font-size: 0.9em;
+        z-index: 1002;
+    }
+
+    .building-card {
+        min-width: 140px;
+        width: 140px;
+        height: auto;
+        min-height: 160px;
+        flex-shrink: 0;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Grid Scaling */
+    .grid-container {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        padding-top: 20px;
+    }
+
+    .city-grid {
+        /* Default width is ~730px. Scale to fit. */
+        transform-origin: top center;
+        transform: scale(0.55);
+        margin-bottom: 50px;
+        /* Space for advisor */
+    }
+
+    /* Header & Stats Compactness */
+    .header {
+        padding: 8px 10px;
+        width: 100%;
+    }
+
+    .header h1 {
+        font-size: 1.2em;
+    }
+
+    .stats-panel {
+        padding: 5px;
+        gap: 5px;
+        overflow-x: auto;
+        /* Allow scroll if needed */
+        justify-content: flex-start;
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+        width: 100%;
+    }
+
+    .stats-panel::-webkit-scrollbar {
+        display: none;
+    }
+
+    .stat {
+        min-width: auto;
+        padding: 4px 8px;
+        flex-shrink: 0;
+    }
+
+    .stat-label {
+        font-size: 0.6em;
+    }
+
+    .stat-value {
+        font-size: 1em;
+    }
+
+    .stat-icon {
+        font-size: 1.1em;
+    }
+
+    /* Advisor Adjustments */
+    .advisor-container {
+        bottom: 20px;
+        left: 10px;
+        pointer-events: none;
+        /* Let clicks pass through if needed */
+        z-index: 90;
+        transform: scale(0.9) translateX(0) !important;
+        opacity: 1 !important;
+    }
+
+    .advisor-character {
+        width: 90px;
+        height: 90px;
+    }
+
+    .advisor-dialogue-box {
+        max-width: 180px;
+        margin-left: -10px;
+        margin-bottom: 5px;
+        pointer-events: auto;
+        font-size: 0.85em;
+        padding: 8px;
+    }
+
+    /* Game Content Overlay (Quiz) */
+    .game-content-overlay {
+        width: 95%;
+        max-height: 70vh;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
+
+@media (max-width: 400px) {
+    .city-grid {
+        transform: scale(0.45);
+    }
+
+    .advisor-character {
+        width: 70px;
+        height: 70px;
+    }
+
+    .building-card {
+        min-width: 120px;
+        width: 120px;
+        min-height: 150px;
+    }
+}
+/* Fix for Undo Button visibility on mobile */
+@media (max-width: 768px) {
+    .palette-footer {
+        display: block !important;
+        position: static;
+        height: 0;
+        width: 0;
+        padding: 0;
+        margin: 0;
+        overflow: visible;
+        border: none;
+    }
+}
