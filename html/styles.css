@@ -6318,3 +6318,72 @@ body {
         flex-shrink: 0;
     }
 }
+/* ==================== MOBILE FIX V4 - Font Size & Grid Scale ==================== */
+@media (max-width: 768px) {
+
+    /* 1. Reduce font sizes in decision/quiz area */
+    .game-content-overlay {
+        font-size: 0.9em;
+    }
+
+    .quiz-header h3 {
+        font-size: 1em;
+    }
+
+    .story-section h2 {
+        font-size: 1.1em;
+    }
+
+    .story-section p {
+        font-size: 0.85em;
+        line-height: 1.4;
+    }
+
+    .choice-card {
+        padding: 10px 12px;
+        font-size: 0.85em;
+        min-height: 60px;
+    }
+
+    .choice-text {
+        font-size: 0.9em;
+    }
+
+    .choice-effects {
+        font-size: 0.75em;
+    }
+
+    /* Chapter title styling */
+    .chapter-title,
+    .story-section h2 {
+        font-size: 1.2em;
+    }
+
+    /* 2. Increase grid scale for better visibility */
+    .city-grid {
+        transform: scale(0.75) !important;
+        transform-origin: top center;
+    }
+
+    .grid-cell-icon {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 400px) {
+
+    /* Even smaller screens */
+    .city-grid {
+        transform: scale(0.65) !important;
+    }
+
+    .choice-card {
+        padding: 8px 10px;
+        font-size: 0.8em;
+        min-height: 50px;
+    }
+
+    .story-section p {
+        font-size: 0.8em;
+    }
+}
