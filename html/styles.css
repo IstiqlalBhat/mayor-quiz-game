@@ -6476,3 +6476,138 @@ body {
         padding: 8px 10px !important;
     }
 }
+/* ==================== MOBILE FIX V6 - Grid, Dynamic Palette, Hurry Effects ==================== */
+@media (max-width: 768px) {
+
+    /* (A) INCREASE GRID SIZE & OVERLAY ADVISOR */
+    .city-grid {
+        transform: scale(0.85) !important;
+        transform-origin: top center;
+    }
+
+    /* Advisor overlays on grid - positioned inside city-view */
+    .advisor-container {
+        position: absolute !important;
+        bottom: 10px !important;
+        left: 5px !important;
+        z-index: 100 !important;
+        /* Don't affect grid layout */
+        pointer-events: none;
+    }
+
+    .advisor-dialogue-box {
+        pointer-events: auto;
+    }
+
+    /* Make city-view take available space */
+    .city-view {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+    }
+
+    /* (B) DYNAMIC PALETTE - Fill space when hidden */
+    /* Remove fixed bottom margin on game-wrapper */
+    .game-wrapper {
+        bottom: 0 !important;
+        /* Dynamic - controlled by JS or palette state */
+        transition: bottom 0.3s ease;
+    }
+
+    /* Palette sits at bottom with dynamic height */
+    .building-palette {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: auto !important;
+        max-height: 220px !important;
+        min-height: 50px !important;
+        transition: max-height 0.3s ease, height 0.3s ease;
+        z-index: 1000 !important;
+    }
+
+    /* When palette is minimized/collapsed */
+    .building-palette.minimized,
+    .building-palette.collapsed {
+        max-height: 50px !important;
+        height: 50px !important;
+    }
+
+    .building-palette.minimized .palette-buildings,
+    .building-palette.collapsed .palette-buildings {
+        display: none !important;
+    }
+
+    /* Game container should extend to bottom when palette is small */
+    .game-container {
+        padding-bottom: 220px;
+        /* Default palette height */
+        transition: padding-bottom 0.3s ease;
+    }
+
+    /* Override: When JS adds class for minimized palette */
+    body.palette-minimized .game-container,
+    body.palette-collapsed .game-container {
+        padding-bottom: 50px !important;
+    }
+
+    /* Remove grey background below palette */
+    .building-palette::after {
+        display: none !important;
+    }
+
+    /* (C) FIX HURRY EFFECTS - Contain animations */
+    .timer-container {
+        position: relative !important;
+        z-index: 10;
+        /* Prevent shake from affecting layout */
+        transform-style: preserve-3d;
+    }
+
+    .timer-container.critical,
+    .timer-container.danger {
+        /* Contain the shake animation within bounds */
+        animation: none !important;
+    }
+
+    /* Still show visual urgency but without layout-breaking shake */
+    .timer-container.critical .timer-display,
+    .timer-container.danger .timer-display {
+        animation: mobileUrgentPulse 0.5s ease-in-out infinite;
+    }
+
+    @keyframes mobileUrgentPulse {
+
+        0%,
+        100% {
+            box-shadow: 0 0 15px rgba(255, 118, 117, 0.6);
+            border-color: rgba(255, 118, 117, 0.8);
+        }
+
+        50% {
+            box-shadow: 0 0 25px rgba(255, 118, 117, 1);
+            border-color: rgba(255, 118, 117, 1);
+        }
+    }
+
+    /* HURRY text - keep it visible but compact */
+    .timer-urgent-text {
+        font-size: 0.9em !important;
+        margin-top: 2px !important;
+        animation: none !important;
+        /* Just color pulse instead of size */
+        color: #ff7675;
+    }
+
+    /* Efficiency display positioning */
+    .efficiency-display {
+        position: static !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .city-grid {
+        transform: scale(0.75) !important;
+    }
+}
