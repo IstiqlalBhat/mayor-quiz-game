@@ -10,29 +10,33 @@ const HOST = '0.0.0.0';
 
 // Database connection (reuse between invocations when possible)
 // Vercel-Supabase integration uses POSTGRES_URL, fallback to DATABASE_URL for local dev
-const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const connectionString = process.env.POSTGRES_URL ||
+                         process.env.POSTGRES_URL_NON_POOLING ||
+                         process.env.DATABASE_URL;
 
 // Log which connection is being used (for debugging)
-console.log('Using database connection:', connectionString ? 'Found' : 'NOT FOUND');
-console.log('Available DB env vars:', {
-  POSTGRES_URL: !!process.env.POSTGRES_URL,
-  POSTGRES_URL_NON_POOLING: !!process.env.POSTGRES_URL_NON_POOLING,
-  DATABASE_URL: !!process.env.DATABASE_URL
-});
+console.log('DB Connection:', connectionString ? 'Found' : 'NOT FOUND');
 
-// Supabase/Vercel requires SSL in production
-const sslConfig = (connectionString && connectionString.includes('supabase')) ||
-                  (connectionString && connectionString.includes('pooler')) ||
-                  process.env.NODE_ENV === 'production'
-  ? { rejectUnauthorized: false }
-  : false;
+let pool = null;
 
-const pool = global.pgPool || new Pool({
-  connectionString: connectionString,
-  ssl: sslConfig
-});
-if (!global.pgPool) {
-  global.pgPool = pool;
+if (connectionString) {
+  // Supabase/Vercel requires SSL in production
+  const sslConfig = connectionString.includes('supabase') ||
+                    connectionString.includes('pooler') ||
+                    process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: false }
+    : false;
+
+  pool = global.pgPool || new Pool({
+    connectionString: connectionString,
+    ssl: sslConfig
+  });
+
+  if (!global.pgPool) {
+    global.pgPool = pool;
+  }
+} else {
+  console.error('WARNING: No database connection string found!');
 }
 
 // Middleware
